@@ -6,6 +6,7 @@ source of truth remains `open-proofline/server`.
 - [Architecture](architecture.md)
 - [API client](api-client.md)
 - [Security model](security-model.md)
+- [Browser security headers](browser-security-headers.md)
 - [Threat model](threat-model.md)
 - [Theme tokens](theme.md)
 - [Development](development.md)

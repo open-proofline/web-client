@@ -224,12 +224,16 @@ Public deployment requires separate backend and infrastructure work, including:
 * payment-gated account creation
 * abuse controls and rate limiting
 * browser credential-storage review
-* CSP/XSS review
+* CSP/XSS and browser security-header review
 * logging and error-redaction review
 * backup/restore and deletion/retention operational review
 * monitoring and incident response planning
 
 Until those requirements are implemented and reviewed, the web client remains an experimental prototype.
+
+Static hosting header guidance is documented in
+[Browser Security Headers](docs/browser-security-headers.md), but those headers
+do not imply production readiness or public `/v1` API readiness.
 
 ## API Boundary
 
