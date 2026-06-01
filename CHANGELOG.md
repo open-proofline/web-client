@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added accessible dependent metadata error states on the incident detail route.
 - Disabled the unconfirmed live owned incident list route and documented the backend limitation.
 - Applied the midnight violet theme tokens to the prototype UI surfaces.
 - Used router-aware links for internal web-client navigation.
