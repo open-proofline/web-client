@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 import { AuthProvider } from "./auth/use-auth";
 import { clearSession, saveSession } from "./auth/session";
 import { createAppRouter } from "./router";
@@ -24,6 +24,10 @@ function renderRoute(path: string) {
     </QueryClientProvider>,
   );
 }
+
+beforeEach(() => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "mock");
+});
 
 afterEach(() => {
   clearSession();
@@ -156,10 +160,8 @@ test("shows generic dependent metadata errors on incident detail", async () => {
     http.get("http://127.0.0.1:8080/v1/contact-public-keys", () =>
       HttpResponse.json({ error: { code: "unavailable" } }, { status: 503 }),
     ),
-    http.get(
-      "http://127.0.0.1:8080/v1/incidents/inc_live/sharing-grants",
-      () =>
-        HttpResponse.json({ error: { code: "unavailable" } }, { status: 503 }),
+    http.get("http://127.0.0.1:8080/v1/incidents/inc_live/sharing-grants", () =>
+      HttpResponse.json({ error: { code: "unavailable" } }, { status: 503 }),
     ),
     http.get("http://127.0.0.1:8080/v1/incidents/inc_live/wrapped-keys", () =>
       HttpResponse.json({ error: { code: "unavailable" } }, { status: 503 }),
