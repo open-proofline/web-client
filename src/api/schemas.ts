@@ -62,7 +62,6 @@ export const chunkSchema = z.object({
   started_at: z.string().optional(),
   ended_at: z.string().optional(),
   original_filename: z.string().optional(),
-  stored_path: z.string().optional(),
   byte_size: z.number().optional(),
   sha256_hex: z.string().optional(),
   created_at: z.string().optional(),
