@@ -37,12 +37,19 @@ function IncidentDetailPage() {
   }
 
   if (incident.isLoading) {
-    return <p className="text-sm text-zinc-600">Loading incident detail.</p>;
+    return (
+      <p className="text-sm text-proofline-text-muted">
+        Loading incident detail.
+      </p>
+    );
   }
 
   if (incident.isError || !incident.data) {
     return (
-      <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+      <p
+        role="alert"
+        className="rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
+      >
         Incident detail could not be loaded.
       </p>
     );
@@ -52,14 +59,16 @@ function IncidentDetailPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border border-zinc-200 bg-white p-6">
+      <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-zinc-500">Incident detail</p>
-            <h1 className="mt-2 text-2xl font-semibold text-zinc-950">
+            <p className="text-sm font-medium text-proofline-text-muted">
+              Incident detail
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
               {detail.incident.id}
             </h1>
-            <p className="mt-2 max-w-3xl text-sm text-zinc-600">
+            <p className="mt-2 max-w-3xl text-sm text-proofline-text-secondary">
               Metadata review only. This view does not play media, decrypt
               browser-side, unwrap keys, or expose raw key material.
             </p>
@@ -97,18 +106,22 @@ function IncidentDetailPage() {
 
       <MetadataSection title="Streams" count={detail.streams.length}>
         {detail.streams.length ? (
-          <div className="divide-y divide-zinc-100">
+          <div className="divide-y divide-proofline-border">
             {detail.streams.map((stream) => (
               <div key={stream.id} className="grid gap-2 py-4 md:grid-cols-5">
-                <div className="font-medium text-zinc-950">{stream.id}</div>
-                <div className="text-zinc-700">{stream.media_type}</div>
+                <div className="font-medium text-proofline-text">
+                  {stream.id}
+                </div>
+                <div className="text-proofline-text-secondary">
+                  {stream.media_type}
+                </div>
                 <div>
                   <StatusBadge value={stream.status} />
                 </div>
-                <div className="text-zinc-700">
+                <div className="text-proofline-text-secondary">
                   {stream.chunk_count ?? 0} chunks
                 </div>
-                <div className="text-zinc-700">
+                <div className="text-proofline-text-secondary">
                   {stream.byte_size ?? 0} bytes
                 </div>
               </div>
@@ -124,16 +137,22 @@ function IncidentDetailPage() {
 
       <MetadataSection title="Chunks" count={detail.chunks.length}>
         {detail.chunks.length ? (
-          <div className="divide-y divide-zinc-100">
+          <div className="divide-y divide-proofline-border">
             {detail.chunks.map((chunk) => (
               <div key={chunk.id} className="grid gap-2 py-4 md:grid-cols-5">
-                <div className="font-medium text-zinc-950">{chunk.id}</div>
-                <div className="text-zinc-700">#{chunk.chunk_index}</div>
-                <div className="text-zinc-700">{chunk.media_type}</div>
-                <div className="text-zinc-700">
+                <div className="font-medium text-proofline-text">
+                  {chunk.id}
+                </div>
+                <div className="text-proofline-text-secondary">
+                  #{chunk.chunk_index}
+                </div>
+                <div className="text-proofline-text-secondary">
+                  {chunk.media_type}
+                </div>
+                <div className="text-proofline-text-secondary">
                   {chunk.byte_size ?? 0} bytes
                 </div>
-                <div className="truncate text-zinc-500">
+                <div className="truncate text-proofline-text-muted">
                   {chunk.sha256_hex ?? "No hash"}
                 </div>
               </div>
@@ -149,21 +168,23 @@ function IncidentDetailPage() {
         count={contacts.data?.length ?? 0}
       >
         {contacts.isLoading ? (
-          <p className="text-sm text-zinc-600">Loading contact key metadata.</p>
+          <p className="text-sm text-proofline-text-muted">
+            Loading contact key metadata.
+          </p>
         ) : contacts.data?.length ? (
-          <div className="divide-y divide-zinc-100">
+          <div className="divide-y divide-proofline-border">
             {contacts.data.map((contact) => (
               <div
                 key={contact.public_key_id}
                 className="grid gap-2 py-4 md:grid-cols-4"
               >
-                <div className="font-medium text-zinc-950">
+                <div className="font-medium text-proofline-text">
                   {contact.display_label ?? contact.contact_id}
                 </div>
-                <div className="text-zinc-700">
+                <div className="text-proofline-text-secondary">
                   {contact.wrapping_algorithm}
                 </div>
-                <div className="truncate text-zinc-500">
+                <div className="truncate text-proofline-text-muted">
                   {contact.public_key_fingerprint}
                 </div>
                 <StatusBadge value={contact.key_state} />
@@ -180,22 +201,26 @@ function IncidentDetailPage() {
 
       <MetadataSection title="Sharing grants" count={grants.data?.length ?? 0}>
         {grants.isLoading ? (
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-proofline-text-muted">
             Loading sharing-grant metadata.
           </p>
         ) : grants.data?.length ? (
-          <div className="divide-y divide-zinc-100">
+          <div className="divide-y divide-proofline-border">
             {grants.data.map((grant) => (
               <div
                 key={grant.grant_id}
                 className="grid gap-2 py-4 md:grid-cols-5"
               >
-                <div className="font-medium text-zinc-950">
+                <div className="font-medium text-proofline-text">
                   {grant.grant_id}
                 </div>
-                <div className="text-zinc-700">{grant.recipient_type}</div>
-                <div className="text-zinc-700">{grant.data_class}</div>
-                <div className="text-zinc-700">
+                <div className="text-proofline-text-secondary">
+                  {grant.recipient_type}
+                </div>
+                <div className="text-proofline-text-secondary">
+                  {grant.data_class}
+                </div>
+                <div className="text-proofline-text-secondary">
                   {grant.expires_at ?? "No expiry"}
                 </div>
                 <StatusBadge value={grant.grant_state} />
@@ -215,20 +240,28 @@ function IncidentDetailPage() {
         count={wrappedKeys.data?.length ?? 0}
       >
         {wrappedKeys.isLoading ? (
-          <p className="text-sm text-zinc-600">Loading wrapped-key metadata.</p>
+          <p className="text-sm text-proofline-text-muted">
+            Loading wrapped-key metadata.
+          </p>
         ) : wrappedKeys.data?.length ? (
-          <div className="divide-y divide-zinc-100">
+          <div className="divide-y divide-proofline-border">
             {wrappedKeys.data.map((record) => (
               <div
                 key={record.wrapped_key_id}
                 className="grid gap-2 py-4 md:grid-cols-5"
               >
-                <div className="font-medium text-zinc-950">
+                <div className="font-medium text-proofline-text">
                   {record.wrapped_key_id}
                 </div>
-                <div className="text-zinc-700">{record.media_key_id}</div>
-                <div className="text-zinc-700">{record.wrapping_algorithm}</div>
-                <div className="text-zinc-700">Grant {record.grant_id}</div>
+                <div className="text-proofline-text-secondary">
+                  {record.media_key_id}
+                </div>
+                <div className="text-proofline-text-secondary">
+                  {record.wrapping_algorithm}
+                </div>
+                <div className="text-proofline-text-secondary">
+                  Grant {record.grant_id}
+                </div>
                 <StatusBadge value={record.wrapped_key_state} />
               </div>
             ))}
@@ -254,10 +287,12 @@ function MetadataSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-6">
+    <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold text-zinc-950">{title}</h2>
-        <span className="text-sm text-zinc-500">{count} records</span>
+        <h2 className="text-lg font-semibold text-proofline-text">{title}</h2>
+        <span className="text-sm text-proofline-text-muted">
+          {count} records
+        </span>
       </div>
       <div className="mt-4">{children}</div>
     </section>

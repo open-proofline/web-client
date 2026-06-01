@@ -19,13 +19,15 @@ function IncidentsIndexPage() {
   }
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-6">
+    <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
       <div>
-        <p className="text-sm font-medium text-zinc-500">
+        <p className="text-sm font-medium text-proofline-text-muted">
           Owned incident metadata
         </p>
-        <h1 className="mt-2 text-2xl font-semibold text-zinc-950">Incidents</h1>
-        <p className="mt-2 max-w-3xl text-sm text-zinc-600">
+        <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
+          Incidents
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm text-proofline-text-secondary">
           This list is for authenticated account incident review. The current
           server docs confirm incident read-by-ID; a backend list route still
           needs confirmation for live mode.
@@ -35,16 +37,18 @@ function IncidentsIndexPage() {
       {incidents.isError ? (
         <p
           role="alert"
-          className="mt-6 rounded-md bg-red-50 p-3 text-sm text-red-700"
+          className="mt-6 rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
         >
           Incident metadata could not be loaded.
         </p>
       ) : incidents.isLoading ? (
-        <p className="mt-6 text-sm text-zinc-600">Loading incident metadata.</p>
+        <p className="mt-6 text-sm text-proofline-text-muted">
+          Loading incident metadata.
+        </p>
       ) : incidents.data?.length ? (
-        <div className="mt-6 overflow-hidden rounded-lg border border-zinc-200">
-          <table className="min-w-full divide-y divide-zinc-200 text-left text-sm">
-            <thead className="bg-zinc-50 text-xs uppercase text-zinc-500">
+        <div className="mt-6 overflow-hidden rounded-lg border border-proofline-border">
+          <table className="min-w-full divide-y divide-proofline-border text-left text-sm">
+            <thead className="bg-proofline-surface-elevated text-xs uppercase text-proofline-text-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">Incident</th>
                 <th className="px-4 py-3 font-medium">Mode</th>
@@ -52,25 +56,28 @@ function IncidentsIndexPage() {
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 bg-white">
+            <tbody className="divide-y divide-proofline-border bg-proofline-surface">
               {incidents.data.map((incident) => (
-                <tr key={incident.id}>
+                <tr
+                  key={incident.id}
+                  className="hover:bg-proofline-surface-elevated"
+                >
                   <td className="px-4 py-3">
                     <Link
                       to="/incidents/$incidentId"
                       params={{ incidentId: incident.id }}
-                      className="font-medium text-zinc-950 hover:underline"
+                      className="font-medium text-proofline-accent-cyan hover:text-proofline-primary-hover focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
                     >
                       {incident.id}
                     </Link>
-                    <div className="text-zinc-500">
+                    <div className="text-proofline-text-muted">
                       {incident.client_label ?? "No client label"}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-zinc-700">
+                  <td className="px-4 py-3 text-proofline-text-secondary">
                     {incident.incident_mode ?? "generic"}
                   </td>
-                  <td className="px-4 py-3 text-zinc-700">
+                  <td className="px-4 py-3 text-proofline-text-secondary">
                     {incident.sharing_state ?? "private"}
                   </td>
                   <td className="px-4 py-3">

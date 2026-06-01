@@ -29,16 +29,16 @@ function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border border-zinc-200 bg-white p-6">
+      <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-zinc-500">
+            <p className="text-sm font-medium text-proofline-text-muted">
               Prototype dashboard
             </p>
-            <h1 className="mt-2 text-2xl font-semibold text-zinc-950">
+            <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
               Incident review workspace
             </h1>
-            <p className="mt-2 max-w-3xl text-sm text-zinc-600">
+            <p className="mt-2 max-w-3xl text-sm text-proofline-text-secondary">
               Review account session state, owned incident metadata, stream and
               chunk metadata, contact public-key metadata, sharing grants, and
               wrapped-key metadata. This app does not record, decrypt, unwrap
@@ -55,12 +55,12 @@ function DashboardPage() {
         <Metric label="Shared metadata records" value={sharedCount} />
       </section>
 
-      <section className="rounded-lg border border-zinc-200 bg-white p-6">
+      <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold text-zinc-950">
+          <h2 className="text-lg font-semibold text-proofline-text">
             Recent incidents
           </h2>
-          <span className="text-sm text-zinc-500">
+          <span className="text-sm text-proofline-text-muted">
             {incidents.isLoading
               ? "Loading"
               : `${incidents.data?.length ?? 0} visible`}
@@ -70,26 +70,28 @@ function DashboardPage() {
         {incidents.isError ? (
           <p
             role="alert"
-            className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700"
+            className="mt-4 rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
           >
             Incident metadata could not be loaded.
           </p>
         ) : incidents.isLoading ? (
-          <p className="mt-4 text-sm text-zinc-600">
+          <p className="mt-4 text-sm text-proofline-text-muted">
             Loading incident metadata.
           </p>
         ) : incidents.data?.length ? (
-          <div className="mt-4 divide-y divide-zinc-100">
+          <div className="mt-4 divide-y divide-proofline-border">
             {incidents.data.slice(0, 4).map((incident) => (
               <Link
                 key={incident.id}
                 to="/incidents/$incidentId"
                 params={{ incidentId: incident.id }}
-                className="flex flex-col gap-2 py-3 hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 rounded-md px-3 py-3 hover:bg-proofline-surface-elevated focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <div className="font-medium text-zinc-950">{incident.id}</div>
-                  <div className="text-sm text-zinc-600">
+                  <div className="font-medium text-proofline-text">
+                    {incident.id}
+                  </div>
+                  <div className="text-sm text-proofline-text-muted">
                     {incident.incident_mode ?? "generic"} ·{" "}
                     {incident.client_label ?? "no client label"}
                   </div>
@@ -111,9 +113,13 @@ function DashboardPage() {
 
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5">
-      <dt className="text-sm font-medium text-zinc-500">{label}</dt>
-      <dd className="mt-2 text-2xl font-semibold text-zinc-950">{value}</dd>
+    <div className="rounded-lg border border-proofline-border bg-proofline-surface-elevated p-5 shadow-lg shadow-proofline-bg-deep/20">
+      <dt className="text-sm font-medium text-proofline-text-muted">
+        {label}
+      </dt>
+      <dd className="mt-2 text-2xl font-semibold text-proofline-text">
+        {value}
+      </dd>
     </div>
   );
 }

@@ -7,6 +7,7 @@ source of truth remains `open-proofline/server`.
 - [API client](api-client.md)
 - [Security model](security-model.md)
 - [Threat model](threat-model.md)
+- [Theme tokens](theme.md)
 - [Development](development.md)
 
 The prototype does not implement recording, browser decryption, key escrow,
