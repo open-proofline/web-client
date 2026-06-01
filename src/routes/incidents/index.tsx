@@ -1,4 +1,4 @@
-import { Navigate, createRoute } from "@tanstack/react-router";
+import { Link, Navigate, createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { prooflineQueryKeys } from "../../api/client";
 import { useAuth } from "../../auth/use-auth";
@@ -56,12 +56,13 @@ function IncidentsIndexPage() {
               {incidents.data.map((incident) => (
                 <tr key={incident.id}>
                   <td className="px-4 py-3">
-                    <a
-                      href={`/incidents/${incident.id}`}
+                    <Link
+                      to="/incidents/$incidentId"
+                      params={{ incidentId: incident.id }}
                       className="font-medium text-zinc-950 hover:underline"
                     >
                       {incident.id}
-                    </a>
+                    </Link>
                     <div className="text-zinc-500">
                       {incident.client_label ?? "No client label"}
                     </div>
