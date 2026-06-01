@@ -21,7 +21,7 @@ export function Listbox<T>({
   return (
     <Headless.Listbox {...props} multiple={false}>
       <Headless.ListboxButton
-        autoFocus={autoFocus}
+        {...(autoFocus === undefined ? {} : { autoFocus })}
         data-slot="control"
         aria-label={ariaLabel}
         className={clsx([

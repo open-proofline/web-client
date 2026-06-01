@@ -1,7 +1,7 @@
 export function MetadataGrid({
   items,
 }: {
-  items: Array<{ label: string; value?: string | number | null }>;
+  items: Array<{ label: string; value?: string | number | null | undefined }>;
 }) {
   return (
     <dl className="grid gap-px overflow-hidden rounded-lg border border-zinc-200 bg-zinc-200 sm:grid-cols-2 xl:grid-cols-4">

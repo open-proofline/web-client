@@ -5,10 +5,10 @@ import { TouchTarget } from "./button";
 import { Link } from "./link";
 
 type AvatarProps = {
-  src?: string | null;
+  src?: string | null | undefined;
   square?: boolean;
-  initials?: string;
-  alt?: string;
+  initials?: string | undefined;
+  alt?: string | undefined;
   className?: string;
 };
 

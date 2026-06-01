@@ -64,7 +64,7 @@ export function Combobox<T>({
         ])}
       >
         <Headless.ComboboxInput
-          autoFocus={autoFocus}
+          {...(autoFocus === undefined ? {} : { autoFocus })}
           data-slot="control"
           aria-label={ariaLabel}
           displayValue={(option: T) => displayValue(option) ?? ""}

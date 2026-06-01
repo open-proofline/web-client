@@ -80,9 +80,9 @@ export function TableBody(props: React.ComponentPropsWithoutRef<"tbody">) {
 }
 
 const TableRowContext = createContext<{
-  href?: string;
-  target?: string;
-  title?: string;
+  href: string | undefined;
+  target: string | undefined;
+  title: string | undefined;
 }>({
   href: undefined,
   target: undefined,
