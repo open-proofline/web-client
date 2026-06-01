@@ -1,4 +1,5 @@
 import {
+  accountSchema,
   contactPublicKeyResponseSchema,
   contactPublicKeysResponseSchema,
   incidentDetailSchema,
@@ -235,7 +236,7 @@ export class ProoflineApiClient {
     if (this.mode === "mock") {
       return mockAccount;
     }
-    return (await this.request("/v1/account")) as Account;
+    return accountSchema.parse(await this.request("/v1/account"));
   }
 
   async listOwnedIncidents(): Promise<Incident[]> {
