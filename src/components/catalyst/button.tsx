@@ -10,7 +10,7 @@ const styles = {
     // Sizing
     "px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/6",
     // Focus
-    "focus:not-data-focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500",
+    "focus:not-data-focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-proofline-focus",
     // Disabled
     "data-disabled:opacity-50",
     // Icon
@@ -28,11 +28,11 @@ const styles = {
     // Background color is moved to control and shadow is removed in dark mode so hide `before` pseudo
     "dark:before:hidden",
     // Dark mode: Subtle white outline is applied using a border
-    "dark:border-white/5",
+    "dark:border-proofline-border",
     // Shim/overlay, inset to match button foreground and used for hover state + highlight shadow
     "after:absolute after:inset-0 after:-z-10 after:rounded-[calc(var(--radius-lg)-1px)]",
     // Inner highlight shadow
-    "after:shadow-[inset_0_1px_--theme(--color-white/15%)]",
+    "after:shadow-[inset_0_1px_--theme(--color-white/25%)]",
     // White overlay on hover
     "data-active:after:bg-(--btn-hover-overlay) data-hover:after:bg-(--btn-hover-overlay)",
     // Dark mode: `after` layer expands to cover entire button
@@ -42,11 +42,11 @@ const styles = {
   ],
   outline: [
     // Base
-    "border-zinc-950/10 text-zinc-950 data-active:bg-zinc-950/2.5 data-hover:bg-zinc-950/2.5",
+    "border-proofline-border text-proofline-text data-active:bg-proofline-surface-strong data-hover:bg-proofline-surface-elevated",
     // Dark mode
-    "dark:border-white/15 dark:text-white dark:[--btn-bg:transparent] dark:data-active:bg-white/5 dark:data-hover:bg-white/5",
+    "dark:border-proofline-border dark:text-proofline-text dark:[--btn-bg:transparent] dark:data-active:bg-proofline-surface-strong dark:data-hover:bg-proofline-surface-elevated",
     // Icon
-    "[--btn-icon:var(--color-zinc-500)] data-active:[--btn-icon:var(--color-zinc-700)] data-hover:[--btn-icon:var(--color-zinc-700)] dark:data-active:[--btn-icon:var(--color-zinc-400)] dark:data-hover:[--btn-icon:var(--color-zinc-400)]",
+    "[--btn-icon:var(--color-proofline-text-muted)] data-active:[--btn-icon:var(--color-proofline-text)] data-hover:[--btn-icon:var(--color-proofline-text)]",
   ],
   plain: [
     // Base
@@ -58,9 +58,9 @@ const styles = {
   ],
   colors: {
     "dark/zinc": [
-      "text-white [--btn-bg:var(--color-zinc-900)] [--btn-border:var(--color-zinc-950)]/90 [--btn-hover-overlay:var(--color-white)]/10",
-      "dark:text-white dark:[--btn-bg:var(--color-zinc-600)] dark:[--btn-hover-overlay:var(--color-white)]/5",
-      "[--btn-icon:var(--color-zinc-400)] data-active:[--btn-icon:var(--color-zinc-300)] data-hover:[--btn-icon:var(--color-zinc-300)]",
+      "text-proofline-primary-text [--btn-bg:var(--color-proofline-primary)] [--btn-border:var(--color-proofline-primary-active)] [--btn-hover-overlay:var(--color-white)]/20",
+      "data-hover:[--btn-bg:var(--color-proofline-primary-hover)] data-active:[--btn-bg:var(--color-proofline-primary-active)]",
+      "[--btn-icon:var(--color-proofline-primary-text)]",
     ],
     light: [
       "text-zinc-950 [--btn-bg:white] [--btn-border:var(--color-zinc-950)]/10 [--btn-hover-overlay:var(--color-zinc-950)]/2.5 data-active:[--btn-border:var(--color-zinc-950)]/15 data-hover:[--btn-border:var(--color-zinc-950)]/15",
@@ -83,9 +83,8 @@ const styles = {
       "[--btn-icon:var(--color-zinc-400)] data-active:[--btn-icon:var(--color-zinc-500)] data-hover:[--btn-icon:var(--color-zinc-500)]",
     ],
     zinc: [
-      "text-white [--btn-hover-overlay:var(--color-white)]/10 [--btn-bg:var(--color-zinc-600)] [--btn-border:var(--color-zinc-700)]/90",
-      "dark:[--btn-hover-overlay:var(--color-white)]/5",
-      "[--btn-icon:var(--color-zinc-400)] data-active:[--btn-icon:var(--color-zinc-300)] data-hover:[--btn-icon:var(--color-zinc-300)]",
+      "text-proofline-text [--btn-hover-overlay:var(--color-white)]/10 [--btn-bg:var(--color-proofline-surface-strong)] [--btn-border:var(--color-proofline-border-strong)]",
+      "[--btn-icon:var(--color-proofline-text-muted)] data-active:[--btn-icon:var(--color-proofline-text)] data-hover:[--btn-icon:var(--color-proofline-text)]",
     ],
     indigo: [
       "text-white [--btn-hover-overlay:var(--color-white)]/10 [--btn-bg:var(--color-indigo-500)] [--btn-border:var(--color-indigo-600)]/90",

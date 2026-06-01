@@ -37,13 +37,15 @@ function LoginPage() {
   }
 
   return (
-    <section className="mx-auto max-w-md rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+    <section className="mx-auto max-w-md rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
       <div>
-        <p className="text-sm font-medium text-zinc-500">
+        <p className="text-sm font-medium text-proofline-text-muted">
           Proofline Web Client
         </p>
-        <h1 className="mt-2 text-2xl font-semibold text-zinc-950">Log in</h1>
-        <p className="mt-2 text-sm text-zinc-600">
+        <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
+          Log in
+        </h1>
+        <p className="mt-2 text-sm text-proofline-text-secondary">
           This prototype uses {apiClient.mode} API mode. Browser token
           persistence is memory-only unless explicitly configured for local
           development.
@@ -76,7 +78,7 @@ function LoginPage() {
         {error ? (
           <p
             role="alert"
-            className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700"
+            className="mt-4 rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
           >
             {error}
           </p>
