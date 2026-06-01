@@ -12,6 +12,11 @@ function shouldUseLocalStorage(): boolean {
   return import.meta.env.VITE_PROOFLINE_SESSION_STORAGE === "localStorage";
 }
 
+function hasUsableExpiration(session: Session): boolean {
+  const expiresAt = Date.parse(session.expiresAt);
+  return Number.isFinite(expiresAt) && expiresAt > Date.now();
+}
+
 export function sessionFromLogin(
   response: LoginResponse,
   mode: Session["mode"],
@@ -28,6 +33,10 @@ export function sessionFromLogin(
 
 export function loadSession(): Session | null {
   if (memorySession) {
+    if (!hasUsableExpiration(memorySession)) {
+      clearSession();
+      return null;
+    }
     return memorySession;
   }
 
@@ -40,8 +49,13 @@ export function loadSession(): Session | null {
     if (!stored) {
       return null;
     }
-    memorySession = sessionSchema.parse(JSON.parse(stored));
-    return memorySession;
+    const parsedSession = sessionSchema.parse(JSON.parse(stored));
+    if (!hasUsableExpiration(parsedSession)) {
+      clearSession();
+      return null;
+    }
+    memorySession = parsedSession;
+    return parsedSession;
   } catch {
     window.localStorage.removeItem(storageKey);
     return null;
