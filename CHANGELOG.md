@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Cleared expired or malformed loaded sessions before authenticating the UI.
 - Avoided prefilled prototype credentials on the login screen in live API mode.
 - Parsed live account responses through the Zod account schema.
 - Removed private chunk storage paths from frontend incident detail schemas.

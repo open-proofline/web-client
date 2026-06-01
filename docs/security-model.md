@@ -7,6 +7,7 @@ This web client is experimental and not production-ready.
 - Session tokens are kept in memory by default.
 - Optional local-storage session persistence is behind
   `VITE_PROOFLINE_SESSION_STORAGE=localStorage` for local development only.
+- Expired or malformed loaded sessions are cleared before authenticating the UI.
 - API responses are parsed with Zod before use where route shapes are known.
 - UI states avoid showing raw tokens, Authorization headers, request bodies,
   plaintext, raw keys, wrapped-key ciphertext, stored paths, or object keys.
