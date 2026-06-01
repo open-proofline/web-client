@@ -33,3 +33,6 @@ Recommended static-host browser headers are documented in
 [Browser Security Headers](browser-security-headers.md). That guidance does not
 make the app production-ready and does not approve public backend `/v1`
 exposure.
+
+Dependency and workflow review expectations are documented in
+[Supply Chain Review](supply-chain.md).
