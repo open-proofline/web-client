@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Used router-aware links for internal web-client navigation.
 - Cleared expired or malformed loaded sessions before authenticating the UI.
 - Avoided prefilled prototype credentials on the login screen in live API mode.
 - Parsed live account responses through the Zod account schema.

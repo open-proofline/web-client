@@ -1,4 +1,4 @@
-import { Navigate, createRoute } from "@tanstack/react-router";
+import { Link, Navigate, createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/use-auth";
 import { prooflineQueryKeys } from "../api/client";
@@ -81,9 +81,10 @@ function DashboardPage() {
         ) : incidents.data?.length ? (
           <div className="mt-4 divide-y divide-zinc-100">
             {incidents.data.slice(0, 4).map((incident) => (
-              <a
+              <Link
                 key={incident.id}
-                href={`/incidents/${incident.id}`}
+                to="/incidents/$incidentId"
+                params={{ incidentId: incident.id }}
                 className="flex flex-col gap-2 py-3 hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
@@ -94,7 +95,7 @@ function DashboardPage() {
                   </div>
                 </div>
                 <StatusBadge value={incident.status} />
-              </a>
+              </Link>
             ))}
           </div>
         ) : (
