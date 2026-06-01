@@ -167,7 +167,11 @@ function IncidentDetailPage() {
         title="Contact public keys"
         count={contacts.data?.length ?? 0}
       >
-        {contacts.isLoading ? (
+        {contacts.isError ? (
+          <MetadataError>
+            Contact public-key metadata could not be loaded.
+          </MetadataError>
+        ) : contacts.isLoading ? (
           <p className="text-sm text-proofline-text-muted">
             Loading contact key metadata.
           </p>
@@ -200,7 +204,11 @@ function IncidentDetailPage() {
       </MetadataSection>
 
       <MetadataSection title="Sharing grants" count={grants.data?.length ?? 0}>
-        {grants.isLoading ? (
+        {grants.isError ? (
+          <MetadataError>
+            Sharing-grant metadata could not be loaded.
+          </MetadataError>
+        ) : grants.isLoading ? (
           <p className="text-sm text-proofline-text-muted">
             Loading sharing-grant metadata.
           </p>
@@ -239,7 +247,11 @@ function IncidentDetailPage() {
         title="Wrapped keys"
         count={wrappedKeys.data?.length ?? 0}
       >
-        {wrappedKeys.isLoading ? (
+        {wrappedKeys.isError ? (
+          <MetadataError>
+            Wrapped-key metadata could not be loaded.
+          </MetadataError>
+        ) : wrappedKeys.isLoading ? (
           <p className="text-sm text-proofline-text-muted">
             Loading wrapped-key metadata.
           </p>
@@ -274,6 +286,17 @@ function IncidentDetailPage() {
         )}
       </MetadataSection>
     </div>
+  );
+}
+
+function MetadataError({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      role="alert"
+      className="rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
+    >
+      {children}
+    </p>
   );
 }
 
