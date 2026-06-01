@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Expanded authenticated route coverage for mock dashboard and incident review flows.
 - Added accessible dependent metadata error states on the incident detail route.
 - Disabled the unconfirmed live owned incident list route and documented the backend limitation.
 - Applied the midnight violet theme tokens to the prototype UI surfaces.
