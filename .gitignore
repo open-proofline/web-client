@@ -30,3 +30,11 @@ test-results/
 *.njsproj
 *.sln
 *.sw?
+
+# Codex generated issues / issue review drafts / generated review directories
+# Scripts directory should be local and ignored
+.backlog-drafts/
+.issue-review-drafts/
+.deep-research-drafts/
+scripts/
+.*-review/

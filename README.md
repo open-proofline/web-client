@@ -63,26 +63,173 @@ npm run format
 npm run format:check
 ```
 
+## Product Scope
+
+Proofline Web Client is the experimental React account portal and incident-review client for Proofline.
+
+The intended product model is a publicly hosted Proofline service where users can create paid accounts once the backend, deployment, billing, abuse controls, and operational hardening are ready. Public account creation is not enabled until those server-side requirements are explicitly implemented, reviewed, documented, and tested.
+
+The web client is responsible for the user-facing account portal, authenticated incident review, and future trusted-contact access flows. It is not the recording client, mobile app, backend, or protocol repository.
+
 ## Current Scope
 
-This bootstrap includes:
+The current bootstrap includes:
 
-- login/logout prototype flow
-- authenticated app shell
-- conservative session state with memory-first token storage
-- incident list UI backed by mock data until the backend list route is confirmed
-- incident detail metadata UI
-- contact public-key, sharing-grant, and wrapped-key metadata views
-- safe loading, empty, and error states
-- frontend CI for typecheck, lint, unit tests, build, and Playwright smoke test
+* login/logout prototype flow
+* authenticated app shell
+* conservative session state with memory-first token storage
+* optional local-storage session persistence for local development only
+* incident list UI backed by mock data until the backend list route is confirmed
+* incident detail metadata UI
+* stream and chunk metadata review
+* contact public-key metadata views
+* sharing-grant metadata views
+* wrapped-key metadata views
+* safe loading, empty, and error states
+* visible prototype and emergency-reliance warnings
+* frontend CI for typecheck, lint, unit tests, build, and Playwright smoke tests
 
-## Non-Goals
+## Planned Account Portal Scope
 
-This repository must not implement recording, browser decryption, backend
-decryption, trusted-contact decryption, key escrow, break-glass key access, raw
-server-held media keys, playable media export, emergency dispatch, push/SMS/
-Messenger notifications, OAuth, JWT, public admin dashboards, mobile client
-code, protocol repository behavior, or production safety workflows.
+Planned account portal work includes:
+
+* public landing and pricing/account-entry pages
+* paid account registration flow
+* payment-gated account creation
+* login/logout
+* account profile page
+* password change flow
+* session status and session revocation flows
+* account billing status display
+* subscription/payment status handling
+* clear account-disabled, payment-required, expired-session, unauthorized, and forbidden states
+* browser-safe API error handling
+* browser token-storage review and hardening
+
+Payment-gated registration must be implemented as a backend-supported account lifecycle, not just a frontend form. The web client may present registration and billing UI only after the backend provides reviewed routes and state transitions for account creation, payment confirmation, subscription status, and disabled/unpaid account behavior.
+
+## Planned Incident Review Scope
+
+Planned authenticated incident-review work includes:
+
+* live owned-incident listing once the backend API contract is confirmed
+* incident detail review
+* stream and chunk metadata review
+* viewer-token creation and revocation UI
+* encrypted bundle download affordances with clear warnings
+* deletion request/status UI for account-owned incidents, if backend support is available
+* mode, capture-profile, escalation-policy, sharing-state, deletion-state, and retention metadata display
+* safe empty/error/loading states for all incident views
+
+The web client must not expose private admin/operator behavior or route `/v1/admin/...` functionality from a public edge.
+
+## Planned Sharing And Contact Scope
+
+Planned sharing/contact work includes:
+
+* contact public-key registration and management
+* contact public-key state display
+* sharing-grant creation and revocation
+* incident-scoped and stream-scoped grant management
+* wrapped-key metadata review and delivery status
+* clear warnings that wrapped-key metadata is access-enabling metadata
+* trusted-contact access design, once separately scoped and threat-modeled
+
+Sharing metadata support does not imply browser decryption, trusted-contact decryption, raw key access, key escrow, or playable export.
+
+## Future Trusted-Contact Scope
+
+Future trusted-contact work may include:
+
+* trusted-contact account access
+* trusted-contact incident access views
+* grant-aware incident metadata review
+* wrapped-key metadata delivery to authorized trusted contacts
+* careful UX for emergency and non-emergency access states
+
+Trusted-contact flows must be designed and reviewed before implementation. They must not imply emergency-services integration or guaranteed emergency response.
+
+## Future Browser Recording Scope
+
+This repository does not currently implement recording or capture behavior.
+
+A future browser-based recording prototype may be added as a separately scoped feature for desktop/browser use cases. Possible capture modes may include:
+
+* microphone-only recording
+* camera and microphone recording
+* screen, window, or tab recording
+* screen capture with microphone audio
+
+Browser recording must be treated as experimental. It must not be presented as a replacement for native iOS or Android recording clients, and it must not be described as reliable emergency capture.
+
+Before implementation, browser recording must be separately designed, documented, threat-modeled, and tested. The design must cover:
+
+* browser permission prompts and explicit user consent
+* browser and operating-system compatibility limits
+* screen, camera, microphone, and system-audio support differences
+* tab close, browser crash, sleep, permission loss, and background reliability limits
+* local encrypted staging before upload
+* chunking behavior
+* upload retry and idempotency behavior
+* user-visible recording state
+* safe failure states
+* privacy and safety wording
+* browser token-storage and XSS implications
+
+If implemented, browser recording must preserve these boundaries:
+
+* no backend decryption
+* no browser decryption unless separately scoped
+* no raw server-held media keys
+* no key escrow
+* no break-glass access
+* no playable media export unless separately scoped
+* no emergency-services integration
+* no claim of production readiness or emergency reliability
+
+Browser recording is intended for possible desktop/browser interaction records, meetings, calls, evidence notes, or other non-mobile capture contexts. Native platform clients remain the intended direction for safety-critical mobile recording and stronger lifecycle reliability.
+
+## Explicit Non-Goals
+
+This repository must not implement:
+
+* production mobile-client behavior
+* browser decryption
+* backend decryption
+* trusted-contact decryption
+* raw media-key handling
+* raw server-held keys
+* key escrow
+* break-glass key access
+* playable media export
+* emergency dispatch
+* push, SMS, or Messenger notifications
+* OAuth or JWT unless explicitly scoped later
+* public admin dashboards
+* backend implementation
+* protocol repository behavior
+* production safety workflows
+
+Users and trusted contacts remain responsible for contacting emergency services.
+
+## Public Deployment Boundary
+
+The web client may be designed for a future public Proofline service, but this repository must not claim production readiness.
+
+Public deployment requires separate backend and infrastructure work, including:
+
+* TLS and edge hardening
+* public API exposure review
+* admin/operator route exclusion from public edges
+* payment-gated account creation
+* abuse controls and rate limiting
+* browser credential-storage review
+* CSP/XSS review
+* logging and error-redaction review
+* backup/restore and deletion/retention operational review
+* monitoring and incident response planning
+
+Until those requirements are implemented and reviewed, the web client remains an experimental prototype.
 
 ## API Boundary
 
