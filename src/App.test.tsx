@@ -3,6 +3,7 @@ import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { render, screen } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 import { AuthProvider } from "./auth/use-auth";
+import { clearSession, saveSession } from "./auth/session";
 import { createAppRouter } from "./router";
 
 function renderRoute(path: string) {
@@ -23,6 +24,7 @@ function renderRoute(path: string) {
 }
 
 afterEach(() => {
+  clearSession();
   vi.unstubAllEnvs();
 });
 
@@ -52,4 +54,29 @@ test("does not prefill prototype credentials in live mode", async () => {
 
   expect(await screen.findByLabelText("Username")).toHaveValue("");
   expect(screen.getByLabelText("Password")).toHaveValue("");
+});
+
+test("shows the live incident list limitation", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveSession({
+    sessionId: "ses_live",
+    account: {
+      id: "acct_live",
+      username: "live-user",
+      role: "user",
+    },
+    token: "test-session-token",
+    createdAt: "2026-06-01T00:00:00Z",
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    mode: "live",
+  });
+
+  renderRoute("/incidents");
+
+  expect(
+    await screen.findByRole("heading", { name: "Incidents" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "current open-proofline/server does not expose GET /v1/incidents",
+  );
 });

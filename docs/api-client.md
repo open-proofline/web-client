@@ -18,11 +18,12 @@ prototype data so browser smoke tests do not require a live backend.
 
 ## Confirmed Backend Routes
 
-From current `open-proofline/server` docs:
+From current `open-proofline/server` docs and route registration:
 
 - `POST /v1/auth/login`
 - `POST /v1/auth/logout`
 - `GET /v1/account`
+- `POST /v1/incidents`
 - `GET /v1/incidents/{incident_id}`
 - `GET /v1/contact-public-keys`
 - `GET /v1/contact-public-keys/{public_key_id}`
@@ -31,11 +32,18 @@ From current `open-proofline/server` docs:
 - `GET /v1/incidents/{incident_id}/wrapped-keys`
 - `GET /v1/wrapped-keys/{wrapped_key_id}`
 
-## Routes Needing Confirmation
+## Unsupported Live Owned Incident List
 
-The prototype has a typed `listOwnedIncidents()` client method for the UI, but
-current server docs do not confirm `GET /v1/incidents`. Live mode should verify
-or replace this route against `open-proofline/server/docs/api.md`.
+Current `open-proofline/server` does not expose `GET /v1/incidents`.
+Its main route registration mounts `POST /v1/incidents` and
+`GET /v1/incidents/{incident_id}`, and its route test expects
+`GET /v1/incidents` to return `404`.
+
+The web client therefore does not call `GET /v1/incidents` in live mode. Mock
+mode still returns typed prototype incident records for browser smoke tests and
+UI review, but those records are not backend truth. Live owned-incident listing
+should remain disabled until `open-proofline/server` adds and documents an
+account-owned list route.
 
 ## Frontend Metadata Boundary
 

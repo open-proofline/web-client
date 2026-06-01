@@ -1,6 +1,10 @@
 import { Link, Navigate, createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { prooflineQueryKeys } from "../../api/client";
+import {
+  isUnsupportedLiveRouteError,
+  ownedIncidentListRoute,
+  prooflineQueryKeys,
+} from "../../api/client";
 import { useAuth } from "../../auth/use-auth";
 import { EmptyState } from "../../components/proofline/EmptyState";
 import { StatusBadge } from "../../components/proofline/StatusBadge";
@@ -18,6 +22,11 @@ function IncidentsIndexPage() {
     return <Navigate to="/login" />;
   }
 
+  const incidentListUnsupported = isUnsupportedLiveRouteError(
+    incidents.error,
+    ownedIncidentListRoute,
+  );
+
   return (
     <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
       <div>
@@ -28,9 +37,9 @@ function IncidentsIndexPage() {
           Incidents
         </h1>
         <p className="mt-2 max-w-3xl text-sm text-proofline-text-secondary">
-          This list is for authenticated account incident review. The current
-          server docs confirm incident read-by-ID; a backend list route still
-          needs confirmation for live mode.
+          {apiClient.mode === "mock"
+            ? "Mock mode shows prototype incident records only; they are not live backend data."
+            : "Live mode does not call an owned incident list route because current open-proofline/server does not expose GET /v1/incidents. Confirmed live support starts with incident read-by-ID."}
         </p>
       </div>
 
@@ -39,7 +48,9 @@ function IncidentsIndexPage() {
           role="alert"
           className="mt-6 rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
         >
-          Incident metadata could not be loaded.
+          {incidentListUnsupported
+            ? "Live owned incident listing is disabled because current open-proofline/server does not expose GET /v1/incidents."
+            : "Incident metadata could not be loaded."}
         </p>
       ) : incidents.isLoading ? (
         <p className="mt-6 text-sm text-proofline-text-muted">

@@ -1,7 +1,11 @@
 import { Link, Navigate, createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/use-auth";
-import { prooflineQueryKeys } from "../api/client";
+import {
+  isUnsupportedLiveRouteError,
+  ownedIncidentListRoute,
+  prooflineQueryKeys,
+} from "../api/client";
 import { rootRoute } from "./__root";
 import { Button } from "../components/catalyst/button";
 import { EmptyState } from "../components/proofline/EmptyState";
@@ -26,6 +30,10 @@ function DashboardPage() {
     incidents.data?.filter(
       (incident) => incident.sharing_state === "trusted_contact_access",
     ).length ?? 0;
+  const incidentListUnsupported = isUnsupportedLiveRouteError(
+    incidents.error,
+    ownedIncidentListRoute,
+  );
 
   return (
     <div className="space-y-6">
@@ -44,6 +52,11 @@ function DashboardPage() {
               wrapped-key metadata. This app does not record, decrypt, unwrap
               keys, export playable media, or contact emergency services.
             </p>
+            <p className="mt-3 max-w-3xl text-sm text-proofline-text-muted">
+              {apiClient.mode === "mock"
+                ? "Mock mode shows prototype incident records only; they are not live backend data."
+                : "Live mode can read confirmed incident detail routes, but owned incident listing is disabled until the server exposes a list route."}
+            </p>
           </div>
           <Button href="/incidents">View incidents</Button>
         </div>
@@ -51,8 +64,14 @@ function DashboardPage() {
 
       <section className="grid gap-4 sm:grid-cols-3">
         <Metric label="API mode" value={apiClient.mode} />
-        <Metric label="Open incidents" value={openCount} />
-        <Metric label="Shared metadata records" value={sharedCount} />
+        <Metric
+          label="Open incidents"
+          value={incidentListUnsupported ? "unavailable" : openCount}
+        />
+        <Metric
+          label="Shared metadata records"
+          value={incidentListUnsupported ? "unavailable" : sharedCount}
+        />
       </section>
 
       <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
@@ -61,9 +80,11 @@ function DashboardPage() {
             Recent incidents
           </h2>
           <span className="text-sm text-proofline-text-muted">
-            {incidents.isLoading
-              ? "Loading"
-              : `${incidents.data?.length ?? 0} visible`}
+            {incidentListUnsupported
+              ? "Live list unavailable"
+              : incidents.isLoading
+                ? "Loading"
+                : `${incidents.data?.length ?? 0} visible`}
           </span>
         </div>
 
@@ -72,7 +93,9 @@ function DashboardPage() {
             role="alert"
             className="mt-4 rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
           >
-            Incident metadata could not be loaded.
+            {incidentListUnsupported
+              ? "Live owned incident listing is disabled because current open-proofline/server does not expose GET /v1/incidents. Mock mode uses prototype incident records only."
+              : "Incident metadata could not be loaded."}
           </p>
         ) : incidents.isLoading ? (
           <p className="mt-4 text-sm text-proofline-text-muted">

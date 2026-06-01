@@ -79,7 +79,7 @@ The current bootstrap includes:
 * authenticated app shell
 * conservative session state with memory-first token storage
 * optional local-storage session persistence for local development only
-* incident list UI backed by mock data until the backend list route is confirmed
+* incident list UI backed by explicit mock data only
 * incident detail metadata UI
 * stream and chunk metadata review
 * contact public-key metadata views
@@ -112,7 +112,7 @@ Payment-gated registration must be implemented as a backend-supported account li
 
 Planned authenticated incident-review work includes:
 
-* live owned-incident listing once the backend API contract is confirmed
+* live owned-incident listing once the backend adds and documents that API
 * incident detail review
 * stream and chunk metadata review
 * viewer-token creation and revocation UI
@@ -234,11 +234,11 @@ Until those requirements are implemented and reviewed, the web client remains an
 ## API Boundary
 
 The server currently confirms bearer session auth, `POST /v1/auth/login`,
-`POST /v1/auth/logout`, `GET /v1/account`, incident read-by-ID, contact
-public-key routes, sharing-grant routes, and wrapped-key routes. The frontend
-API client keeps a typed shape for owned incident listing, but current server
-docs do not confirm `GET /v1/incidents`; live mode marks that route as needing
-confirmation.
+`POST /v1/auth/logout`, `GET /v1/account`, incident create/read-by-ID, contact
+public-key routes, sharing-grant routes, and wrapped-key routes. Current
+`open-proofline/server` does not expose `GET /v1/incidents`; live mode disables
+owned incident listing instead of calling an unconfirmed route. Mock mode uses
+prototype incident records only and must not be treated as backend truth.
 
 The client must not log session tokens, Authorization headers, request bodies,
 uploaded bytes, plaintext, raw keys, raw media keys, contact private keys,
