@@ -50,137 +50,146 @@ const mockAccount: Account = {
   updated_at: "2026-06-01T00:00:00Z",
 };
 
-const mockIncidents: Incident[] = [
-  {
-    id: "inc_prototype_001",
-    status: "open",
-    client_label: "prototype review",
-    incident_mode: "interaction_record",
-    capture_profile: "audio_location",
-    escalation_policy: "none",
-    sharing_state: "private",
-    deletion_state: "active",
-    created_at: "2026-06-01T01:00:00Z",
-    updated_at: "2026-06-01T01:18:00Z",
-  },
-  {
-    id: "inc_prototype_002",
-    status: "closed",
-    client_label: "metadata-only sample",
-    incident_mode: "evidence_note",
-    capture_profile: "note_or_attachment",
-    escalation_policy: "none",
-    sharing_state: "trusted_contact_access",
-    deletion_state: "active",
-    created_at: "2026-05-31T11:20:00Z",
-    updated_at: "2026-05-31T12:04:00Z",
-  },
-];
+const mockIncidentOne: Incident = {
+  id: "inc_prototype_001",
+  status: "open",
+  client_label: "prototype review",
+  incident_mode: "interaction_record",
+  capture_profile: "audio_location",
+  escalation_policy: "none",
+  sharing_state: "private",
+  deletion_state: "active",
+  created_at: "2026-06-01T01:00:00Z",
+  updated_at: "2026-06-01T01:18:00Z",
+};
+
+const mockIncidentTwo: Incident = {
+  id: "inc_prototype_002",
+  status: "closed",
+  client_label: "metadata-only sample",
+  incident_mode: "evidence_note",
+  capture_profile: "note_or_attachment",
+  escalation_policy: "none",
+  sharing_state: "trusted_contact_access",
+  deletion_state: "active",
+  created_at: "2026-05-31T11:20:00Z",
+  updated_at: "2026-05-31T12:04:00Z",
+};
+
+const mockIncidents: Incident[] = [mockIncidentOne, mockIncidentTwo];
+
+const mockIncidentDetailOne: IncidentDetail = {
+  incident: mockIncidentOne,
+  streams: [
+    {
+      id: "str_audio_001",
+      incident_id: "inc_prototype_001",
+      media_type: "audio",
+      status: "open",
+      chunk_count: 3,
+      byte_size: 61440,
+      started_at: "2026-06-01T01:00:00Z",
+      created_at: "2026-06-01T01:00:00Z",
+    },
+  ],
+  chunks: [
+    {
+      id: "chk_audio_001",
+      incident_id: "inc_prototype_001",
+      stream_id: "str_audio_001",
+      chunk_index: 1,
+      media_type: "audio",
+      started_at: "2026-06-01T01:00:00Z",
+      ended_at: "2026-06-01T01:00:10Z",
+      byte_size: 20480,
+      sha256_hex:
+        "4f1ef7673557c98ec30a1e83d75f6a5b4796e08f4b2f470582d8d91f73c4bb5d",
+      created_at: "2026-06-01T01:00:11Z",
+    },
+  ],
+  checkins: [],
+};
+
+const mockIncidentDetailTwo: IncidentDetail = {
+  incident: mockIncidentTwo,
+  streams: [
+    {
+      id: "str_metadata_001",
+      incident_id: "inc_prototype_002",
+      media_type: "metadata",
+      status: "complete",
+      chunk_count: 1,
+      byte_size: 4096,
+      started_at: "2026-05-31T11:20:00Z",
+      completed_at: "2026-05-31T11:21:00Z",
+      created_at: "2026-05-31T11:20:00Z",
+    },
+  ],
+  chunks: [],
+  checkins: [],
+};
 
 const mockIncidentDetails: Record<string, IncidentDetail> = {
   inc_prototype_001: {
-    incident: mockIncidents[0],
-    streams: [
-      {
-        id: "str_audio_001",
-        incident_id: "inc_prototype_001",
-        media_type: "audio",
-        status: "open",
-        chunk_count: 3,
-        byte_size: 61440,
-        started_at: "2026-06-01T01:00:00Z",
-        created_at: "2026-06-01T01:00:00Z",
-      },
-    ],
-    chunks: [
-      {
-        id: "chk_audio_001",
-        incident_id: "inc_prototype_001",
-        stream_id: "str_audio_001",
-        chunk_index: 1,
-        media_type: "audio",
-        started_at: "2026-06-01T01:00:00Z",
-        ended_at: "2026-06-01T01:00:10Z",
-        byte_size: 20480,
-        sha256_hex:
-          "4f1ef7673557c98ec30a1e83d75f6a5b4796e08f4b2f470582d8d91f73c4bb5d",
-        created_at: "2026-06-01T01:00:11Z",
-      },
-    ],
-    checkins: [],
+    ...mockIncidentDetailOne,
   },
   inc_prototype_002: {
-    incident: mockIncidents[1],
-    streams: [
-      {
-        id: "str_metadata_001",
-        incident_id: "inc_prototype_002",
-        media_type: "metadata",
-        status: "complete",
-        chunk_count: 1,
-        byte_size: 4096,
-        started_at: "2026-05-31T11:20:00Z",
-        completed_at: "2026-05-31T11:21:00Z",
-        created_at: "2026-05-31T11:20:00Z",
-      },
-    ],
-    chunks: [],
-    checkins: [],
+    ...mockIncidentDetailTwo,
   },
 };
 
-const mockContactPublicKeys: ContactPublicKey[] = [
-  {
-    public_key_id: "cpk_prototype_001",
-    owner_account_id: "acct_prototype",
-    contact_id: "ctc_prototype_001",
-    version: 1,
-    display_label: "Verified trusted contact",
-    wrapping_algorithm: "age-v1-x25519",
-    public_key_fingerprint: "fingerprint-prototype-001",
-    key_state: "active",
-    created_at: "2026-06-01T00:30:00Z",
-    updated_at: "2026-06-01T00:45:00Z",
-  },
-];
+const mockContactPublicKey: ContactPublicKey = {
+  public_key_id: "cpk_prototype_001",
+  owner_account_id: "acct_prototype",
+  contact_id: "ctc_prototype_001",
+  version: 1,
+  display_label: "Verified trusted contact",
+  wrapping_algorithm: "age-v1-x25519",
+  public_key_fingerprint: "fingerprint-prototype-001",
+  key_state: "active",
+  created_at: "2026-06-01T00:30:00Z",
+  updated_at: "2026-06-01T00:45:00Z",
+};
 
-const mockSharingGrants: SharingGrant[] = [
-  {
-    grant_id: "sgr_prototype_001",
-    owner_account_id: "acct_prototype",
-    incident_id: "inc_prototype_002",
-    stream_id: null,
-    recipient_type: "trusted_contact",
-    contact_id: "ctc_prototype_001",
-    contact_public_key_id: "cpk_prototype_001",
-    contact_public_key_version: 1,
-    data_class: "metadata_ciphertext",
-    grant_state: "active",
-    created_at: "2026-05-31T12:00:00Z",
-    updated_at: "2026-05-31T12:00:00Z",
-    expires_at: "2026-06-08T12:00:00Z",
-  },
-];
+const mockContactPublicKeys: ContactPublicKey[] = [mockContactPublicKey];
 
-const mockWrappedKeys: WrappedKey[] = [
-  {
-    wrapped_key_id: "wkey_prototype_001",
-    owner_account_id: "acct_prototype",
-    incident_id: "inc_prototype_002",
-    stream_id: null,
-    grant_id: "sgr_prototype_001",
-    recipient_type: "trusted_contact",
-    contact_id: "ctc_prototype_001",
-    contact_public_key_id: "cpk_prototype_001",
-    contact_public_key_version: 1,
-    media_key_id: "media-key-prototype-001",
-    wrapping_algorithm: "age-v1-x25519",
-    wrapping_algorithm_version: "1",
-    wrapped_key_state: "active",
-    created_at: "2026-05-31T12:01:00Z",
-    updated_at: "2026-05-31T12:01:00Z",
-  },
-];
+const mockSharingGrant: SharingGrant = {
+  grant_id: "sgr_prototype_001",
+  owner_account_id: "acct_prototype",
+  incident_id: "inc_prototype_002",
+  stream_id: null,
+  recipient_type: "trusted_contact",
+  contact_id: "ctc_prototype_001",
+  contact_public_key_id: "cpk_prototype_001",
+  contact_public_key_version: 1,
+  data_class: "metadata_ciphertext",
+  grant_state: "active",
+  created_at: "2026-05-31T12:00:00Z",
+  updated_at: "2026-05-31T12:00:00Z",
+  expires_at: "2026-06-08T12:00:00Z",
+};
+
+const mockSharingGrants: SharingGrant[] = [mockSharingGrant];
+
+const mockWrappedKey: WrappedKey = {
+  wrapped_key_id: "wkey_prototype_001",
+  owner_account_id: "acct_prototype",
+  incident_id: "inc_prototype_002",
+  stream_id: null,
+  grant_id: "sgr_prototype_001",
+  recipient_type: "trusted_contact",
+  contact_id: "ctc_prototype_001",
+  contact_public_key_id: "cpk_prototype_001",
+  contact_public_key_version: 1,
+  media_key_id: "media-key-prototype-001",
+  wrapping_algorithm: "age-v1-x25519",
+  wrapping_algorithm_version: "1",
+  wrapped_key_state: "active",
+  created_at: "2026-05-31T12:01:00Z",
+  updated_at: "2026-05-31T12:01:00Z",
+};
+
+const mockWrappedKeys: WrappedKey[] = [mockWrappedKey];
 
 export class ProoflineApiClient {
   readonly baseUrl: string;
@@ -244,9 +253,7 @@ export class ProoflineApiClient {
 
   async readIncident(incidentId: string): Promise<IncidentDetail> {
     if (this.mode === "mock") {
-      return (
-        mockIncidentDetails[incidentId] ?? mockIncidentDetails.inc_prototype_001
-      );
+      return mockIncidentDetails[incidentId] ?? mockIncidentDetailOne;
     }
     return incidentDetailSchema.parse(
       await this.request(`/v1/incidents/${encodeURIComponent(incidentId)}`),
@@ -264,7 +271,7 @@ export class ProoflineApiClient {
 
   async readContactPublicKey(publicKeyId: string): Promise<ContactPublicKey> {
     if (this.mode === "mock") {
-      return mockContactPublicKeys[0];
+      return mockContactPublicKey;
     }
     return contactPublicKeyResponseSchema.parse(
       await this.request(
@@ -288,7 +295,7 @@ export class ProoflineApiClient {
 
   async readSharingGrant(grantId: string): Promise<SharingGrant> {
     if (this.mode === "mock") {
-      return mockSharingGrants[0];
+      return mockSharingGrant;
     }
     return sharingGrantResponseSchema.parse(
       await this.request(`/v1/sharing-grants/${encodeURIComponent(grantId)}`),
@@ -310,7 +317,7 @@ export class ProoflineApiClient {
 
   async readWrappedKey(wrappedKeyId: string): Promise<WrappedKey> {
     if (this.mode === "mock") {
-      return mockWrappedKeys[0];
+      return mockWrappedKey;
     }
     return wrappedKeyResponseSchema.parse(
       await this.request(

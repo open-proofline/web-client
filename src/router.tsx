@@ -17,11 +17,13 @@ const routeTree = rootRoute.addChildren([
 ]);
 
 export function createAppRouter(options: { history?: RouterHistory } = {}) {
-  return createRouter({
+  const routerOptions = {
     routeTree,
-    history: options.history,
     defaultPreload: "intent",
-  });
+    ...(options.history ? { history: options.history } : {}),
+  } as const;
+
+  return createRouter(routerOptions);
 }
 
 export function AppRouter() {
