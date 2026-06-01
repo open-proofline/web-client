@@ -37,6 +37,12 @@ The prototype has a typed `listOwnedIncidents()` client method for the UI, but
 current server docs do not confirm `GET /v1/incidents`. Live mode should verify
 or replace this route against `open-proofline/server/docs/api.md`.
 
+## Frontend Metadata Boundary
+
+Incident detail parsing keeps browser state focused on public-safe metadata.
+If backend chunk responses include private `stored_path` values for upload or
+storage internals, the frontend schema does not retain those fields.
+
 ## Logging Boundary
 
 The client must not log session tokens, Authorization headers, request bodies,
