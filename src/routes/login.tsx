@@ -9,8 +9,13 @@ import { Input } from "../components/catalyst/input";
 function LoginPage() {
   const { login, isAuthenticated, apiClient } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("prototype-user");
-  const [password, setPassword] = useState("prototype-password");
+  const isMockMode = apiClient.mode === "mock";
+  const [username, setUsername] = useState(() =>
+    isMockMode ? "prototype-user" : "",
+  );
+  const [password, setPassword] = useState(() =>
+    isMockMode ? "prototype-password" : "",
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
