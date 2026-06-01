@@ -1,0 +1,124 @@
+import { Navigate, createRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "../auth/use-auth";
+import { prooflineQueryKeys } from "../api/client";
+import { rootRoute } from "./__root";
+import { Button } from "../components/catalyst/button";
+import { EmptyState } from "../components/proofline/EmptyState";
+import { StatusBadge } from "../components/proofline/StatusBadge";
+
+function DashboardPage() {
+  const { isAuthenticated, apiClient } = useAuth();
+  const incidents = useQuery({
+    queryKey: prooflineQueryKeys.incidents,
+    queryFn: () => apiClient.listOwnedIncidents(),
+    enabled: isAuthenticated,
+  });
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  const openCount =
+    incidents.data?.filter((incident) => incident.status === "open").length ??
+    0;
+  const sharedCount =
+    incidents.data?.filter(
+      (incident) => incident.sharing_state === "trusted_contact_access",
+    ).length ?? 0;
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-lg border border-zinc-200 bg-white p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-zinc-500">
+              Prototype dashboard
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-zinc-950">
+              Incident review workspace
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm text-zinc-600">
+              Review account session state, owned incident metadata, stream and
+              chunk metadata, contact public-key metadata, sharing grants, and
+              wrapped-key metadata. This app does not record, decrypt, unwrap
+              keys, export playable media, or contact emergency services.
+            </p>
+          </div>
+          <Button href="/incidents">View incidents</Button>
+        </div>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-3">
+        <Metric label="API mode" value={apiClient.mode} />
+        <Metric label="Open incidents" value={openCount} />
+        <Metric label="Shared metadata records" value={sharedCount} />
+      </section>
+
+      <section className="rounded-lg border border-zinc-200 bg-white p-6">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-lg font-semibold text-zinc-950">
+            Recent incidents
+          </h2>
+          <span className="text-sm text-zinc-500">
+            {incidents.isLoading
+              ? "Loading"
+              : `${incidents.data?.length ?? 0} visible`}
+          </span>
+        </div>
+
+        {incidents.isError ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700"
+          >
+            Incident metadata could not be loaded.
+          </p>
+        ) : incidents.isLoading ? (
+          <p className="mt-4 text-sm text-zinc-600">
+            Loading incident metadata.
+          </p>
+        ) : incidents.data?.length ? (
+          <div className="mt-4 divide-y divide-zinc-100">
+            {incidents.data.slice(0, 4).map((incident) => (
+              <a
+                key={incident.id}
+                href={`/incidents/${incident.id}`}
+                className="flex flex-col gap-2 py-3 hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <div className="font-medium text-zinc-950">{incident.id}</div>
+                  <div className="text-sm text-zinc-600">
+                    {incident.incident_mode ?? "generic"} ·{" "}
+                    {incident.client_label ?? "no client label"}
+                  </div>
+                </div>
+                <StatusBadge value={incident.status} />
+              </a>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No incidents"
+            body="Owned incident metadata will appear here when available."
+          />
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <dt className="text-sm font-medium text-zinc-500">{label}</dt>
+      <dd className="mt-2 text-2xl font-semibold text-zinc-950">{value}</dd>
+    </div>
+  );
+}
+
+export const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: DashboardPage,
+});
