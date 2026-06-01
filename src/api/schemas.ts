@@ -81,11 +81,6 @@ export const incidentDetailSchema = z.object({
   checkins: z.array(checkinSchema).default([]),
 });
 
-export const incidentListResponseSchema = z.union([
-  z.object({ incidents: z.array(incidentSchema) }),
-  z.array(incidentSchema).transform((incidents) => ({ incidents })),
-]);
-
 export const contactPublicKeySchema = z.object({
   public_key_id: z.string(),
   owner_account_id: z.string().optional(),

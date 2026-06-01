@@ -1,7 +1,11 @@
 import { http, HttpResponse } from "msw";
 import { expect, test } from "vitest";
 import { server } from "../test/setup";
-import { createProoflineApiClient } from "./client";
+import {
+  createProoflineApiClient,
+  isUnsupportedLiveRouteError,
+  ownedIncidentListRoute,
+} from "./client";
 import { safeErrorMessage } from "./errors";
 
 test("parses live account responses with zod", async () => {
@@ -58,5 +62,23 @@ test("rejects invalid live account responses with a safe error message", async (
   expect(caughtError).toBeDefined();
   expect(safeErrorMessage(caughtError)).toBe(
     "The request could not be completed.",
+  );
+});
+
+test("does not call an unconfirmed live owned incident list route", async () => {
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  let caughtError: unknown;
+  try {
+    await client.listOwnedIncidents();
+  } catch (error) {
+    caughtError = error;
+  }
+
+  expect(isUnsupportedLiveRouteError(caughtError, ownedIncidentListRoute)).toBe(
+    true,
   );
 });
