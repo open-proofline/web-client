@@ -40,8 +40,9 @@ export const prooflineQueryKeys = {
 const defaultBaseUrl =
   import.meta.env.VITE_PROOFLINE_API_BASE_URL ?? "http://127.0.0.1:8080";
 
-const defaultMode: ClientMode =
-  import.meta.env.VITE_PROOFLINE_API_MODE === "live" ? "live" : "mock";
+function defaultClientMode(): ClientMode {
+  return import.meta.env.VITE_PROOFLINE_API_MODE === "live" ? "live" : "mock";
+}
 
 const mockAccount: Account = {
   id: "acct_prototype",
@@ -199,7 +200,7 @@ export class ProoflineApiClient {
 
   constructor(options: ClientOptions = {}) {
     this.baseUrl = (options.baseUrl ?? defaultBaseUrl).replace(/\/+$/, "");
-    this.mode = options.mode ?? defaultMode;
+    this.mode = options.mode ?? defaultClientMode();
     this.getToken = options.getToken ?? (() => null);
   }
 
