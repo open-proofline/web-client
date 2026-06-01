@@ -28,3 +28,8 @@ This web client is experimental and not production-ready.
 Before production use, review CSP, XSS exposure, dependency supply chain,
 session persistence, CSRF assumptions, public API deployment posture, and
 whether any credential should be stored in browser storage.
+
+Recommended static-host browser headers are documented in
+[Browser Security Headers](browser-security-headers.md). That guidance does not
+make the app production-ready and does not approve public backend `/v1`
+exposure.
