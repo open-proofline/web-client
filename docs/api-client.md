@@ -66,6 +66,26 @@ The API client includes typed public calls for `POST /v1/auth/register` and
 verification-required response and does not create a browser session. Email
 verification returns a verified status and also does not create a session.
 
+Public registration availability is controlled by `open-proofline/server`
+configuration, not this frontend:
+
+- `disabled` and `admin_only` reject public registration with
+  `registration_disabled`.
+- `open` accepts username, email, and password, creates a
+  `pending_email_verification` account, sends a verification email, and returns
+  a generic `202 verification_required` response. Duplicate username or email
+  submissions keep the same generic response shape.
+- `paid` returns `registration_payment_unavailable` as a fail-closed
+  placeholder. It does not create checkout sessions, subscriptions, active
+  accounts, or billing webhooks.
+
+Verification links use the public web origin and place the raw verification
+token in the URL fragment. The browser route reads the fragment, submits the
+token to `POST /v1/auth/email/verify` in the JSON body, and clears the fragment
+from the address bar. The raw token is a secret-bearing credential and must not
+be logged, persisted, screenshotted, copied into issue drafts, or sent to
+analytics.
+
 Mock mode returns explicit prototype-only responses for these methods; it does
 not create accounts, send email, verify real tokens, or model payment/billing
 state.
@@ -74,5 +94,5 @@ state.
 
 The client must not log session tokens, Authorization headers, request bodies,
 uploaded bytes, plaintext, raw keys, raw media keys, contact private keys,
-wrapped-key ciphertext, object keys, stored paths, private deployment details,
-or user safety data.
+wrapped-key ciphertext, verification credentials, object keys, stored paths,
+private deployment details, or user safety data.

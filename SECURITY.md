@@ -3,8 +3,8 @@
 Proofline Web Client is experimental and not production-ready.
 
 Do not report real secrets, raw session tokens, Authorization headers, request
-bodies, plaintext, raw keys, wrapped-key ciphertext, private deployment details,
-or user safety data in public issues.
+bodies, plaintext, raw keys, wrapped-key ciphertext, verification credentials,
+private deployment details, or user safety data in public issues.
 
 Backend security issues may belong in
 [`open-proofline/server`](https://github.com/open-proofline/server). Web-client
