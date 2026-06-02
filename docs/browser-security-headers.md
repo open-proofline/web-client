@@ -22,6 +22,11 @@ approval. Backend behavior and public API readiness remain governed by
 requires separate server, deployment, abuse-control, credential-storage, CSRF,
 logging, and operations review.
 
+If a future web-client mode uses the server browser-session cookie routes,
+static hosting review must also cover credentialed CORS. The API origin must be
+an exact reviewed origin configured in `open-proofline/server`; wildcard
+origins are not acceptable for credentialed requests.
+
 ## Recommended Starting Set
 
 Use exact origins for the deployed static site and reviewed API origin. If the
@@ -55,6 +60,20 @@ changes the browser embedding model.
 not add public `/v1` origins casually. The current backend source of truth is
 `open-proofline/server`, and this web client must not claim broader backend
 readiness than the server docs and deployment review support.
+
+### Credentialed CORS And CSRF
+
+The current implementation uses bearer-token live auth and does not implement
+browser-cookie auth. If browser-cookie auth is added later, the frontend must
+send `credentials: "include"` only to the reviewed API origin, must not attach
+an `Authorization` header in cookie mode, and must attach the server-provided
+CSRF header to unsafe cookie-authenticated requests.
+
+Static headers cannot make credentialed CORS safe by themselves. Server
+configuration must use exact allowed origins, secure cookie settings for public
+HTTPS origins, and the reviewed CSRF header name. Do not enable wildcard CORS,
+do not proxy private admin routes through the public web origin, and do not
+document cookie mode as production-ready without a separate deployment review.
 
 ### Content Sniffing
 
@@ -117,6 +136,9 @@ for HTTPS-only access.
 ## Review Checklist
 
 - CSP names only the static origin and reviewed API origin.
+- Credentialed CORS, if used, is limited to exact reviewed origins and not `*`.
+- Cookie-auth requests, if implemented, do not also attach bearer credentials.
+- Unsafe cookie-auth requests, if implemented, attach the reviewed CSRF header.
 - No public edge routes private admin surfaces such as `/v1/admin/...`.
 - `nosniff`, referrer policy, permissions policy, and frame restrictions are
   present on the static app.
