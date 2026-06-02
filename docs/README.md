@@ -6,6 +6,9 @@ source of truth remains `open-proofline/server`.
 - [Architecture](architecture.md)
 - [API client](api-client.md): current route contracts and browser-cookie auth
   planning boundary.
+- [Stripe subscription UI](stripe-subscription-ui.md): cost-recovery hosted
+  subscription UI boundary for future Stripe Checkout, Billing, and Customer
+  Portal integration.
 - [Security model](security-model.md): implemented controls, non-controls, and
   browser auth review areas.
 - [Browser security headers](browser-security-headers.md): static-host header
