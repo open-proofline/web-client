@@ -3,6 +3,9 @@ import { z } from "zod";
 export const accountSchema = z.object({
   id: z.string(),
   username: z.string(),
+  email: z.string().optional(),
+  email_verified_at: z.string().optional(),
+  account_state: z.string().optional(),
   role: z.enum(["user", "admin"]),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
@@ -15,6 +18,19 @@ export const loginResponseSchema = z.object({
   token: z.string(),
   created_at: z.string(),
   expires_at: z.string(),
+});
+
+export const accountResponseSchema = z.object({
+  account: accountSchema,
+});
+
+export const registrationAcceptedResponseSchema = z.object({
+  status: z.literal("verification_required"),
+  message: z.string(),
+});
+
+export const emailVerificationResponseSchema = z.object({
+  status: z.literal("verified"),
 });
 
 export const sessionSchema = z.object({
@@ -156,6 +172,12 @@ export const wrappedKeyResponseSchema = z.object({
 
 export type Account = z.infer<typeof accountSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
+export type RegistrationAcceptedResponse = z.infer<
+  typeof registrationAcceptedResponseSchema
+>;
+export type EmailVerificationResponse = z.infer<
+  typeof emailVerificationResponseSchema
+>;
 export type Session = z.infer<typeof sessionSchema>;
 export type Incident = z.infer<typeof incidentSchema>;
 export type IncidentDetail = z.infer<typeof incidentDetailSchema>;

@@ -21,6 +21,8 @@ prototype data so browser smoke tests do not require a live backend.
 From current `open-proofline/server` docs and route registration:
 
 - `POST /v1/auth/login`
+- `POST /v1/auth/register`
+- `POST /v1/auth/email/verify`
 - `POST /v1/auth/logout`
 - `GET /v1/account`
 - `POST /v1/incidents`
@@ -56,6 +58,17 @@ The current server may return ciphertext on authenticated wrapped-key routes,
 but this metadata-review prototype keeps only wrapped-key identifiers, grant and
 contact bindings, wrapping metadata, and state until a separate trusted-contact
 delivery flow is designed and reviewed.
+
+## Public Registration Contracts
+
+The API client includes typed public calls for `POST /v1/auth/register` and
+`POST /v1/auth/email/verify`. Registration returns the server's generic
+verification-required response and does not create a browser session. Email
+verification returns a verified status and also does not create a session.
+
+Mock mode returns explicit prototype-only responses for these methods; it does
+not create accounts, send email, verify real tokens, or model payment/billing
+state.
 
 ## Logging Boundary
 
