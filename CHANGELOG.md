@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added a pending email-verification login state.
 - Added a browser email-verification route that clears verification URL fragments.
 - Added typed public registration and email-verification API client contracts.
 - Replaced render-time login redirect navigation with a declarative redirect.
