@@ -11,7 +11,7 @@ import {
   createProoflineApiClient,
   type ProoflineApiClient,
 } from "../api/client";
-import { safeErrorMessage } from "../api/errors";
+import { ApiError, safeErrorMessage } from "../api/errors";
 import type { Session } from "../api/schemas";
 import {
   clearSession,
@@ -27,7 +27,10 @@ type AuthContextValue = {
   login: (credentials: {
     username: string;
     password: string;
-  }) => Promise<{ ok: true } | { ok: false; message: string }>;
+  }) => Promise<
+    | { ok: true }
+    | { ok: false; code?: "email_verification_required"; message: string }
+  >;
   logout: () => Promise<void>;
 };
 
@@ -54,6 +57,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(nextSession);
         return { ok: true as const };
       } catch (error) {
+        if (
+          error instanceof ApiError &&
+          error.code === "email_verification_required"
+        ) {
+          return {
+            ok: false as const,
+            code: "email_verification_required" as const,
+            message:
+              "Verify your email address before logging in. Check your verification email for the link.",
+          };
+        }
         return { ok: false as const, message: safeErrorMessage(error) };
       }
     },

@@ -63,6 +63,77 @@ test("does not prefill prototype credentials in live mode", async () => {
   expect(screen.getByLabelText("Password")).toHaveValue("");
 });
 
+test("shows a pending email verification login state", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  server.use(
+    http.post("*/v1/auth/login", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "email_verification_required",
+            message: "email verification is required before login",
+          },
+        },
+        { status: 403 },
+      ),
+    ),
+  );
+
+  renderRoute("/login");
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "pending-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "valid-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+
+  const alert = await screen.findByRole("alert");
+  expect(alert).toHaveTextContent(
+    "Verify your email address before logging in.",
+  );
+  expect(alert).toHaveTextContent("Check your verification email");
+  expect(
+    screen.getByRole("link", { name: "email verification page" }),
+  ).toHaveAttribute("href", "/verify-email");
+  expect(screen.queryByText("Incident review workspace")).toBeNull();
+});
+
+test("keeps generic login failures generic", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  server.use(
+    http.post("*/v1/auth/login", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "invalid_credentials",
+            message: "username or password is invalid",
+          },
+        },
+        { status: 401 },
+      ),
+    ),
+  );
+
+  renderRoute("/login");
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "unknown-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "wrong-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+
+  const alert = await screen.findByRole("alert");
+  expect(alert).toHaveTextContent("username or password is invalid");
+  expect(alert).not.toHaveTextContent("verification email");
+  expect(
+    screen.queryByRole("link", { name: "email verification page" }),
+  ).toBeNull();
+});
+
 test("verifies email links and clears URL fragments", async () => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
   window.history.pushState(null, "", "/verify-email#token=unit-token");

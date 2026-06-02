@@ -1,10 +1,20 @@
-import { Navigate, createRoute, useNavigate } from "@tanstack/react-router";
+import {
+  Link as RouterLink,
+  Navigate,
+  createRoute,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth/use-auth";
 import { rootRoute } from "./__root";
 import { Button } from "../components/catalyst/button";
 import { Field, FieldGroup, Label } from "../components/catalyst/fieldset";
 import { Input } from "../components/catalyst/input";
+
+type LoginErrorState = {
+  message: string;
+  code?: "email_verification_required";
+};
 
 function LoginPage() {
   const { login, isAuthenticated, apiClient } = useAuth();
@@ -16,8 +26,10 @@ function LoginPage() {
   const [password, setPassword] = useState(() =>
     isMockMode ? "prototype-password" : "",
   );
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<LoginErrorState | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEmailVerificationRequired =
+    error?.code === "email_verification_required";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,7 +38,11 @@ function LoginPage() {
     const result = await login({ username, password });
     setIsSubmitting(false);
     if (!result.ok) {
-      setError(result.message);
+      setError(
+        result.code
+          ? { message: result.message, code: result.code }
+          : { message: result.message },
+      );
       return;
     }
     await navigate({ to: "/" });
@@ -76,12 +92,29 @@ function LoginPage() {
         </FieldGroup>
 
         {error ? (
-          <p
+          <div
             role="alert"
-            className="mt-4 rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
+            className={
+              isEmailVerificationRequired
+                ? "mt-4 rounded-md border border-proofline-warning/40 bg-proofline-warning-bg p-3 text-sm text-proofline-warning"
+                : "mt-4 rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
+            }
           >
-            {error}
-          </p>
+            <p>{error.message}</p>
+            {isEmailVerificationRequired ? (
+              <p className="mt-2 text-proofline-text-secondary">
+                If you already have a verification link, open it in this
+                browser or go to the{" "}
+                <RouterLink
+                  to="/verify-email"
+                  className="font-medium text-proofline-text underline underline-offset-4 focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
+                >
+                  email verification page
+                </RouterLink>
+                .
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         <Button type="submit" className="mt-6 w-full" disabled={isSubmitting}>
