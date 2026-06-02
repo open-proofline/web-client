@@ -15,7 +15,10 @@ const navigation = [
 export function AppShell() {
   const { isAuthenticated, session, logout } = useAuth();
   const location = useLocation();
-  const showNavigation = isAuthenticated && location.pathname !== "/login";
+  const showNavigation =
+    isAuthenticated &&
+    location.pathname !== "/login" &&
+    location.pathname !== "/verify-email";
 
   return (
     <div className="min-h-screen bg-proofline-bg text-proofline-text">

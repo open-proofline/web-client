@@ -31,6 +31,7 @@ beforeEach(() => {
 
 afterEach(() => {
   clearSession();
+  window.history.replaceState(null, "", "/");
   vi.unstubAllEnvs();
 });
 
@@ -60,6 +61,68 @@ test("does not prefill prototype credentials in live mode", async () => {
 
   expect(await screen.findByLabelText("Username")).toHaveValue("");
   expect(screen.getByLabelText("Password")).toHaveValue("");
+});
+
+test("verifies email links and clears URL fragments", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  window.history.pushState(null, "", "/verify-email#token=unit-token");
+  server.use(
+    http.post("*/v1/auth/email/verify", async ({ request }) => {
+      expect(request.headers.get("authorization")).toBeNull();
+      await expect(request.json()).resolves.toEqual({
+        token: "unit-token",
+      });
+      return HttpResponse.json({ status: "verified" });
+    }),
+  );
+
+  renderRoute("/verify-email");
+
+  expect(
+    await screen.findByText("Your email address has been verified."),
+  ).toBeInTheDocument();
+  expect(window.location.pathname).toBe("/verify-email");
+  expect(window.location.hash).toBe("");
+  expect(screen.queryByText("unit-token")).toBeNull();
+});
+
+test("shows a safe missing email verification credential state", async () => {
+  window.history.pushState(null, "", "/verify-email");
+
+  renderRoute("/verify-email");
+
+  expect(
+    await screen.findByRole("alert"),
+  ).toHaveTextContent(
+    "This verification link is missing its verification credential.",
+  );
+  expect(window.location.hash).toBe("");
+});
+
+test("shows a safe invalid email verification state", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  window.history.pushState(null, "", "/verify-email#token=expired-token");
+  server.use(
+    http.post("*/v1/auth/email/verify", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "verification_token_invalid",
+            message: "verification token is invalid or expired",
+          },
+        },
+        { status: 400 },
+      ),
+    ),
+  );
+
+  renderRoute("/verify-email");
+
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "This verification link is invalid or has expired.",
+  );
+  expect(window.location.hash).toBe("");
+  expect(screen.queryByText("expired-token")).toBeNull();
 });
 
 test("redirects unauthenticated incident routes to login", async () => {

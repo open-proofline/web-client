@@ -8,10 +8,12 @@ import { incidentsRoute } from "./routes/incidents/index";
 import { indexRoute } from "./routes/index";
 import { loginRoute } from "./routes/login";
 import { rootRoute } from "./routes/__root";
+import { verifyEmailRoute } from "./routes/verify-email";
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
+  verifyEmailRoute,
   incidentsRoute,
   incidentDetailRoute,
 ]);
