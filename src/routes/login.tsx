@@ -1,4 +1,4 @@
-import { createRoute, useNavigate } from "@tanstack/react-router";
+import { Navigate, createRoute, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth/use-auth";
 import { rootRoute } from "./__root";
@@ -33,7 +33,7 @@ function LoginPage() {
   }
 
   if (isAuthenticated) {
-    void navigate({ to: "/" });
+    return <Navigate to="/" />;
   }
 
   return (

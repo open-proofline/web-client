@@ -70,6 +70,19 @@ test("redirects unauthenticated incident routes to login", async () => {
   ).toBeInTheDocument();
 });
 
+test("redirects authenticated login visits to the dashboard", async () => {
+  saveMockSession();
+
+  renderRoute("/login");
+
+  expect(
+    await screen.findByRole("heading", {
+      name: "Incident review workspace",
+    }),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Log in" })).toBeNull();
+});
+
 test("logs in with mock credentials and renders the dashboard", async () => {
   renderRoute("/login");
 

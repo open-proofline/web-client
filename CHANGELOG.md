@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Replaced render-time login redirect navigation with a declarative redirect.
 - Dropped wrapped-key ciphertext from retained frontend wrapped-key schemas.
 - Added dependency audit CI and supply-chain review expectations.
 - Documented the browser security header posture for static web-client deployment.
