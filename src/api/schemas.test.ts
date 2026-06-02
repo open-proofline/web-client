@@ -1,5 +1,9 @@
 import { expect, test } from "vitest";
-import { incidentDetailSchema } from "./schemas";
+import {
+  incidentDetailSchema,
+  wrappedKeyResponseSchema,
+  wrappedKeysResponseSchema,
+} from "./schemas";
 
 test("incident detail parsing drops private chunk storage paths", () => {
   const parsed = incidentDetailSchema.parse({
@@ -48,4 +52,65 @@ test("incident detail parsing drops private chunk storage paths", () => {
       "4f1ef7673557c98ec30a1e83d75f6a5b4796e08f4b2f470582d8d91f73c4bb5d",
   });
   expect("stored_path" in chunk).toBe(false);
+});
+
+const wrappedKeyFixture = {
+  wrapped_key_id: "wkey_test",
+  owner_account_id: "acct_test",
+  incident_id: "inc_test",
+  stream_id: null,
+  grant_id: "sgr_test",
+  recipient_type: "trusted_contact",
+  contact_id: "ctc_test",
+  contact_public_key_id: "cpk_test",
+  contact_public_key_version: 1,
+  media_key_id: "media-key-test",
+  wrapping_algorithm: "age-v1-x25519",
+  wrapping_algorithm_version: "1",
+  wrapped_key_ciphertext: "wrapped-ciphertext",
+  public_wrapping_metadata: {
+    ephemeral_public_key: "public-metadata",
+  },
+  wrapped_key_state: "active",
+  created_at: "2026-06-01T00:00:00Z",
+  updated_at: "2026-06-01T00:00:00Z",
+};
+
+test("wrapped-key list parsing drops wrapped-key ciphertext", () => {
+  const parsed = wrappedKeysResponseSchema.parse({
+    wrapped_keys: [wrappedKeyFixture],
+  });
+
+  expect(parsed.wrapped_keys).toHaveLength(1);
+  const wrappedKey = parsed.wrapped_keys[0];
+  expect(wrappedKey).toBeDefined();
+  if (!wrappedKey) {
+    throw new Error("expected parsed wrapped key");
+  }
+  expect(wrappedKey).toMatchObject({
+    wrapped_key_id: "wkey_test",
+    incident_id: "inc_test",
+    grant_id: "sgr_test",
+    media_key_id: "media-key-test",
+    wrapping_algorithm: "age-v1-x25519",
+    public_wrapping_metadata: {
+      ephemeral_public_key: "public-metadata",
+    },
+    wrapped_key_state: "active",
+  });
+  expect("wrapped_key_ciphertext" in wrappedKey).toBe(false);
+});
+
+test("wrapped-key detail parsing drops wrapped-key ciphertext", () => {
+  const parsed = wrappedKeyResponseSchema.parse({
+    wrapped_key: wrappedKeyFixture,
+  });
+
+  expect(parsed.wrapped_key).toMatchObject({
+    wrapped_key_id: "wkey_test",
+    contact_id: "ctc_test",
+    contact_public_key_id: "cpk_test",
+    wrapped_key_state: "active",
+  });
+  expect("wrapped_key_ciphertext" in parsed.wrapped_key).toBe(false);
 });

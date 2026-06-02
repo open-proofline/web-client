@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Dropped wrapped-key ciphertext from retained frontend wrapped-key schemas.
 - Added dependency audit CI and supply-chain review expectations.
 - Documented the browser security header posture for static web-client deployment.
 - Expanded authenticated route coverage for mock dashboard and incident review flows.

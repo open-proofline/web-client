@@ -10,7 +10,7 @@ import { safeErrorMessage } from "./errors";
 
 test("parses live account responses with zod", async () => {
   server.use(
-    http.get("http://127.0.0.1:8080/v1/account", () =>
+    http.get("*/v1/account", () =>
       HttpResponse.json({
         id: "acct_live",
         username: "live-user",
@@ -39,7 +39,7 @@ test("parses live account responses with zod", async () => {
 
 test("rejects invalid live account responses with a safe error message", async () => {
   server.use(
-    http.get("http://127.0.0.1:8080/v1/account", () =>
+    http.get("*/v1/account", () =>
       HttpResponse.json({
         id: "acct_live",
         username: "live-user",

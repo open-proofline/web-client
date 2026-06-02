@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 
 export const server = setupServer(
-  http.get("http://127.0.0.1:8080/v1/account", () =>
+  http.get("*/v1/account", () =>
     HttpResponse.json({
       id: "acct_test",
       username: "test-user",
