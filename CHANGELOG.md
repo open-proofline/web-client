@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Documented the future Stripe subscription UI boundary for cost-recovery hosted
+  server access without implementing payment processing.
 - Documented browser cookie auth and CSRF client-mode planning.
 - Documented the registration and email-verification boundary.
 - Added a public registration form flow.
