@@ -140,7 +140,6 @@ export const wrappedKeySchema = z.object({
   media_key_id: z.string(),
   wrapping_algorithm: z.string(),
   wrapping_algorithm_version: z.string().optional(),
-  wrapped_key_ciphertext: z.string().optional(),
   public_wrapping_metadata: z.record(z.string(), z.unknown()).optional(),
   wrapped_key_state: z.string(),
   created_at: z.string().optional(),

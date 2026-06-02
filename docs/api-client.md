@@ -51,6 +51,12 @@ Incident detail parsing keeps browser state focused on public-safe metadata.
 If backend chunk responses include private `stored_path` values for upload or
 storage internals, the frontend schema does not retain those fields.
 
+Wrapped-key parsing does not retain `wrapped_key_ciphertext` in frontend state.
+The current server may return ciphertext on authenticated wrapped-key routes,
+but this metadata-review prototype keeps only wrapped-key identifiers, grant and
+contact bindings, wrapping metadata, and state until a separate trusted-contact
+delivery flow is designed and reviewed.
+
 ## Logging Boundary
 
 The client must not log session tokens, Authorization headers, request bodies,

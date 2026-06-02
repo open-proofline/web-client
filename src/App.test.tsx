@@ -145,7 +145,7 @@ test("shows generic dependent metadata errors on incident detail", async () => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
   saveLiveSession();
   server.use(
-    http.get("http://127.0.0.1:8080/v1/incidents/inc_live", () =>
+    http.get("*/v1/incidents/inc_live", () =>
       HttpResponse.json({
         incident: {
           id: "inc_live",
@@ -157,13 +157,13 @@ test("shows generic dependent metadata errors on incident detail", async () => {
         checkins: [],
       }),
     ),
-    http.get("http://127.0.0.1:8080/v1/contact-public-keys", () =>
+    http.get("*/v1/contact-public-keys", () =>
       HttpResponse.json({ error: { code: "unavailable" } }, { status: 503 }),
     ),
-    http.get("http://127.0.0.1:8080/v1/incidents/inc_live/sharing-grants", () =>
+    http.get("*/v1/incidents/inc_live/sharing-grants", () =>
       HttpResponse.json({ error: { code: "unavailable" } }, { status: 503 }),
     ),
-    http.get("http://127.0.0.1:8080/v1/incidents/inc_live/wrapped-keys", () =>
+    http.get("*/v1/incidents/inc_live/wrapped-keys", () =>
       HttpResponse.json({ error: { code: "unavailable" } }, { status: 503 }),
     ),
   );
