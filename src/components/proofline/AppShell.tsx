@@ -18,6 +18,7 @@ export function AppShell() {
   const showNavigation =
     isAuthenticated &&
     location.pathname !== "/login" &&
+    location.pathname !== "/register" &&
     location.pathname !== "/verify-email";
 
   return (

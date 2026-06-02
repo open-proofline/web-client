@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added a public registration form flow.
 - Added a pending email-verification login state.
 - Added a browser email-verification route that clears verification URL fragments.
 - Added typed public registration and email-verification API client contracts.
