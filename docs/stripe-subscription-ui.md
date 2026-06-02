@@ -15,7 +15,7 @@ to the hosted main server**, not as a for-profit product funnel.
 Proofline remains an open source project maintained by one person. The
 subscription exists because the hosted server, object storage, database, email,
 monitoring, backups, maintenance time, and release work cannot sustainably be
-paid from the maintainer's personal pensioner income.
+paid from the maintainer's limited personal income.
 
 User-facing copy should be plain and honest:
 
