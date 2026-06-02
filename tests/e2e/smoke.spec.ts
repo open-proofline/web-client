@@ -20,6 +20,21 @@ test("loads the prototype login flow", async ({ page }) => {
   await expect(page.getByText("Shared metadata records")).toBeVisible();
 });
 
+test("verifies email links without retaining URL fragments", async ({
+  page,
+}) => {
+  await page.goto("/verify-email#token=e2e-token");
+
+  await expect(page).toHaveURL(/\/verify-email$/);
+  await expect(
+    page.getByRole("heading", { name: "Verify email" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Your email address has been verified."),
+  ).toBeVisible();
+  await expect(page.getByText("e2e-token")).toHaveCount(0);
+});
+
 test("navigates internal incident routes without full page reloads", async ({
   page,
 }) => {
