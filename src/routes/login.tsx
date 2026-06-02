@@ -121,6 +121,17 @@ function LoginPage() {
           {isSubmitting ? "Signing in" : "Log in"}
         </Button>
       </form>
+
+      <p className="mt-4 text-sm text-proofline-text-secondary">
+        Need an account?{" "}
+        <RouterLink
+          to="/register"
+          className="font-medium text-proofline-text underline underline-offset-4 focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
+        >
+          Create account
+        </RouterLink>
+        .
+      </p>
     </section>
   );
 }

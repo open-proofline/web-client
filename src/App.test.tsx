@@ -63,6 +63,232 @@ test("does not prefill prototype credentials in live mode", async () => {
   expect(screen.getByLabelText("Password")).toHaveValue("");
 });
 
+test("registers in mock mode with a prototype-only accepted state", async () => {
+  renderRoute("/register");
+
+  expect(
+    await screen.findByText(
+      "Password must be 12 to 72 bytes. Longer non-ASCII passwords may use more than one byte per character.",
+    ),
+  ).toBeInTheDocument();
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "new-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Email"), {
+    target: { value: "new-user@example.invalid" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "valid-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+  expect(await screen.findByRole("status")).toHaveTextContent(
+    "Check your email to continue.",
+  );
+  expect(
+    screen.getByText(
+      "Prototype mock registration accepted. No account is created and no email is sent.",
+    ),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("Incident review workspace")).toBeNull();
+});
+
+test.each(["not-an-address", "a@a"])(
+  "blocks registration submission when the email is not in address format",
+  async (email) => {
+    vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+    const registrationRequest = vi.fn();
+    server.use(
+      http.post("*/v1/auth/register", () => {
+        registrationRequest();
+        return HttpResponse.json(
+          {
+            status: "verification_required",
+            message:
+              "If registration can be completed, a verification email will be sent.",
+          },
+          { status: 202 },
+        );
+      }),
+    );
+
+    renderRoute("/register");
+
+    fireEvent.change(await screen.findByLabelText("Username"), {
+      target: { value: "new-user" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: email },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "valid-password" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(
+      await screen.findByText(
+        "Enter a valid email address like example@example.com",
+      ),
+    ).toBeInTheDocument();
+    expect(registrationRequest).toHaveBeenCalledTimes(0);
+    expect(screen.queryByText("Check your email to continue.")).toBeNull();
+  },
+);
+
+test.each([
+  {
+    password: "short",
+    message: "Password must be at least 12 bytes.",
+  },
+  {
+    password: "a".repeat(73),
+    message: "Password must be at most 72 bytes.",
+  },
+])(
+  "blocks registration submission when the password is outside server byte limits",
+  async ({ password, message }) => {
+    vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+    const registrationRequest = vi.fn();
+    server.use(
+      http.post("*/v1/auth/register", () => {
+        registrationRequest();
+        return HttpResponse.json(
+          {
+            status: "verification_required",
+            message:
+              "If registration can be completed, a verification email will be sent.",
+          },
+          { status: 202 },
+        );
+      }),
+    );
+
+    renderRoute("/register");
+
+    fireEvent.change(await screen.findByLabelText("Username"), {
+      target: { value: "new-user" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "new-user@example.invalid" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: password },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(registrationRequest).toHaveBeenCalledTimes(0);
+    expect(screen.queryByText("Check your email to continue.")).toBeNull();
+  },
+);
+
+test("submits live registration without creating a session", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  server.use(
+    http.post("*/v1/auth/register", async ({ request }) => {
+      expect(request.headers.get("authorization")).toBeNull();
+      await expect(request.json()).resolves.toEqual({
+        username: "new-user",
+        email: "new-user@example.invalid",
+        password: "valid-password",
+      });
+      return HttpResponse.json(
+        {
+          status: "verification_required",
+          message:
+            "If registration can be completed, a verification email will be sent.",
+        },
+        { status: 202 },
+      );
+    }),
+  );
+
+  renderRoute("/register");
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "new-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Email"), {
+    target: { value: "new-user@example.invalid" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "valid-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+  expect(await screen.findByRole("status")).toHaveTextContent(
+    "Check your email to continue.",
+  );
+  expect(
+    screen.getByText(
+      "If registration can be completed, a verification email will be sent.",
+    ),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("Signed in as")).toBeNull();
+});
+
+const registrationErrorCases = [
+  {
+    code: "registration_disabled",
+    message: "Public registration is not enabled for this deployment.",
+  },
+  {
+    code: "registration_payment_unavailable",
+    message:
+      "Paid registration is not available in this prototype. No payment was started.",
+  },
+  {
+    code: "invalid_username",
+    message: "Use a username that meets the server requirements.",
+  },
+  {
+    code: "invalid_email",
+    message: "Enter a valid email address.",
+  },
+  {
+    code: "invalid_password",
+    message: "Use a password that meets the server requirements.",
+  },
+] as const;
+
+test.each(registrationErrorCases)(
+  "maps $code registration errors to safe UI text",
+  async ({ code, message }) => {
+    vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+    server.use(
+      http.post("*/v1/auth/register", () =>
+        HttpResponse.json(
+          {
+            error: {
+              code,
+              message: "server registration error",
+            },
+          },
+          { status: code.startsWith("registration_") ? 403 : 400 },
+        ),
+      ),
+    );
+
+    renderRoute("/register");
+
+    fireEvent.change(await screen.findByLabelText("Username"), {
+      target: { value: "new-user" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "new-user@example.invalid" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "valid-password" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    expect(screen.queryByText("server registration error")).toBeNull();
+    expect(screen.queryByText("Signed in as")).toBeNull();
+  },
+);
+
 test("shows a pending email verification login state", async () => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
   server.use(

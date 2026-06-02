@@ -20,6 +20,28 @@ test("loads the prototype login flow", async ({ page }) => {
   await expect(page.getByText("Shared metadata records")).toBeVisible();
 });
 
+test("creates prototype registrations without signing in", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByRole("link", { name: "Create account" }).click();
+
+  await expect(page).toHaveURL(/\/register$/);
+  await expect(
+    page.getByRole("heading", { name: "Create account" }),
+  ).toBeVisible();
+  await page.getByLabel("Username").fill("new-user");
+  await page.getByLabel("Email").fill("new-user@example.invalid");
+  await page.getByLabel("Password").fill("valid-password");
+  await page.getByRole("button", { name: "Create account" }).click();
+
+  await expect(page.getByText("Check your email to continue.")).toBeVisible();
+  await expect(
+    page.getByText(
+      "Prototype mock registration accepted. No account is created and no email is sent.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByText("Signed in as")).toHaveCount(0);
+});
+
 test("verifies email links without retaining URL fragments", async ({
   page,
 }) => {
