@@ -67,7 +67,13 @@ npm run format:check
 
 Proofline Web Client is the experimental React account portal and incident-review client for Proofline.
 
-The intended product model is a publicly hosted Proofline service where users can create paid accounts once the backend, deployment, billing, abuse controls, and operational hardening are ready. Public account creation is not enabled until those server-side requirements are explicitly implemented, reviewed, documented, and tested.
+The intended product model is a publicly hosted Proofline service where users
+can create paid accounts once the backend, deployment, billing, abuse controls,
+and operational hardening are ready. The server now documents public
+self-registration modes, but registration is backend-configured and disabled by
+default. Open self-registration requires reviewed server configuration and email
+verification before login; paid registration remains a fail-closed placeholder,
+not billing.
 
 The web client is responsible for the user-facing account portal, authenticated incident review, and future trusted-contact access flows. It is not the recording client, mobile app, backend, or protocol repository.
 
@@ -76,6 +82,8 @@ The web client is responsible for the user-facing account portal, authenticated 
 The current bootstrap includes:
 
 * login/logout prototype flow
+* public registration form flow against the server registration contract
+* browser email-verification route that clears verification URL fragments
 * authenticated app shell
 * conservative session state with memory-first token storage
 * optional local-storage session persistence for local development only
@@ -94,7 +102,6 @@ The current bootstrap includes:
 Planned account portal work includes:
 
 * public landing and pricing/account-entry pages
-* paid account registration flow
 * payment-gated account creation
 * login/logout
 * account profile page
@@ -106,7 +113,13 @@ Planned account portal work includes:
 * browser-safe API error handling
 * browser token-storage review and hardening
 
-Payment-gated registration must be implemented as a backend-supported account lifecycle, not just a frontend form. The web client may present registration and billing UI only after the backend provides reviewed routes and state transitions for account creation, payment confirmation, subscription status, and disabled/unpaid account behavior.
+Payment-gated registration must be implemented as a backend-supported account
+lifecycle, not just a frontend form. The current server paid-registration mode
+returns a fail-closed placeholder error and does not create checkout sessions,
+subscriptions, active accounts, or billing webhooks. The web client may present
+billing UI only after the backend provides reviewed routes and state transitions
+for payment confirmation, subscription status, and disabled/unpaid account
+behavior.
 
 ## Planned Incident Review Scope
 
@@ -238,16 +251,31 @@ do not imply production readiness or public `/v1` API readiness.
 ## API Boundary
 
 The server currently confirms bearer session auth, `POST /v1/auth/login`,
+`POST /v1/auth/register`, `POST /v1/auth/email/verify`,
 `POST /v1/auth/logout`, `GET /v1/account`, incident create/read-by-ID, contact
 public-key routes, sharing-grant routes, and wrapped-key routes. Current
 `open-proofline/server` does not expose `GET /v1/incidents`; live mode disables
 owned incident listing instead of calling an unconfirmed route. Mock mode uses
 prototype incident records only and must not be treated as backend truth.
 
+Public registration is controlled by the server's
+`SAFE_ACCOUNT_REGISTRATION_MODE`. `disabled` and `admin_only` reject public
+registration with `registration_disabled`; `open` creates a
+`pending_email_verification` account and sends a verification link before login
+is allowed; `paid` returns `registration_payment_unavailable` and does not
+perform billing or create an active account. Registration and email verification
+do not create browser sessions.
+
+Email verification links carry a raw verification token in the URL fragment.
+The web client reads that secret-bearing fragment, submits the token in the
+verification request body, and clears the fragment from the address bar. Raw
+verification tokens must not be logged, persisted, screenshotted, copied into
+issue drafts, or sent to analytics.
+
 The client must not log session tokens, Authorization headers, request bodies,
 uploaded bytes, plaintext, raw keys, raw media keys, contact private keys,
-wrapped-key ciphertext, object keys, stored paths, private deployment details,
-or user safety data.
+wrapped-key ciphertext, verification credentials, object keys, stored paths,
+private deployment details, or user safety data.
 
 ## Session Storage
 

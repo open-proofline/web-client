@@ -13,7 +13,8 @@ flowchart LR
 
 ## Boundaries
 
-- The app reviews account and incident metadata.
+- The app handles account login, public registration, email verification, and
+  incident metadata review.
 - The app does not record media.
 - The app does not decrypt chunks or unwrap wrapped keys.
 - The app does not export playable media.
