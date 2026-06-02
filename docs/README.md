@@ -4,9 +4,12 @@ These docs describe the current experimental web-client prototype. The backend
 source of truth remains `open-proofline/server`.
 
 - [Architecture](architecture.md)
-- [API client](api-client.md)
-- [Security model](security-model.md)
-- [Browser security headers](browser-security-headers.md)
+- [API client](api-client.md): current route contracts and browser-cookie auth
+  planning boundary.
+- [Security model](security-model.md): implemented controls, non-controls, and
+  browser auth review areas.
+- [Browser security headers](browser-security-headers.md): static-host header
+  guidance and credentialed CORS review notes.
 - [Supply chain review](supply-chain.md)
 - [Threat model](threat-model.md)
 - [Theme tokens](theme.md)

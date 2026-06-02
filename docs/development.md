@@ -36,3 +36,6 @@ VITE_PROOFLINE_SESSION_STORAGE=memory
 
 Use `VITE_PROOFLINE_API_MODE=live` only when a local backend is running and the
 route assumptions have been checked against `open-proofline/server/docs/api.md`.
+The current live client uses bearer-token auth. There is no browser-cookie auth
+environment switch yet; do not add one without updating the API client contract,
+CSRF handling, tests, and deployment guidance together.

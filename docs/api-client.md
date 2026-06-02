@@ -24,6 +24,9 @@ From current `open-proofline/server` docs and route registration:
 - `POST /v1/auth/register`
 - `POST /v1/auth/email/verify`
 - `POST /v1/auth/logout`
+- `POST /v1/auth/web/login`
+- `POST /v1/auth/web/logout`
+- `GET /v1/auth/web/csrf`
 - `GET /v1/account`
 - `POST /v1/incidents`
 - `GET /v1/incidents/{incident_id}`
@@ -89,6 +92,52 @@ analytics.
 Mock mode returns explicit prototype-only responses for these methods; it does
 not create accounts, send email, verify real tokens, or model payment/billing
 state.
+
+## Browser Cookie Auth And CSRF Planning Boundary
+
+The current frontend implementation uses bearer-session auth in live mode:
+`POST /v1/auth/login` returns a bearer token, authenticated requests attach
+`Authorization: Bearer ...`, and session storage is memory-first with optional
+local-storage persistence for local development only.
+
+`open-proofline/server` also documents browser-cookie auth routes for a future
+web-client mode:
+
+- `POST /v1/auth/web/login`
+- `POST /v1/auth/web/logout`
+- `GET /v1/auth/web/csrf`
+
+That mode is not implemented in this client yet. When it is implemented, the
+API client must choose one credential mode per live client instance:
+
+- bearer mode: call the existing bearer login/logout routes and never send
+  `credentials: "include"` for session cookies;
+- cookie mode: call the web login/logout/CSRF routes, send
+  `credentials: "include"` to the reviewed API origin, and never attach an
+  `Authorization` header.
+
+The modes must not be mixed for the same request. Current server behavior
+rejects requests that include both bearer credentials and a browser session
+cookie with `400 ambiguous_credentials`; tests for a cookie-mode implementation
+should assert that authenticated requests cannot add both.
+
+Cookie-mode CSRF handling should be explicit in the client contract:
+
+- fetch the CSRF token from `GET /v1/auth/web/csrf` after a successful cookie
+  login and before the first unsafe cookie-authenticated request;
+- cache the token in memory only, scoped to the active browser session;
+- attach the returned header name, defaulting to `X-CSRF-Token` per current
+  server docs, to unsafe methods such as `POST` and `PATCH`;
+- refresh the token after login, after a `403 csrf_required`, and after any
+  auth/session reset;
+- clear the cached token on logout and when account/session state is cleared.
+
+Credentialed CORS is a deployment boundary, not a frontend-only switch. A
+cookie-mode client must be used only with exact reviewed origins configured in
+`open-proofline/server`; wildcard origins are not acceptable for credentialed
+requests. Browser tests should cover web login, CSRF fetch, unsafe request
+header attachment, logout cleanup, and failure behavior when the CSRF token is
+missing or rejected.
 
 ## Logging Boundary
 

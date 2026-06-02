@@ -33,6 +33,33 @@ persisted in browser storage, screenshotted, copied into public issue drafts,
 included in analytics, or exposed in UI beyond the transient browser URL
 fragment needed to complete verification.
 
+## Browser Cookie Auth And CSRF Planning Boundary
+
+The implemented live client remains bearer-token based. A future browser-cookie
+auth mode must be a separate client mode, not an additive flag on top of bearer
+auth. In that mode, authenticated requests would use
+`credentials: "include"` with the reviewed API origin and must not attach an
+`Authorization` header. Bearer mode must not rely on browser session cookies.
+
+Current `open-proofline/server` behavior rejects mixed bearer and browser-cookie
+credentials with `400 ambiguous_credentials`. The frontend must treat that as a
+security invariant: a request builder should make the credential mode
+unambiguous before the request is sent, and tests should verify that both
+credential types cannot be attached together.
+
+Cookie-authenticated unsafe requests require a session-bound CSRF header. A
+future implementation should fetch the token from `GET /v1/auth/web/csrf`,
+store it in memory only, attach the returned header name to unsafe methods, and
+clear it on logout or session reset. Missing or rejected CSRF tokens should
+produce a controlled error state and a token refresh attempt where appropriate,
+not a fallback to bearer credentials.
+
+Credentialed CORS and cookie attributes are deployment-sensitive server
+configuration. The web client documentation may describe the required
+frontend behavior, but approval to expose public `/v1` routes, exact allowed
+origins, cookie security flags, and CSRF header names remains in
+`open-proofline/server` and deployment review.
+
 ## Explicit Non-Controls
 
 - No browser decryption.
@@ -48,8 +75,9 @@ fragment needed to complete verification.
 ## Browser Review Areas
 
 Before production use, review CSP, XSS exposure, dependency supply chain,
-session persistence, CSRF assumptions, public API deployment posture, and
-whether any credential should be stored in browser storage.
+session persistence, bearer-versus-cookie credential mode, CSRF assumptions,
+credentialed CORS posture, public API deployment posture, and whether any
+credential should be stored in browser storage.
 
 Recommended static-host browser headers are documented in
 [Browser Security Headers](browser-security-headers.md). That guidance does not

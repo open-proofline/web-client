@@ -13,10 +13,10 @@
 - Do not add OAuth, JWT, push notifications, SMS, Messenger notifications,
   emergency dispatch, public admin dashboards, mobile client code, or protocol
   repository behavior unless explicitly requested.
-- Do not log raw tokens, Authorization headers, request bodies, uploaded bytes,
-  plaintext, raw keys, raw media keys, contact private keys, wrapped-key
-  ciphertext, verification credentials, stored paths, object keys, private
-  deployment details, or user safety data.
+- Do not log raw tokens, browser session cookies, CSRF tokens, Authorization
+  headers, request bodies, uploaded bytes, plaintext, raw keys, raw media keys,
+  contact private keys, wrapped-key ciphertext, verification credentials,
+  stored paths, object keys, private deployment details, or user safety data.
 - Keep public UI wording clear that the app is experimental and not for
   emergency reliance.
 - Users or trusted contacts remain responsible for contacting emergency

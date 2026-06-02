@@ -87,6 +87,7 @@ The current bootstrap includes:
 * authenticated app shell
 * conservative session state with memory-first token storage
 * optional local-storage session persistence for local development only
+* documented browser-cookie auth and CSRF client-mode planning boundary
 * incident list UI backed by explicit mock data only
 * incident detail metadata UI
 * stream and chunk metadata review
@@ -112,6 +113,8 @@ Planned account portal work includes:
 * clear account-disabled, payment-required, expired-session, unauthorized, and forbidden states
 * browser-safe API error handling
 * browser token-storage review and hardening
+* browser-cookie auth mode and CSRF handling, once server/deployment review
+  approves credentialed CORS for exact origins
 
 Payment-gated registration must be implemented as a backend-supported account
 lifecycle, not just a frontend form. The current server paid-registration mode
@@ -237,6 +240,7 @@ Public deployment requires separate backend and infrastructure work, including:
 * payment-gated account creation
 * abuse controls and rate limiting
 * browser credential-storage review
+* credentialed CORS and CSRF review for any browser-cookie auth mode
 * CSP/XSS and browser security-header review
 * logging and error-redaction review
 * backup/restore and deletion/retention operational review

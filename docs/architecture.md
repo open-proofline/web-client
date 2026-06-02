@@ -15,6 +15,9 @@ flowchart LR
 
 - The app handles account login, public registration, email verification, and
   incident metadata review.
+- The current live API client uses bearer-token auth. Browser-cookie auth and
+  CSRF handling remain a documented future client-mode boundary, not an
+  implemented runtime mode.
 - The app does not record media.
 - The app does not decrypt chunks or unwrap wrapped keys.
 - The app does not export playable media.

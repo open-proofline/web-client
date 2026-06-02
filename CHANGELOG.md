@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Documented browser cookie auth and CSRF client-mode planning.
 - Documented the registration and email-verification boundary.
 - Added a public registration form flow.
 - Added a pending email-verification login state.
