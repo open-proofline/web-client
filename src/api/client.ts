@@ -1,18 +1,22 @@
 import {
-  accountSchema,
+  accountResponseSchema,
   contactPublicKeyResponseSchema,
   contactPublicKeysResponseSchema,
   incidentDetailSchema,
+  emailVerificationResponseSchema,
   loginResponseSchema,
+  registrationAcceptedResponseSchema,
   sharingGrantResponseSchema,
   sharingGrantsResponseSchema,
   wrappedKeyResponseSchema,
   wrappedKeysResponseSchema,
   type Account,
   type ContactPublicKey,
+  type EmailVerificationResponse,
   type Incident,
   type IncidentDetail,
   type LoginResponse,
+  type RegistrationAcceptedResponse,
   type SharingGrant,
   type WrappedKey,
 } from "./schemas";
@@ -24,6 +28,20 @@ type ClientOptions = {
   baseUrl?: string;
   mode?: ClientMode;
   getToken?: () => string | null;
+};
+
+type RegisterAccountRequest = {
+  username: string;
+  email: string;
+  password: string;
+};
+
+type VerifyAccountEmailRequest = {
+  token: string;
+};
+
+type RequestOptions = {
+  includeAuth?: boolean;
 };
 
 export const ownedIncidentListRoute = "GET /v1/incidents";
@@ -69,9 +87,20 @@ function defaultClientMode(): ClientMode {
 const mockAccount: Account = {
   id: "acct_prototype",
   username: "prototype-user",
+  account_state: "active",
   role: "user",
   created_at: "2026-06-01T00:00:00Z",
   updated_at: "2026-06-01T00:00:00Z",
+};
+
+const mockRegistrationAccepted: RegistrationAcceptedResponse = {
+  status: "verification_required",
+  message:
+    "Prototype mock registration accepted. No account is created and no email is sent.",
+};
+
+const mockEmailVerification: EmailVerificationResponse = {
+  status: "verified",
 };
 
 const mockIncidentOne: Incident = {
@@ -241,10 +270,50 @@ export class ProoflineApiClient {
     }
 
     return loginResponseSchema.parse(
-      await this.request("/v1/auth/login", {
-        method: "POST",
-        body: JSON.stringify(credentials),
-      }),
+      await this.request(
+        "/v1/auth/login",
+        {
+          method: "POST",
+          body: JSON.stringify(credentials),
+        },
+        { includeAuth: false },
+      ),
+    );
+  }
+
+  async registerAccount(
+    request: RegisterAccountRequest,
+  ): Promise<RegistrationAcceptedResponse> {
+    if (this.mode === "mock") {
+      return mockRegistrationAccepted;
+    }
+    return registrationAcceptedResponseSchema.parse(
+      await this.request(
+        "/v1/auth/register",
+        {
+          method: "POST",
+          body: JSON.stringify(request),
+        },
+        { includeAuth: false },
+      ),
+    );
+  }
+
+  async verifyAccountEmail(
+    request: VerifyAccountEmailRequest,
+  ): Promise<EmailVerificationResponse> {
+    if (this.mode === "mock") {
+      return mockEmailVerification;
+    }
+    return emailVerificationResponseSchema.parse(
+      await this.request(
+        "/v1/auth/email/verify",
+        {
+          method: "POST",
+          body: JSON.stringify(request),
+        },
+        { includeAuth: false },
+      ),
     );
   }
 
@@ -259,7 +328,8 @@ export class ProoflineApiClient {
     if (this.mode === "mock") {
       return mockAccount;
     }
-    return accountSchema.parse(await this.request("/v1/account"));
+    return accountResponseSchema.parse(await this.request("/v1/account"))
+      .account;
   }
 
   async listOwnedIncidents(): Promise<Incident[]> {
@@ -351,13 +421,14 @@ export class ProoflineApiClient {
   private async request(
     path: string,
     init: RequestInit = {},
+    options: RequestOptions = {},
   ): Promise<unknown> {
     const headers = new Headers(init.headers);
     if (init.body && !headers.has("content-type")) {
       headers.set("content-type", "application/json");
     }
 
-    const token = this.getToken();
+    const token = options.includeAuth === false ? null : this.getToken();
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
     }
