@@ -10,6 +10,7 @@ import { rootRoute } from "./__root";
 import { Button } from "../components/catalyst/button";
 import { Field, FieldGroup, Label } from "../components/catalyst/fieldset";
 import { Input } from "../components/catalyst/input";
+import { ProoflineLogo } from "../components/proofline/ProoflineLogo";
 
 type LoginErrorState = {
   message: string;
@@ -55,9 +56,12 @@ function LoginPage() {
   return (
     <section className="mx-auto max-w-md rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
       <div>
-        <p className="text-sm font-medium text-proofline-text-muted">
-          Proofline Web Client
-        </p>
+        <div className="flex items-center gap-3">
+          <ProoflineLogo className="size-12 shrink-0" />
+          <p className="text-sm font-medium text-proofline-text-muted">
+            Proofline
+          </p>
+        </div>
         <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
           Log in
         </h1>
@@ -103,8 +107,8 @@ function LoginPage() {
             <p>{error.message}</p>
             {isEmailVerificationRequired ? (
               <p className="mt-2 text-proofline-text-secondary">
-                If you already have a verification link, open it in this
-                browser or go to the{" "}
+                If you already have a verification link, open it in this browser
+                or go to the{" "}
                 <RouterLink
                   to="/verify-email"
                   className="font-medium text-proofline-text underline underline-offset-4 focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
