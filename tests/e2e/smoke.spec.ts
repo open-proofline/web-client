@@ -30,7 +30,9 @@ test("loads the login flow", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
   await page.getByLabel("Account menu").click();
   await expect(page.getByText("prototype-user")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
+  await page.getByRole("heading", { name: "Review workspace" }).click();
+  await expect(page.getByRole("menuitem", { name: "Sign out" })).toHaveCount(0);
   await expect(page.getByText("Connection mode")).toBeVisible();
   await expect(page.getByText("mock", { exact: true })).toBeVisible();
   await expect(page.getByText("Open incidents")).toBeVisible();

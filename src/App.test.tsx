@@ -452,7 +452,13 @@ test("logs in with mock credentials and renders the dashboard", async () => {
   ).toBeInTheDocument();
   fireEvent.click(screen.getByLabelText("Account menu"));
   expect(screen.getByText("prototype-user")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("menuitem", { name: "Sign out" }),
+  ).toBeInTheDocument();
+  fireEvent.pointerDown(document.body);
+  expect(
+    screen.queryByRole("menuitem", { name: "Sign out" }),
+  ).not.toBeInTheDocument();
   expect(screen.getByText("Open incidents")).toBeInTheDocument();
   expect(screen.getByText("Shared records")).toBeInTheDocument();
 });
