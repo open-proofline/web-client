@@ -33,7 +33,7 @@ export function AppShell() {
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <RouterLink
                     to="/"
-                    className="text-lg font-semibold text-proofline-text focus:outline-2 focus:outline-offset-4 focus:outline-proofline-focus"
+                    className="text-lg font-semibold leading-6 text-proofline-text focus:outline-2 focus:outline-offset-4 focus:outline-proofline-focus"
                   >
                     Proofline
                   </RouterLink>
