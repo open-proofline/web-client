@@ -55,11 +55,11 @@ function LoginPage() {
 
   return (
     <AuthScreen
-      title="Log in"
+      title="Sign in"
       lead={
         apiClient.mode === "mock"
-          ? "Mock mode uses sample credentials and sample incident records only."
-          : "Use your Proofline account credentials. Browser token persistence is memory-only unless local development storage is explicitly enabled."
+          ? "Sample mode fills test credentials and uses sample records only."
+          : "Use your Proofline account to review incidents and account status."
       }
       footer={
         <>
@@ -124,7 +124,7 @@ function LoginPage() {
         ) : null}
 
         <Button type="submit" className="mt-6 w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Signing in" : "Log in"}
+          {isSubmitting ? "Signing in" : "Sign in"}
         </Button>
       </form>
     </AuthScreen>

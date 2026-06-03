@@ -71,8 +71,9 @@ function IncidentDetailPage() {
         body={
           <>
             <p>
-              Metadata review only. This view does not play media, decrypt
-              browser-side, unwrap keys, or expose raw key material.
+              Review status, streams, contacts, sharing, and protected-key
+              delivery for this incident. This view does not play media, decrypt
+              data, or expose private keys.
             </p>
           </>
         }
@@ -125,7 +126,7 @@ function IncidentDetailPage() {
         ) : (
           <EmptyState
             title="No streams"
-            body="Stream metadata is not present."
+            body="Stream details are not present."
           />
         )}
       </MetadataSection>
@@ -147,21 +148,16 @@ function IncidentDetailPage() {
             ))}
           </div>
         ) : (
-          <EmptyState title="No chunks" body="Chunk metadata is not present." />
+          <EmptyState title="No chunks" body="Chunk details are not present." />
         )}
       </MetadataSection>
 
-      <MetadataSection
-        title="Contact public keys"
-        count={contacts.data?.length ?? 0}
-      >
+      <MetadataSection title="Contact keys" count={contacts.data?.length ?? 0}>
         {contacts.isError ? (
-          <MetadataError>
-            Contact public-key metadata could not be loaded.
-          </MetadataError>
+          <MetadataError>Contact details could not be loaded.</MetadataError>
         ) : contacts.isLoading ? (
           <p className="text-sm text-proofline-text-muted">
-            Loading contact key metadata.
+            Loading contact details.
           </p>
         ) : contacts.data?.length ? (
           <div className="divide-y divide-proofline-border">
@@ -183,19 +179,19 @@ function IncidentDetailPage() {
         ) : (
           <EmptyState
             title="No contact keys"
-            body="Contact public-key metadata will appear here."
+            body="Contact key details will appear here."
           />
         )}
       </MetadataSection>
 
-      <MetadataSection title="Sharing grants" count={grants.data?.length ?? 0}>
+      <MetadataSection title="Shared access" count={grants.data?.length ?? 0}>
         {grants.isError ? (
           <MetadataError>
-            Sharing-grant metadata could not be loaded.
+            Shared access details could not be loaded.
           </MetadataError>
         ) : grants.isLoading ? (
           <p className="text-sm text-proofline-text-muted">
-            Loading sharing-grant metadata.
+            Loading shared access details.
           </p>
         ) : grants.data?.length ? (
           <div className="divide-y divide-proofline-border">
@@ -214,23 +210,23 @@ function IncidentDetailPage() {
           </div>
         ) : (
           <EmptyState
-            title="No grants"
-            body="Sharing-grant metadata will appear here when present."
+            title="No shared access"
+            body="Shared access details will appear here when present."
           />
         )}
       </MetadataSection>
 
       <MetadataSection
-        title="Wrapped keys"
+        title="Key delivery"
         count={wrappedKeys.data?.length ?? 0}
       >
         {wrappedKeys.isError ? (
           <MetadataError>
-            Wrapped-key metadata could not be loaded.
+            Key delivery details could not be loaded.
           </MetadataError>
         ) : wrappedKeys.isLoading ? (
           <p className="text-sm text-proofline-text-muted">
-            Loading wrapped-key metadata.
+            Loading key delivery details.
           </p>
         ) : wrappedKeys.data?.length ? (
           <div className="divide-y divide-proofline-border">
@@ -249,8 +245,8 @@ function IncidentDetailPage() {
           </div>
         ) : (
           <EmptyState
-            title="No wrapped keys"
-            body="Wrapped-key delivery metadata will appear here. This app does not unwrap keys."
+            title="No key delivery"
+            body="Key delivery details will appear here. This app does not unlock encrypted media."
           />
         )}
       </MetadataSection>

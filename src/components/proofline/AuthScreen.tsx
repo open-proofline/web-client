@@ -11,7 +11,7 @@ export function AuthScreen({ title, lead, children, footer }: AuthScreenProps) {
   return (
     <section className="mx-auto w-full max-w-md rounded-lg border border-proofline-border bg-proofline-surface p-5 shadow-lg shadow-proofline-bg-deep/20 sm:p-6">
       <div className="flex items-start gap-3">
-        <ProoflineLogo className="size-12 shrink-0" />
+        <ProoflineLogo className="size-16 shrink-0 scale-125 object-contain" />
         <div className="min-w-0">
           <p className="text-sm font-medium text-proofline-text-muted">
             Proofline

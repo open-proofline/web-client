@@ -36,25 +36,25 @@ function IncidentsIndexPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Owned incident metadata"
+        eyebrow="Evidence overview"
         title="Incidents"
         body={
           apiClient.mode === "mock"
-            ? "Mock mode shows sample incident records only; they are not live backend data."
-            : "Live mode does not call an owned incident list route because current open-proofline/server does not expose GET /v1/incidents. Confirmed live support starts with incident read-by-ID."
+            ? "Sample records are shown for local testing only."
+            : "Live mode can open a known incident. A full incident list is not available yet."
         }
       />
 
-      <ContentSection title="Incident records">
+      <ContentSection title="Recent records">
         {incidents.isError ? (
           <InlineStatus role="alert" tone="danger">
             {incidentListUnsupported
-              ? "Live owned incident listing is disabled because current open-proofline/server does not expose GET /v1/incidents."
-              : "Incident metadata could not be loaded."}
+              ? "The live incident list is not available yet."
+              : "Incident records could not be loaded."}
           </InlineStatus>
         ) : incidents.isLoading ? (
           <p className="text-sm text-proofline-text-muted">
-            Loading incident metadata.
+            Loading incident records.
           </p>
         ) : incidents.data?.length ? (
           <div className="divide-y divide-proofline-border">
@@ -91,7 +91,7 @@ function IncidentsIndexPage() {
         ) : (
           <EmptyState
             title="No incidents"
-            body="Owned incident records will appear here when the API returns them."
+            body="Incident records will appear here when available."
           />
         )}
       </ContentSection>

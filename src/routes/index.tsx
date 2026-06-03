@@ -44,19 +44,19 @@ function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Dashboard"
-        title="Incident review workspace"
+        title="Review workspace"
         body={
           <>
             <p>
-              Review account session state, owned incident metadata, stream and
-              chunk metadata, contact public-key metadata, sharing grants, and
-              wrapped-key metadata. This app does not record, decrypt, unwrap
-              keys, export playable media, or contact emergency services.
+              Review recent incidents, trusted-contact access, and evidence
+              status for this Proofline account. This app does not record
+              incidents, play media, decrypt data, or contact emergency
+              services.
             </p>
             <p className="mt-3 text-proofline-text-muted">
               {apiClient.mode === "mock"
-                ? "Mock mode shows sample incident records only; they are not live backend data."
-                : "Live mode can read confirmed incident detail routes, but owned incident listing is disabled until the server exposes a list route."}
+                ? "Sample records are shown for local testing only."
+                : "Live mode can open a known incident. A full incident list is not available yet."}
             </p>
           </>
         }
@@ -64,13 +64,13 @@ function DashboardPage() {
       />
 
       <section className="grid gap-4 sm:grid-cols-3">
-        <Metric label="API mode" value={apiClient.mode} />
+        <Metric label="Connection mode" value={apiClient.mode} />
         <Metric
           label="Open incidents"
           value={incidentListUnsupported ? "unavailable" : openCount}
         />
         <Metric
-          label="Shared metadata records"
+          label="Shared records"
           value={incidentListUnsupported ? "unavailable" : sharedCount}
         />
       </section>
@@ -90,12 +90,12 @@ function DashboardPage() {
         {incidents.isError ? (
           <InlineStatus role="alert" tone="danger">
             {incidentListUnsupported
-              ? "Live owned incident listing is disabled because current open-proofline/server does not expose GET /v1/incidents. Mock mode uses sample incident records only."
-              : "Incident metadata could not be loaded."}
+              ? "The live incident list is not available yet. Sample mode can still show test records."
+              : "Incident records could not be loaded."}
           </InlineStatus>
         ) : incidents.isLoading ? (
           <p className="text-sm text-proofline-text-muted">
-            Loading incident metadata.
+            Loading incident records.
           </p>
         ) : incidents.data?.length ? (
           <div className="divide-y divide-proofline-border">
@@ -122,7 +122,7 @@ function DashboardPage() {
         ) : (
           <EmptyState
             title="No incidents"
-            body="Owned incident metadata will appear here when available."
+            body="Incident records will appear here when available."
           />
         )}
       </ContentSection>

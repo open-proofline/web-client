@@ -3,7 +3,7 @@ import {
   Outlet,
   useLocation,
 } from "@tanstack/react-router";
-import { Button } from "../catalyst/button";
+import { ProfileMenu } from "./ProfileMenu";
 import { PrototypeNotice } from "./PrototypeNotice";
 import { ProoflineLogo } from "./ProoflineLogo";
 import { useAuth } from "../../auth/use-auth";
@@ -28,7 +28,7 @@ export function AppShell() {
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 items-start gap-3">
-              <ProoflineLogo className="size-10 shrink-0" />
+              <ProoflineLogo className="size-12 shrink-0 scale-125 object-contain sm:size-14" />
               <div className="min-w-0">
                 <RouterLink
                   to="/"
@@ -36,33 +36,19 @@ export function AppShell() {
                 >
                   Proofline
                 </RouterLink>
-                <p className="mt-1 text-sm leading-5 text-proofline-text-muted">
-                  Account and incident metadata review
-                </p>
-                <p className="mt-1 text-xs leading-5 text-proofline-text-muted">
-                  Users and trusted contacts remain responsible for contacting
-                  emergency services.
+                <p className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-sm leading-5 text-proofline-text-muted">
+                  <span>Account and incident review</span>
+                  <span className="hidden sm:inline" aria-hidden="true">
+                    •
+                  </span>
+                  <span>For emergencies, contact local services directly.</span>
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 sm:justify-end">
               <PrototypeNotice />
-              {session ? (
-                <span className="text-sm text-proofline-text-muted">
-                  Signed in as{" "}
-                  <span className="font-medium text-proofline-text">
-                    {session.account.username}
-                  </span>
-                </span>
-              ) : null}
-              {isAuthenticated ? (
-                <Button outline onClick={() => void logout()}>
-                  Log out
-                </Button>
-              ) : (
-                <Button href="/login">Log in</Button>
-              )}
+              <ProfileMenu session={session} onLogout={logout} />
             </div>
           </div>
 

@@ -62,7 +62,7 @@ function VerifyEmailPage() {
   return (
     <AuthScreen
       title="Verify email"
-      lead="Proofline reads the verification credential from the link, submits it once, and clears the browser URL fragment."
+      lead="Proofline checks the verification link once and clears it from the address bar."
     >
       {state === "checking" ? (
         <p
@@ -90,7 +90,7 @@ function VerifyEmailPage() {
           role="alert"
           className="mt-4 rounded-md border border-proofline-warning/40 bg-proofline-warning-bg p-3 text-sm text-proofline-warning"
         >
-          This verification link is missing its verification credential.
+          This verification link is missing its verification code.
         </p>
       ) : null}
 
@@ -104,7 +104,7 @@ function VerifyEmailPage() {
       ) : null}
 
       <Button href="/login" className="mt-6 w-full">
-        Go to login
+        Go to sign in
       </Button>
     </AuthScreen>
   );
