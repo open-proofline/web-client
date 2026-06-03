@@ -25,17 +25,17 @@ test("loads the login flow", async ({ page }) => {
 
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(
-    page.getByRole("heading", { name: "Review workspace" }),
+    page.getByRole("heading", { name: "Account overview" }),
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await page.getByLabel("Account menu").click();
   await expect(page.getByText("prototype-user")).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
-  await page.getByRole("heading", { name: "Review workspace" }).click();
+  await page.getByRole("heading", { name: "Account overview" }).click();
   await expect(page.getByRole("menuitem", { name: "Sign out" })).toHaveCount(0);
   await expect(page.getByText("Connection mode")).toBeVisible();
   await expect(page.getByText("mock", { exact: true })).toBeVisible();
-  await expect(page.getByText("Open incidents")).toBeVisible();
+  await expect(page.getByText("Open records")).toBeVisible();
   await expect(page.getByText("Shared records")).toBeVisible();
 });
 
@@ -85,13 +85,15 @@ test("navigates internal incident routes without full page reloads", async ({
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(
-    page.getByRole("heading", { name: "Review workspace" }),
+    page.getByRole("heading", { name: "Account overview" }),
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
-  await page.getByRole("link", { name: "View incidents" }).click();
+  await page.getByRole("link", { name: "View records" }).click();
   await expect(page).toHaveURL(/\/incidents$/);
-  await expect(page.getByRole("heading", { name: "Incidents" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Incident records" }),
+  ).toBeVisible();
   await expect(page.getByText("inc_prototype_001")).toBeVisible();
   await expect(page.getByText("inc_prototype_002")).toBeVisible();
   await expectNoHorizontalOverflow(page);

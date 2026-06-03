@@ -37,7 +37,7 @@ function IncidentsIndexPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Evidence overview"
-        title="Incidents"
+        title="Incident records"
         body={
           apiClient.mode === "mock"
             ? "Sample records are shown for local testing only."
@@ -90,7 +90,7 @@ function IncidentsIndexPage() {
           </div>
         ) : (
           <EmptyState
-            title="No incidents"
+            title="No records"
             body="Incident records will appear here when available."
           />
         )}

@@ -27,8 +27,7 @@ const minPasswordBytes = 12;
 const maxPasswordBytes = 72;
 const maxEmailBytes = 254;
 const emailAddressPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const passwordRequirements =
-  "Use 12 to 72 characters. Longer non-ASCII passwords may count as more than one character.";
+const passwordRequirements = "Choose a password between 12 to 72 characters.";
 
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
@@ -138,10 +137,11 @@ function RegisterPage() {
   return (
     <AuthScreen
       title="Create account"
+      showBranding={false}
       lead={
         apiClient.mode === "mock"
           ? "Sample mode checks the form and shows the next step without creating an account."
-          : "Create a Proofline account for this deployment. You will verify your email before signing in."
+          : "Create a Proofline account. Your email will need to be verified before signing in."
       }
       footer={
         <>

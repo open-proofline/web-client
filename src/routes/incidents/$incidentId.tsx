@@ -72,13 +72,17 @@ function IncidentDetailPage() {
           <>
             <p>
               Review status, streams, contacts, sharing, and protected-key
-              delivery for this incident. This view does not play media, decrypt
-              data, or expose private keys.
+              delivery for this incident record.
             </p>
           </>
         }
         action={<StatusBadge value={detail.incident.status} />}
       />
+
+      <InlineStatus tone="warning">
+        Review only. This view does not play media, decrypt data, or expose
+        private keys.
+      </InlineStatus>
 
       <ContentSection title="Overview">
         <MetadataGrid

@@ -50,7 +50,7 @@ export function ProfileMenu({ session, onLogout }: ProfileMenuProps) {
         aria-label="Account menu"
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="flex size-10 items-center justify-center rounded-full border border-proofline-border bg-proofline-surface-elevated text-sm font-semibold text-proofline-text shadow-lg shadow-proofline-bg-deep/20 hover:bg-proofline-surface-strong focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus aria-expanded:bg-proofline-surface-strong"
+        className="flex size-10 items-center justify-center rounded-full border border-proofline-border bg-proofline-surface-elevated text-sm font-semibold leading-none text-proofline-text shadow-lg shadow-proofline-bg-deep/20 hover:bg-proofline-surface-strong focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus aria-expanded:bg-proofline-surface-strong"
         onClick={() => setIsOpen((open) => !open)}
       >
         <span aria-hidden="true">{accountInitial(session)}</span>

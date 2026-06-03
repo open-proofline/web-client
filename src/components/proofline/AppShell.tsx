@@ -9,8 +9,8 @@ import { ProoflineLogo } from "./ProoflineLogo";
 import { useAuth } from "../../auth/use-auth";
 
 const navigation = [
-  { to: "/", label: "Dashboard" },
-  { to: "/incidents", label: "Incidents" },
+  { to: "/", label: "Overview" },
+  { to: "/incidents", label: "Records" },
 ];
 
 export function AppShell() {
@@ -26,28 +26,37 @@ export function AppShell() {
     <div className="min-h-screen bg-proofline-bg text-proofline-text">
       <header className="border-b border-proofline-border bg-proofline-bg-deep">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:items-center">
-            <div className="flex min-w-0 items-start gap-3">
-              <ProoflineLogo className="size-12 shrink-0 scale-125 object-contain sm:size-14" />
+          <div
+            className={
+              isAuthenticated
+                ? "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:items-center"
+                : "grid grid-cols-1 items-start gap-3 sm:items-center"
+            }
+          >
+            <RouterLink
+              to="/"
+              aria-label="Proofline home"
+              className="inline-flex w-fit max-w-full min-w-0 items-start gap-3 justify-self-start rounded-md focus:outline-2 focus:outline-offset-4 focus:outline-proofline-focus"
+            >
+              <ProoflineLogo className="size-10 shrink-0 object-contain" />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <RouterLink
-                    to="/"
-                    className="text-lg font-semibold leading-6 text-proofline-text focus:outline-2 focus:outline-offset-4 focus:outline-proofline-focus"
-                  >
+                  <span className="text-lg font-semibold leading-6 text-proofline-text">
                     Proofline
-                  </RouterLink>
+                  </span>
                   <PrototypeNotice />
                 </div>
                 <p className="mt-1 text-xs leading-4 text-proofline-text-muted">
                   Not an emergency service
                 </p>
               </div>
-            </div>
+            </RouterLink>
 
-            <div className="flex justify-end">
-              <ProfileMenu session={session} onLogout={logout} />
-            </div>
+            {isAuthenticated ? (
+              <div className="flex justify-end">
+                <ProfileMenu session={session} onLogout={logout} />
+              </div>
+            ) : null}
           </div>
 
           {showNavigation ? (

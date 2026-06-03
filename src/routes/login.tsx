@@ -56,10 +56,11 @@ function LoginPage() {
   return (
     <AuthScreen
       title="Sign in"
+      showBranding={false}
       lead={
         apiClient.mode === "mock"
           ? "Sample mode fills test credentials and uses sample records only."
-          : "Use your Proofline account to review incidents and account status."
+          : "Access your Proofline account to review incident records and manage your account."
       }
       footer={
         <>

@@ -43,15 +43,13 @@ function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Dashboard"
-        title="Review workspace"
+        eyebrow="Overview"
+        title="Account overview"
         body={
           <>
             <p>
-              Review recent incidents, trusted-contact access, and evidence
-              status for this Proofline account. This app does not record
-              incidents, play media, decrypt data, or contact emergency
-              services.
+              Review recent incident records, trusted-contact access, and
+              account status.
             </p>
             <p className="mt-3 text-proofline-text-muted">
               {apiClient.mode === "mock"
@@ -60,27 +58,32 @@ function DashboardPage() {
             </p>
           </>
         }
-        action={<Button href="/incidents">View incidents</Button>}
+        action={<Button href="/incidents">View records</Button>}
       />
 
       <section className="grid gap-4 sm:grid-cols-3">
         <Metric label="Connection mode" value={apiClient.mode} />
         <Metric
-          label="Open incidents"
-          value={incidentListUnsupported ? "unavailable" : openCount}
+          label="Open records"
+          value={incidentListUnsupported ? "Not available yet" : openCount}
         />
         <Metric
           label="Shared records"
-          value={incidentListUnsupported ? "unavailable" : sharedCount}
+          value={incidentListUnsupported ? "Not available yet" : sharedCount}
         />
       </section>
 
+      <InlineStatus tone="warning">
+        Not an emergency service. This web client does not record incidents,
+        play media, or decrypt data.
+      </InlineStatus>
+
       <ContentSection
-        title="Recent incidents"
+        title="Recent incident records"
         trailing={
           <span>
             {incidentListUnsupported
-              ? "Live list unavailable"
+              ? "List not available yet"
               : incidents.isLoading
                 ? "Loading"
                 : `${incidents.data?.length ?? 0} visible`}
@@ -121,7 +124,7 @@ function DashboardPage() {
           </div>
         ) : (
           <EmptyState
-            title="No incidents"
+            title="No records"
             body="Incident records will appear here when available."
           />
         )}
