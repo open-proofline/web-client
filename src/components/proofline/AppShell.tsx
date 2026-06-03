@@ -25,29 +25,33 @@ export function AppShell() {
   return (
     <div className="min-h-screen bg-proofline-bg text-proofline-text">
       <header className="border-b border-proofline-border bg-proofline-bg-deep">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 sm:py-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
             <div className="flex min-w-0 items-start gap-3">
               <ProoflineLogo className="size-12 shrink-0 scale-125 object-contain sm:size-14" />
               <div className="min-w-0">
-                <RouterLink
-                  to="/"
-                  className="text-lg font-semibold text-proofline-text focus:outline-2 focus:outline-offset-4 focus:outline-proofline-focus"
-                >
-                  Proofline
-                </RouterLink>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <RouterLink
+                    to="/"
+                    className="text-lg font-semibold text-proofline-text focus:outline-2 focus:outline-offset-4 focus:outline-proofline-focus"
+                  >
+                    Proofline
+                  </RouterLink>
+                  <PrototypeNotice />
+                </div>
                 <p className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-sm leading-5 text-proofline-text-muted">
                   <span>Account and incident review</span>
                   <span className="hidden sm:inline" aria-hidden="true">
                     •
                   </span>
-                  <span>For emergencies, contact local services directly.</span>
+                  <span>
+                    No emergency reliance. Contact local services directly.
+                  </span>
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-              <PrototypeNotice />
+            <div className="flex justify-end">
               <ProfileMenu session={session} onLogout={logout} />
             </div>
           </div>

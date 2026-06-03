@@ -41,9 +41,7 @@ test("renders the login screen", async () => {
   expect(
     await screen.findByRole("heading", { name: "Sign in" }),
   ).toBeInTheDocument();
-  expect(
-    screen.getByText("Experimental · Not for emergency reliance"),
-  ).toBeInTheDocument();
+  expect(screen.getByText("Experimental")).toBeInTheDocument();
   expect(screen.getByLabelText("Account menu")).toBeInTheDocument();
 });
 

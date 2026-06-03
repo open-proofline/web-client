@@ -20,9 +20,7 @@ test("loads the login flow", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Log in" })).toHaveCount(0);
-  await expect(
-    page.getByText("Experimental · Not for emergency reliance"),
-  ).toBeVisible();
+  await expect(page.getByText("Experimental")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -114,8 +112,6 @@ test("navigates internal incident routes without full page reloads", async ({
   ).toBeVisible();
   await expect(page.getByText("No shared access")).toBeVisible();
   await expect(page.getByText("No key delivery")).toBeVisible();
-  await expect(
-    page.getByText("Experimental · Not for emergency reliance"),
-  ).toBeVisible();
+  await expect(page.getByText("Experimental")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
