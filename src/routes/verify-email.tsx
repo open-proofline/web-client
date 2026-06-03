@@ -1,8 +1,8 @@
 import { createRoute } from "@tanstack/react-router";
 import { useLayoutEffect, useRef, useState } from "react";
 import { useAuth } from "../auth/use-auth";
+import { AuthScreen } from "../components/proofline/AuthScreen";
 import { Button } from "../components/catalyst/button";
-import { ProoflineLogo } from "../components/proofline/ProoflineLogo";
 import { rootRoute } from "./__root";
 
 type VerificationState = "checking" | "missing" | "verified" | "invalid";
@@ -60,17 +60,10 @@ function VerifyEmailPage() {
   }, [apiClient]);
 
   return (
-    <section className="mx-auto max-w-md rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
-      <div className="flex items-center gap-3">
-        <ProoflineLogo className="size-12 shrink-0" />
-        <p className="text-sm font-medium text-proofline-text-muted">
-          Proofline
-        </p>
-      </div>
-      <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
-        Verify email
-      </h1>
-
+    <AuthScreen
+      title="Verify email"
+      lead="Proofline reads the verification credential from the link, submits it once, and clears the browser URL fragment."
+    >
       {state === "checking" ? (
         <p
           role="status"
@@ -113,7 +106,7 @@ function VerifyEmailPage() {
       <Button href="/login" className="mt-6 w-full">
         Go to login
       </Button>
-    </section>
+    </AuthScreen>
   );
 }
 

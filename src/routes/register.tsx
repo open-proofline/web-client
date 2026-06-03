@@ -6,6 +6,7 @@ import {
 import { useState, type FormEvent } from "react";
 import { ApiError } from "../api/errors";
 import { useAuth } from "../auth/use-auth";
+import { AuthScreen } from "../components/proofline/AuthScreen";
 import { Button } from "../components/catalyst/button";
 import {
   Description,
@@ -15,7 +16,6 @@ import {
   Label,
 } from "../components/catalyst/fieldset";
 import { Input } from "../components/catalyst/input";
-import { ProoflineLogo } from "../components/proofline/ProoflineLogo";
 import { rootRoute } from "./__root";
 
 type RegistrationResult =
@@ -73,7 +73,7 @@ function registrationErrorMessage(error: unknown): string {
     case "registration_disabled":
       return "Public registration is not enabled for this deployment.";
     case "registration_payment_unavailable":
-      return "Paid registration is not available in this prototype. No payment was started.";
+      return "Paid registration is not available in this experimental client. No payment was started.";
     case "invalid_username":
       return "Use a username that meets the server requirements.";
     case "invalid_email":
@@ -128,25 +128,35 @@ function RegisterPage() {
     return <Navigate to="/" />;
   }
 
-  return (
-    <section className="mx-auto max-w-md rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
-      <div>
-        <div className="flex items-center gap-3">
-          <ProoflineLogo className="size-12 shrink-0" />
-          <p className="text-sm font-medium text-proofline-text-muted">
-            Proofline
-          </p>
-        </div>
-        <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
-          Create account
-        </h1>
-        <p className="mt-2 text-sm text-proofline-text-secondary">
-          This prototype uses {apiClient.mode} API mode. Registration creates no
-          browser session; verify your email before logging in.
-        </p>
-      </div>
+  const acceptedMessage =
+    result.state === "accepted" && apiClient.mode === "mock"
+      ? "Sample registration accepted. No account is created and no email is sent."
+      : result.state === "accepted"
+        ? result.message
+        : null;
 
-      <form onSubmit={handleSubmit} className="mt-6">
+  return (
+    <AuthScreen
+      title="Create account"
+      lead={
+        apiClient.mode === "mock"
+          ? "Mock mode checks the form and shows the next step without creating an account."
+          : "Create a Proofline account for this deployment. Registration does not sign you in; verify your email before logging in."
+      }
+      footer={
+        <>
+          Already have an account?{" "}
+          <RouterLink
+            to="/login"
+            className="font-medium text-proofline-text underline underline-offset-4 focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
+          >
+            Log in
+          </RouterLink>
+          .
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit}>
         <FieldGroup>
           <Field>
             <Label>Username</Label>
@@ -212,7 +222,7 @@ function RegisterPage() {
           >
             <p>Check your email to continue.</p>
             <p className="mt-2 text-proofline-text-secondary">
-              {result.message}
+              {acceptedMessage}
             </p>
           </div>
         ) : null}
@@ -230,18 +240,7 @@ function RegisterPage() {
           {isSubmitting ? "Creating account" : "Create account"}
         </Button>
       </form>
-
-      <p className="mt-4 text-sm text-proofline-text-secondary">
-        Already have an account?{" "}
-        <RouterLink
-          to="/login"
-          className="font-medium text-proofline-text underline underline-offset-4 focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
-        >
-          Log in
-        </RouterLink>
-        .
-      </p>
-    </section>
+    </AuthScreen>
   );
 }
 

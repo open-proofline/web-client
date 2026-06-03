@@ -7,10 +7,10 @@ import {
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth/use-auth";
 import { rootRoute } from "./__root";
+import { AuthScreen } from "../components/proofline/AuthScreen";
 import { Button } from "../components/catalyst/button";
 import { Field, FieldGroup, Label } from "../components/catalyst/fieldset";
 import { Input } from "../components/catalyst/input";
-import { ProoflineLogo } from "../components/proofline/ProoflineLogo";
 
 type LoginErrorState = {
   message: string;
@@ -54,25 +54,27 @@ function LoginPage() {
   }
 
   return (
-    <section className="mx-auto max-w-md rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
-      <div>
-        <div className="flex items-center gap-3">
-          <ProoflineLogo className="size-12 shrink-0" />
-          <p className="text-sm font-medium text-proofline-text-muted">
-            Proofline
-          </p>
-        </div>
-        <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
-          Log in
-        </h1>
-        <p className="mt-2 text-sm text-proofline-text-secondary">
-          This prototype uses {apiClient.mode} API mode. Browser token
-          persistence is memory-only unless explicitly configured for local
-          development.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="mt-6">
+    <AuthScreen
+      title="Log in"
+      lead={
+        apiClient.mode === "mock"
+          ? "Mock mode uses sample credentials and sample incident records only."
+          : "Use your Proofline account credentials. Browser token persistence is memory-only unless local development storage is explicitly enabled."
+      }
+      footer={
+        <>
+          Need an account?{" "}
+          <RouterLink
+            to="/register"
+            className="font-medium text-proofline-text underline underline-offset-4 focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
+          >
+            Create account
+          </RouterLink>
+          .
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit}>
         <FieldGroup>
           <Field>
             <Label>Username</Label>
@@ -125,18 +127,7 @@ function LoginPage() {
           {isSubmitting ? "Signing in" : "Log in"}
         </Button>
       </form>
-
-      <p className="mt-4 text-sm text-proofline-text-secondary">
-        Need an account?{" "}
-        <RouterLink
-          to="/register"
-          className="font-medium text-proofline-text underline underline-offset-4 focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
-        >
-          Create account
-        </RouterLink>
-        .
-      </p>
-    </section>
+    </AuthScreen>
   );
 }
 

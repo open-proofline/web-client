@@ -7,6 +7,12 @@ import {
 } from "../../api/client";
 import { useAuth } from "../../auth/use-auth";
 import { EmptyState } from "../../components/proofline/EmptyState";
+import {
+  ContentSection,
+  InlineStatus,
+  MetadataRow,
+  PageHeader,
+} from "../../components/proofline/Layout";
 import { StatusBadge } from "../../components/proofline/StatusBadge";
 import { rootRoute } from "../__root";
 
@@ -28,86 +34,68 @@ function IncidentsIndexPage() {
   );
 
   return (
-    <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
-      <div>
-        <p className="text-sm font-medium text-proofline-text-muted">
-          Owned incident metadata
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
-          Incidents
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm text-proofline-text-secondary">
-          {apiClient.mode === "mock"
-            ? "Mock mode shows prototype incident records only; they are not live backend data."
-            : "Live mode does not call an owned incident list route because current open-proofline/server does not expose GET /v1/incidents. Confirmed live support starts with incident read-by-ID."}
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Owned incident metadata"
+        title="Incidents"
+        body={
+          apiClient.mode === "mock"
+            ? "Mock mode shows sample incident records only; they are not live backend data."
+            : "Live mode does not call an owned incident list route because current open-proofline/server does not expose GET /v1/incidents. Confirmed live support starts with incident read-by-ID."
+        }
+      />
 
-      {incidents.isError ? (
-        <p
-          role="alert"
-          className="mt-6 rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
-        >
-          {incidentListUnsupported
-            ? "Live owned incident listing is disabled because current open-proofline/server does not expose GET /v1/incidents."
-            : "Incident metadata could not be loaded."}
-        </p>
-      ) : incidents.isLoading ? (
-        <p className="mt-6 text-sm text-proofline-text-muted">
-          Loading incident metadata.
-        </p>
-      ) : incidents.data?.length ? (
-        <div className="mt-6 overflow-hidden rounded-lg border border-proofline-border">
-          <table className="min-w-full divide-y divide-proofline-border text-left text-sm">
-            <thead className="bg-proofline-surface-elevated text-xs uppercase text-proofline-text-muted">
-              <tr>
-                <th className="px-4 py-3 font-medium">Incident</th>
-                <th className="px-4 py-3 font-medium">Mode</th>
-                <th className="px-4 py-3 font-medium">Sharing</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-proofline-border bg-proofline-surface">
-              {incidents.data.map((incident) => (
-                <tr
-                  key={incident.id}
-                  className="hover:bg-proofline-surface-elevated"
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      to="/incidents/$incidentId"
-                      params={{ incidentId: incident.id }}
-                      className="font-medium text-proofline-accent-cyan hover:text-proofline-primary-hover focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
-                    >
-                      {incident.id}
-                    </Link>
-                    <div className="text-proofline-text-muted">
-                      {incident.client_label ?? "No client label"}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-proofline-text-secondary">
-                    {incident.incident_mode ?? "generic"}
-                  </td>
-                  <td className="px-4 py-3 text-proofline-text-secondary">
-                    {incident.sharing_state ?? "private"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge value={incident.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="mt-6">
+      <ContentSection title="Incident records">
+        {incidents.isError ? (
+          <InlineStatus role="alert" tone="danger">
+            {incidentListUnsupported
+              ? "Live owned incident listing is disabled because current open-proofline/server does not expose GET /v1/incidents."
+              : "Incident metadata could not be loaded."}
+          </InlineStatus>
+        ) : incidents.isLoading ? (
+          <p className="text-sm text-proofline-text-muted">
+            Loading incident metadata.
+          </p>
+        ) : incidents.data?.length ? (
+          <div className="divide-y divide-proofline-border">
+            {incidents.data.map((incident) => (
+              <MetadataRow
+                key={incident.id}
+                title={
+                  <Link
+                    to="/incidents/$incidentId"
+                    params={{ incidentId: incident.id }}
+                    className="text-proofline-accent-cyan hover:text-proofline-primary-hover focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
+                  >
+                    {incident.id}
+                  </Link>
+                }
+                items={[
+                  {
+                    label: "Label",
+                    value: incident.client_label ?? "No client label",
+                  },
+                  {
+                    label: "Mode",
+                    value: incident.incident_mode ?? "generic",
+                  },
+                  {
+                    label: "Sharing",
+                    value: incident.sharing_state ?? "private",
+                  },
+                ]}
+                status={<StatusBadge value={incident.status} />}
+              />
+            ))}
+          </div>
+        ) : (
           <EmptyState
             title="No incidents"
             body="Owned incident records will appear here when the API returns them."
           />
-        </div>
-      )}
-    </section>
+        )}
+      </ContentSection>
+    </div>
   );
 }
 

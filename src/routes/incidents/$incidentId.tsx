@@ -3,6 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { prooflineQueryKeys } from "../../api/client";
 import { useAuth } from "../../auth/use-auth";
 import { EmptyState } from "../../components/proofline/EmptyState";
+import {
+  ContentSection,
+  InlineStatus,
+  MetadataRow,
+  PageHeader,
+} from "../../components/proofline/Layout";
 import { MetadataGrid } from "../../components/proofline/MetadataGrid";
 import { StatusBadge } from "../../components/proofline/StatusBadge";
 import { rootRoute } from "../__root";
@@ -38,7 +44,7 @@ function IncidentDetailPage() {
 
   if (incident.isLoading) {
     return (
-      <p className="text-sm text-proofline-text-muted">
+      <p role="status" className="text-sm text-proofline-text-muted">
         Loading incident detail.
       </p>
     );
@@ -59,72 +65,61 @@ function IncidentDetailPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-proofline-text-muted">
-              Incident detail
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
-              {detail.incident.id}
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-proofline-text-secondary">
+      <PageHeader
+        eyebrow="Incident detail"
+        title={detail.incident.id}
+        body={
+          <>
+            <p>
               Metadata review only. This view does not play media, decrypt
               browser-side, unwrap keys, or expose raw key material.
             </p>
-          </div>
-          <StatusBadge value={detail.incident.status} />
-        </div>
+          </>
+        }
+        action={<StatusBadge value={detail.incident.status} />}
+      />
 
-        <div className="mt-6">
-          <MetadataGrid
-            items={[
-              {
-                label: "Mode",
-                value: detail.incident.incident_mode ?? "generic",
-              },
-              {
-                label: "Capture profile",
-                value: detail.incident.capture_profile,
-              },
-              {
-                label: "Escalation policy",
-                value: detail.incident.escalation_policy,
-              },
-              { label: "Sharing state", value: detail.incident.sharing_state },
-              {
-                label: "Deletion state",
-                value: detail.incident.deletion_state,
-              },
-              { label: "Created", value: detail.incident.created_at },
-              { label: "Updated", value: detail.incident.updated_at },
-              { label: "Client label", value: detail.incident.client_label },
-            ]}
-          />
-        </div>
-      </section>
+      <ContentSection title="Overview">
+        <MetadataGrid
+          items={[
+            {
+              label: "Mode",
+              value: detail.incident.incident_mode ?? "generic",
+            },
+            {
+              label: "Capture profile",
+              value: detail.incident.capture_profile,
+            },
+            {
+              label: "Escalation policy",
+              value: detail.incident.escalation_policy,
+            },
+            { label: "Sharing state", value: detail.incident.sharing_state },
+            {
+              label: "Deletion state",
+              value: detail.incident.deletion_state,
+            },
+            { label: "Created", value: detail.incident.created_at },
+            { label: "Updated", value: detail.incident.updated_at },
+            { label: "Client label", value: detail.incident.client_label },
+          ]}
+        />
+      </ContentSection>
 
       <MetadataSection title="Streams" count={detail.streams.length}>
         {detail.streams.length ? (
           <div className="divide-y divide-proofline-border">
             {detail.streams.map((stream) => (
-              <div key={stream.id} className="grid gap-2 py-4 md:grid-cols-5">
-                <div className="font-medium text-proofline-text">
-                  {stream.id}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {stream.media_type}
-                </div>
-                <div>
-                  <StatusBadge value={stream.status} />
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {stream.chunk_count ?? 0} chunks
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {stream.byte_size ?? 0} bytes
-                </div>
-              </div>
+              <MetadataRow
+                key={stream.id}
+                title={stream.id}
+                items={[
+                  { label: "Media", value: stream.media_type },
+                  { label: "Chunks", value: stream.chunk_count ?? 0 },
+                  { label: "Bytes", value: stream.byte_size ?? 0 },
+                ]}
+                status={<StatusBadge value={stream.status} />}
+              />
             ))}
           </div>
         ) : (
@@ -139,23 +134,16 @@ function IncidentDetailPage() {
         {detail.chunks.length ? (
           <div className="divide-y divide-proofline-border">
             {detail.chunks.map((chunk) => (
-              <div key={chunk.id} className="grid gap-2 py-4 md:grid-cols-5">
-                <div className="font-medium text-proofline-text">
-                  {chunk.id}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  #{chunk.chunk_index}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {chunk.media_type}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {chunk.byte_size ?? 0} bytes
-                </div>
-                <div className="truncate text-proofline-text-muted">
-                  {chunk.sha256_hex ?? "No hash"}
-                </div>
-              </div>
+              <MetadataRow
+                key={chunk.id}
+                title={chunk.id}
+                items={[
+                  { label: "Index", value: `#${chunk.chunk_index}` },
+                  { label: "Media", value: chunk.media_type },
+                  { label: "Bytes", value: chunk.byte_size ?? 0 },
+                  { label: "SHA-256", value: chunk.sha256_hex ?? "No hash" },
+                ]}
+              />
             ))}
           </div>
         ) : (
@@ -178,21 +166,18 @@ function IncidentDetailPage() {
         ) : contacts.data?.length ? (
           <div className="divide-y divide-proofline-border">
             {contacts.data.map((contact) => (
-              <div
+              <MetadataRow
                 key={contact.public_key_id}
-                className="grid gap-2 py-4 md:grid-cols-4"
-              >
-                <div className="font-medium text-proofline-text">
-                  {contact.display_label ?? contact.contact_id}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {contact.wrapping_algorithm}
-                </div>
-                <div className="truncate text-proofline-text-muted">
-                  {contact.public_key_fingerprint}
-                </div>
-                <StatusBadge value={contact.key_state} />
-              </div>
+                title={contact.display_label ?? contact.contact_id}
+                items={[
+                  { label: "Algorithm", value: contact.wrapping_algorithm },
+                  {
+                    label: "Fingerprint",
+                    value: contact.public_key_fingerprint,
+                  },
+                ]}
+                status={<StatusBadge value={contact.key_state} />}
+              />
             ))}
           </div>
         ) : (
@@ -215,24 +200,16 @@ function IncidentDetailPage() {
         ) : grants.data?.length ? (
           <div className="divide-y divide-proofline-border">
             {grants.data.map((grant) => (
-              <div
+              <MetadataRow
                 key={grant.grant_id}
-                className="grid gap-2 py-4 md:grid-cols-5"
-              >
-                <div className="font-medium text-proofline-text">
-                  {grant.grant_id}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {grant.recipient_type}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {grant.data_class}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {grant.expires_at ?? "No expiry"}
-                </div>
-                <StatusBadge value={grant.grant_state} />
-              </div>
+                title={grant.grant_id}
+                items={[
+                  { label: "Recipient", value: grant.recipient_type },
+                  { label: "Data class", value: grant.data_class },
+                  { label: "Expires", value: grant.expires_at ?? "No expiry" },
+                ]}
+                status={<StatusBadge value={grant.grant_state} />}
+              />
             ))}
           </div>
         ) : (
@@ -258,24 +235,16 @@ function IncidentDetailPage() {
         ) : wrappedKeys.data?.length ? (
           <div className="divide-y divide-proofline-border">
             {wrappedKeys.data.map((record) => (
-              <div
+              <MetadataRow
                 key={record.wrapped_key_id}
-                className="grid gap-2 py-4 md:grid-cols-5"
-              >
-                <div className="font-medium text-proofline-text">
-                  {record.wrapped_key_id}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {record.media_key_id}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  {record.wrapping_algorithm}
-                </div>
-                <div className="text-proofline-text-secondary">
-                  Grant {record.grant_id}
-                </div>
-                <StatusBadge value={record.wrapped_key_state} />
-              </div>
+                title={record.wrapped_key_id}
+                items={[
+                  { label: "Media key", value: record.media_key_id },
+                  { label: "Algorithm", value: record.wrapping_algorithm },
+                  { label: "Grant", value: record.grant_id },
+                ]}
+                status={<StatusBadge value={record.wrapped_key_state} />}
+              />
             ))}
           </div>
         ) : (
@@ -291,12 +260,9 @@ function IncidentDetailPage() {
 
 function MetadataError({ children }: { children: React.ReactNode }) {
   return (
-    <p
-      role="alert"
-      className="rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
-    >
+    <InlineStatus role="alert" tone="danger">
       {children}
-    </p>
+    </InlineStatus>
   );
 }
 
@@ -310,15 +276,9 @@ function MetadataSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold text-proofline-text">{title}</h2>
-        <span className="text-sm text-proofline-text-muted">
-          {count} records
-        </span>
-      </div>
-      <div className="mt-4">{children}</div>
-    </section>
+    <ContentSection title={title} trailing={`${count} records`}>
+      {children}
+    </ContentSection>
   );
 }
 

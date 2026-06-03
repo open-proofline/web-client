@@ -42,7 +42,7 @@ test("renders the login screen", async () => {
     await screen.findByRole("heading", { name: "Log in" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByText("Experimental prototype. Not for emergency reliance."),
+    screen.getByText("Experimental · Not for emergency reliance"),
   ).toBeInTheDocument();
 });
 
@@ -63,7 +63,7 @@ test("does not prefill prototype credentials in live mode", async () => {
   expect(screen.getByLabelText("Password")).toHaveValue("");
 });
 
-test("registers in mock mode with a prototype-only accepted state", async () => {
+test("registers in mock mode with a sample-only accepted state", async () => {
   renderRoute("/register");
 
   expect(
@@ -88,7 +88,7 @@ test("registers in mock mode with a prototype-only accepted state", async () => 
   );
   expect(
     screen.getByText(
-      "Prototype mock registration accepted. No account is created and no email is sent.",
+      "Sample registration accepted. No account is created and no email is sent.",
     ),
   ).toBeInTheDocument();
   expect(screen.queryByText("Incident review workspace")).toBeNull();
@@ -236,7 +236,7 @@ const registrationErrorCases = [
   {
     code: "registration_payment_unavailable",
     message:
-      "Paid registration is not available in this prototype. No payment was started.",
+      "Paid registration is not available in this experimental client. No payment was started.",
   },
   {
     code: "invalid_username",
@@ -388,9 +388,7 @@ test("shows a safe missing email verification credential state", async () => {
 
   renderRoute("/verify-email");
 
-  expect(
-    await screen.findByRole("alert"),
-  ).toHaveTextContent(
+  expect(await screen.findByRole("alert")).toHaveTextContent(
     "This verification link is missing its verification credential.",
   );
   expect(window.location.hash).toBe("");
@@ -471,7 +469,7 @@ test("renders authenticated mock incident list records", async () => {
   expect(screen.getByText("inc_prototype_002")).toBeInTheDocument();
   expect(
     screen.getByText(
-      "Mock mode shows prototype incident records only; they are not live backend data.",
+      "Mock mode shows sample incident records only; they are not live backend data.",
     ),
   ).toBeInTheDocument();
 });
