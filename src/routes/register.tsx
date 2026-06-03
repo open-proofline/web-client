@@ -15,6 +15,7 @@ import {
   Label,
 } from "../components/catalyst/fieldset";
 import { Input } from "../components/catalyst/input";
+import { ProoflineLogo } from "../components/proofline/ProoflineLogo";
 import { rootRoute } from "./__root";
 
 type RegistrationResult =
@@ -26,7 +27,8 @@ const minPasswordBytes = 12;
 const maxPasswordBytes = 72;
 const maxEmailBytes = 254;
 const emailAddressPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const passwordRequirements = "Password must be 12 to 72 bytes. Longer non-ASCII passwords may use more than one byte per character.";
+const passwordRequirements =
+  "Password must be 12 to 72 bytes. Longer non-ASCII passwords may use more than one byte per character.";
 
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
@@ -129,15 +131,18 @@ function RegisterPage() {
   return (
     <section className="mx-auto max-w-md rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
       <div>
-        <p className="text-sm font-medium text-proofline-text-muted">
-          Proofline Web Client
-        </p>
+        <div className="flex items-center gap-3">
+          <ProoflineLogo className="size-12 shrink-0" />
+          <p className="text-sm font-medium text-proofline-text-muted">
+            Proofline
+          </p>
+        </div>
         <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
           Create account
         </h1>
         <p className="mt-2 text-sm text-proofline-text-secondary">
-          This prototype uses {apiClient.mode} API mode. Registration creates
-          no browser session; verify your email before logging in.
+          This prototype uses {apiClient.mode} API mode. Registration creates no
+          browser session; verify your email before logging in.
         </p>
       </div>
 
@@ -172,7 +177,9 @@ function RegisterPage() {
               }}
               required
             />
-            {emailError !== null ? <ErrorMessage>{emailError}</ErrorMessage> : null}
+            {emailError !== null ? (
+              <ErrorMessage>{emailError}</ErrorMessage>
+            ) : null}
           </Field>
           <Field>
             <Label>Password</Label>
@@ -185,7 +192,9 @@ function RegisterPage() {
               onChange={(event) => {
                 setPassword(event.target.value);
                 if (passwordError !== null) {
-                  setPasswordError(passwordValidationMessage(event.target.value));
+                  setPasswordError(
+                    passwordValidationMessage(event.target.value),
+                  );
                 }
               }}
               required

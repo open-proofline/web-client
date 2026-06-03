@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-router";
 import { Button } from "../catalyst/button";
 import { PrototypeNotice } from "./PrototypeNotice";
+import { ProoflineLogo } from "./ProoflineLogo";
 import { useAuth } from "../../auth/use-auth";
 
 const navigation = [
@@ -26,16 +27,19 @@ export function AppShell() {
       <PrototypeNotice />
       <header className="border-b border-proofline-border bg-proofline-bg-deep">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <RouterLink
-              to="/"
-              className="text-lg font-semibold text-proofline-text focus:outline-2 focus:outline-offset-4 focus:outline-proofline-focus"
-            >
-              Proofline
-            </RouterLink>
-            <p className="text-sm text-proofline-text-muted">
-              Account and incident review prototype
-            </p>
+          <div className="flex items-center gap-3">
+            <ProoflineLogo className="size-10 shrink-0" />
+            <div>
+              <RouterLink
+                to="/"
+                className="text-lg font-semibold text-proofline-text focus:outline-2 focus:outline-offset-4 focus:outline-proofline-focus"
+              >
+                Proofline
+              </RouterLink>
+              <p className="text-sm text-proofline-text-muted">
+                Account and incident review prototype
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
