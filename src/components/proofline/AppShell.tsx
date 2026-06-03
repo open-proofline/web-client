@@ -53,9 +53,9 @@ export function AppShell() {
           {showNavigation ? (
             <nav
               aria-label="Primary"
-              className="-mx-4 overflow-x-auto px-4 py-1"
+              className="-mx-4 overflow-x-auto px-4 py-1 lg:hidden"
             >
-              <div className="flex min-w-max gap-2 px-1 py-1 lg:hidden">
+              <div className="flex min-w-max gap-2 px-1 py-1">
                 {navigation.map((item) => (
                   <RouterLink
                     key={item.to}
