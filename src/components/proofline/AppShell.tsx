@@ -25,8 +25,8 @@ export function AppShell() {
   return (
     <div className="min-h-screen bg-proofline-bg text-proofline-text">
       <header className="border-b border-proofline-border bg-proofline-bg-deep">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 sm:py-4">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 sm:pb-2 sm:pt-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:items-center">
             <div className="flex min-w-0 items-start gap-3">
               <ProoflineLogo className="size-12 shrink-0 scale-125 object-contain sm:size-14" />
               <div className="min-w-0">
