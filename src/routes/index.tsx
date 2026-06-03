@@ -9,6 +9,11 @@ import {
 import { rootRoute } from "./__root";
 import { Button } from "../components/catalyst/button";
 import { EmptyState } from "../components/proofline/EmptyState";
+import {
+  ContentSection,
+  InlineStatus,
+  PageHeader,
+} from "../components/proofline/Layout";
 import { StatusBadge } from "../components/proofline/StatusBadge";
 
 function DashboardPage() {
@@ -37,72 +42,66 @@ function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-proofline-text-muted">
-              Prototype dashboard
+      <PageHeader
+        eyebrow="Overview"
+        title="Account overview"
+        body={
+          <>
+            <p>
+              Review recent incident records, trusted-contact access, and
+              account status.
             </p>
-            <h1 className="mt-2 text-2xl font-semibold text-proofline-text">
-              Incident review workspace
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-proofline-text-secondary">
-              Review account session state, owned incident metadata, stream and
-              chunk metadata, contact public-key metadata, sharing grants, and
-              wrapped-key metadata. This app does not record, decrypt, unwrap
-              keys, export playable media, or contact emergency services.
-            </p>
-            <p className="mt-3 max-w-3xl text-sm text-proofline-text-muted">
+            <p className="mt-3 text-proofline-text-muted">
               {apiClient.mode === "mock"
-                ? "Mock mode shows prototype incident records only; they are not live backend data."
-                : "Live mode can read confirmed incident detail routes, but owned incident listing is disabled until the server exposes a list route."}
+                ? "Sample records are shown for local testing only."
+                : "Live mode can open a known incident. A full incident list is not available yet."}
             </p>
-          </div>
-          <Button href="/incidents">View incidents</Button>
-        </div>
-      </section>
+          </>
+        }
+        action={<Button href="/incidents">View records</Button>}
+      />
 
       <section className="grid gap-4 sm:grid-cols-3">
-        <Metric label="API mode" value={apiClient.mode} />
+        <Metric label="Connection mode" value={apiClient.mode} />
         <Metric
-          label="Open incidents"
-          value={incidentListUnsupported ? "unavailable" : openCount}
+          label="Open records"
+          value={incidentListUnsupported ? "Not available yet" : openCount}
         />
         <Metric
-          label="Shared metadata records"
-          value={incidentListUnsupported ? "unavailable" : sharedCount}
+          label="Shared records"
+          value={incidentListUnsupported ? "Not available yet" : sharedCount}
         />
       </section>
 
-      <section className="rounded-lg border border-proofline-border bg-proofline-surface p-6 shadow-lg shadow-proofline-bg-deep/20">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold text-proofline-text">
-            Recent incidents
-          </h2>
-          <span className="text-sm text-proofline-text-muted">
+      <InlineStatus tone="warning">
+        Not an emergency service. This web client does not record incidents,
+        play media, or decrypt data.
+      </InlineStatus>
+
+      <ContentSection
+        title="Recent incident records"
+        trailing={
+          <span>
             {incidentListUnsupported
-              ? "Live list unavailable"
+              ? "List not available yet"
               : incidents.isLoading
                 ? "Loading"
                 : `${incidents.data?.length ?? 0} visible`}
           </span>
-        </div>
-
+        }
+      >
         {incidents.isError ? (
-          <p
-            role="alert"
-            className="mt-4 rounded-md border border-proofline-danger/40 bg-proofline-danger-bg p-3 text-sm text-proofline-danger"
-          >
+          <InlineStatus role="alert" tone="danger">
             {incidentListUnsupported
-              ? "Live owned incident listing is disabled because current open-proofline/server does not expose GET /v1/incidents. Mock mode uses prototype incident records only."
-              : "Incident metadata could not be loaded."}
-          </p>
+              ? "The live incident list is not available yet. Sample mode can still show test records."
+              : "Incident records could not be loaded."}
+          </InlineStatus>
         ) : incidents.isLoading ? (
-          <p className="mt-4 text-sm text-proofline-text-muted">
-            Loading incident metadata.
+          <p className="text-sm text-proofline-text-muted">
+            Loading incident records.
           </p>
         ) : incidents.data?.length ? (
-          <div className="mt-4 divide-y divide-proofline-border">
+          <div className="divide-y divide-proofline-border">
             {incidents.data.slice(0, 4).map((incident) => (
               <Link
                 key={incident.id}
@@ -125,11 +124,11 @@ function DashboardPage() {
           </div>
         ) : (
           <EmptyState
-            title="No incidents"
-            body="Owned incident metadata will appear here when available."
+            title="No records"
+            body="Incident records will appear here when available."
           />
         )}
-      </section>
+      </ContentSection>
     </div>
   );
 }
@@ -137,9 +136,7 @@ function DashboardPage() {
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-lg border border-proofline-border bg-proofline-surface-elevated p-5 shadow-lg shadow-proofline-bg-deep/20">
-      <dt className="text-sm font-medium text-proofline-text-muted">
-        {label}
-      </dt>
+      <dt className="text-sm font-medium text-proofline-text-muted">{label}</dt>
       <dd className="mt-2 text-2xl font-semibold text-proofline-text">
         {value}
       </dd>

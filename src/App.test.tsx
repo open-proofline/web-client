@@ -39,11 +39,13 @@ test("renders the login screen", async () => {
   renderRoute("/login");
 
   expect(
-    await screen.findByRole("heading", { name: "Log in" }),
+    await screen.findByRole("heading", { name: "Sign in" }),
   ).toBeInTheDocument();
+  expect(screen.getByText("Experimental")).toBeInTheDocument();
   expect(
-    screen.getByText("Experimental prototype. Not for emergency reliance."),
+    screen.getByRole("link", { name: "Proofline home" }),
   ).toBeInTheDocument();
+  expect(screen.queryByLabelText("Account menu")).toBeNull();
 });
 
 test("prefills prototype credentials in mock mode", async () => {
@@ -63,13 +65,11 @@ test("does not prefill prototype credentials in live mode", async () => {
   expect(screen.getByLabelText("Password")).toHaveValue("");
 });
 
-test("registers in mock mode with a prototype-only accepted state", async () => {
+test("registers in mock mode with a sample-only accepted state", async () => {
   renderRoute("/register");
 
   expect(
-    await screen.findByText(
-      "Password must be 12 to 72 bytes. Longer non-ASCII passwords may use more than one byte per character.",
-    ),
+    await screen.findByText("Choose a password between 12 to 72 characters."),
   ).toBeInTheDocument();
 
   fireEvent.change(await screen.findByLabelText("Username"), {
@@ -88,10 +88,10 @@ test("registers in mock mode with a prototype-only accepted state", async () => 
   );
   expect(
     screen.getByText(
-      "Prototype mock registration accepted. No account is created and no email is sent.",
+      "Sample registration accepted. No account is created and no email is sent.",
     ),
   ).toBeInTheDocument();
-  expect(screen.queryByText("Incident review workspace")).toBeNull();
+  expect(screen.queryByText("Account overview")).toBeNull();
 });
 
 test.each(["not-an-address", "a@a"])(
@@ -225,7 +225,7 @@ test("submits live registration without creating a session", async () => {
       "If registration can be completed, a verification email will be sent.",
     ),
   ).toBeInTheDocument();
-  expect(screen.queryByText("Signed in as")).toBeNull();
+  expect(screen.queryByText("live-user")).toBeNull();
 });
 
 const registrationErrorCases = [
@@ -236,7 +236,7 @@ const registrationErrorCases = [
   {
     code: "registration_payment_unavailable",
     message:
-      "Paid registration is not available in this prototype. No payment was started.",
+      "Paid registration is not available in this experimental client. No payment was started.",
   },
   {
     code: "invalid_username",
@@ -285,7 +285,7 @@ test.each(registrationErrorCases)(
 
     expect(await screen.findByRole("alert")).toHaveTextContent(message);
     expect(screen.queryByText("server registration error")).toBeNull();
-    expect(screen.queryByText("Signed in as")).toBeNull();
+    expect(screen.queryByText("live-user")).toBeNull();
   },
 );
 
@@ -313,7 +313,7 @@ test("shows a pending email verification login state", async () => {
   fireEvent.change(screen.getByLabelText("Password"), {
     target: { value: "valid-password" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
   const alert = await screen.findByRole("alert");
   expect(alert).toHaveTextContent(
@@ -323,7 +323,7 @@ test("shows a pending email verification login state", async () => {
   expect(
     screen.getByRole("link", { name: "email verification page" }),
   ).toHaveAttribute("href", "/verify-email");
-  expect(screen.queryByText("Incident review workspace")).toBeNull();
+  expect(screen.queryByText("Account overview")).toBeNull();
 });
 
 test("keeps generic login failures generic", async () => {
@@ -350,7 +350,7 @@ test("keeps generic login failures generic", async () => {
   fireEvent.change(screen.getByLabelText("Password"), {
     target: { value: "wrong-password" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
   const alert = await screen.findByRole("alert");
   expect(alert).toHaveTextContent("username or password is invalid");
@@ -383,15 +383,13 @@ test("verifies email links and clears URL fragments", async () => {
   expect(screen.queryByText("unit-token")).toBeNull();
 });
 
-test("shows a safe missing email verification credential state", async () => {
+test("shows a safe missing email verification code state", async () => {
   window.history.pushState(null, "", "/verify-email");
 
   renderRoute("/verify-email");
 
-  expect(
-    await screen.findByRole("alert"),
-  ).toHaveTextContent(
-    "This verification link is missing its verification credential.",
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "This verification link is missing its verification code.",
   );
   expect(window.location.hash).toBe("");
 });
@@ -426,7 +424,7 @@ test("redirects unauthenticated incident routes to login", async () => {
   renderRoute("/incidents/inc_prototype_001");
 
   expect(
-    await screen.findByRole("heading", { name: "Log in" }),
+    await screen.findByRole("heading", { name: "Sign in" }),
   ).toBeInTheDocument();
 });
 
@@ -437,26 +435,33 @@ test("redirects authenticated login visits to the dashboard", async () => {
 
   expect(
     await screen.findByRole("heading", {
-      name: "Incident review workspace",
+      name: "Account overview",
     }),
   ).toBeInTheDocument();
-  expect(screen.queryByRole("heading", { name: "Log in" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Sign in" })).toBeNull();
 });
 
 test("logs in with mock credentials and renders the dashboard", async () => {
   renderRoute("/login");
 
-  fireEvent.click(await screen.findByRole("button", { name: "Log in" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Sign in" }));
 
   expect(
     await screen.findByRole("heading", {
-      name: "Incident review workspace",
+      name: "Account overview",
     }),
   ).toBeInTheDocument();
-  expect(screen.getByText("Signed in as")).toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText("Account menu"));
   expect(screen.getByText("prototype-user")).toBeInTheDocument();
-  expect(screen.getByText("Open incidents")).toBeInTheDocument();
-  expect(screen.getByText("Shared metadata records")).toBeInTheDocument();
+  expect(
+    screen.getByRole("menuitem", { name: "Sign out" }),
+  ).toBeInTheDocument();
+  fireEvent.pointerDown(document.body);
+  expect(
+    screen.queryByRole("menuitem", { name: "Sign out" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText("Open records")).toBeInTheDocument();
+  expect(screen.getByText("Shared records")).toBeInTheDocument();
 });
 
 test("renders authenticated mock incident list records", async () => {
@@ -465,14 +470,12 @@ test("renders authenticated mock incident list records", async () => {
   renderRoute("/incidents");
 
   expect(
-    await screen.findByRole("heading", { name: "Incidents" }),
+    await screen.findByRole("heading", { name: "Incident records" }),
   ).toBeInTheDocument();
   expect(await screen.findByText("inc_prototype_001")).toBeInTheDocument();
   expect(screen.getByText("inc_prototype_002")).toBeInTheDocument();
   expect(
-    screen.getByText(
-      "Mock mode shows prototype incident records only; they are not live backend data.",
-    ),
+    screen.getByText("Sample records are shown for local testing only."),
   ).toBeInTheDocument();
 });
 
@@ -487,17 +490,17 @@ test("renders authenticated mock incident detail metadata sections", async () =>
   expect(screen.getByRole("heading", { name: "Streams" })).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "Chunks" })).toBeInTheDocument();
   expect(
-    screen.getByRole("heading", { name: "Contact public keys" }),
+    screen.getByRole("heading", { name: "Contact keys" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("heading", { name: "Sharing grants" }),
+    screen.getByRole("heading", { name: "Shared access" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("heading", { name: "Wrapped keys" }),
+    screen.getByRole("heading", { name: "Key delivery" }),
   ).toBeInTheDocument();
   expect(screen.getByText("str_audio_001")).toBeInTheDocument();
-  expect(screen.getByText("No grants")).toBeInTheDocument();
-  expect(screen.getByText("No wrapped keys")).toBeInTheDocument();
+  expect(screen.getByText("No shared access")).toBeInTheDocument();
+  expect(screen.getByText("No key delivery")).toBeInTheDocument();
 });
 
 test("shows the live incident list limitation", async () => {
@@ -507,10 +510,10 @@ test("shows the live incident list limitation", async () => {
   renderRoute("/incidents");
 
   expect(
-    await screen.findByRole("heading", { name: "Incidents" }),
+    await screen.findByRole("heading", { name: "Incident records" }),
   ).toBeInTheDocument();
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "current open-proofline/server does not expose GET /v1/incidents",
+    "The live incident list is not available yet.",
   );
 });
 
@@ -548,13 +551,13 @@ test("shows generic dependent metadata errors on incident detail", async () => {
   ).toBeInTheDocument();
   expect(await screen.findAllByRole("alert")).toHaveLength(3);
   expect(
-    screen.getByText("Contact public-key metadata could not be loaded."),
+    screen.getByText("Contact details could not be loaded."),
   ).toBeInTheDocument();
   expect(
-    screen.getByText("Sharing-grant metadata could not be loaded."),
+    screen.getByText("Shared access details could not be loaded."),
   ).toBeInTheDocument();
   expect(
-    screen.getByText("Wrapped-key metadata could not be loaded."),
+    screen.getByText("Key delivery details could not be loaded."),
   ).toBeInTheDocument();
 });
 

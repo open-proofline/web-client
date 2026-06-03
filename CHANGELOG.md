@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Improved public-facing web-client UX copy, warning treatment, and responsive
+  incident metadata layouts.
 - Documented browser cookie auth and CSRF client-mode planning.
 - Documented the registration and email-verification boundary.
 - Added a public registration form flow.
