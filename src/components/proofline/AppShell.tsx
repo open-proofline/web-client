@@ -39,14 +39,8 @@ export function AppShell() {
                   </RouterLink>
                   <PrototypeNotice />
                 </div>
-                <p className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-sm leading-5 text-proofline-text-muted">
-                  <span>Account and incident review</span>
-                  <span className="hidden sm:inline" aria-hidden="true">
-                    •
-                  </span>
-                  <span>
-                    No emergency reliance. Contact local services directly.
-                  </span>
+                <p className="mt-1 text-xs leading-4 text-proofline-text-muted">
+                  Not an emergency service
                 </p>
               </div>
             </div>
