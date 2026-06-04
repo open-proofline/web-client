@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added the reusable documentation and prompt review workflow and refreshed
+  docs to distinguish current server support for owner-scoped incident listing
+  from the web client's remaining live-list implementation gap.
 - Improved public-facing web-client UX copy, warning treatment, and responsive
   incident metadata layouts.
 - Documented browser cookie auth and CSRF client-mode planning.
@@ -16,7 +19,8 @@
 - Documented the browser security header posture for static web-client deployment.
 - Expanded authenticated route coverage for mock dashboard and incident review flows.
 - Added accessible dependent metadata error states on the incident detail route.
-- Disabled the unconfirmed live owned incident list route and documented the backend limitation.
+- Disabled the live owned incident list route in the client pending API-client
+  support and tests.
 - Applied the midnight violet theme tokens to the prototype UI surfaces.
 - Used router-aware links for internal web-client navigation.
 - Cleared expired or malformed loaded sessions before authenticating the UI.

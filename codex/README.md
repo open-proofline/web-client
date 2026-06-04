@@ -14,6 +14,8 @@ deployment constraints.
 - `20-code-review.md`: review current changes
 - `30-security-review.md`: review frontend security posture
 - `40-documentation-update.md`: update docs without overpromising
+- `45-documentation-and-prompt-review.md`: comprehensive documentation and
+  reusable-prompt consistency review
 - `50-web-security-header-review.md`: review browser security header posture
 - `70-work-on-github-issue.md`: work on one issue
 - `75-create-draft-pr-from-current-branch.md`: create a draft PR
