@@ -81,39 +81,40 @@ The web client is responsible for the user-facing account portal, authenticated 
 
 The current bootstrap includes:
 
-* login/logout prototype flow
-* public registration form flow against the server registration contract
-* browser email-verification route that clears verification URL fragments
-* authenticated app shell
-* conservative session state with memory-first token storage
-* optional local-storage session persistence for local development only
-* documented browser-cookie auth and CSRF client-mode planning boundary
-* incident list UI backed by explicit mock data only
-* incident detail metadata UI
-* stream and chunk metadata review
-* contact public-key metadata views
-* sharing-grant metadata views
-* wrapped-key metadata views
-* safe loading, empty, and error states
-* visible prototype and emergency-reliance warnings
-* frontend CI for typecheck, lint, unit tests, build, and Playwright smoke tests
+- login/logout prototype flow
+- public registration form flow against the server registration contract
+- browser email-verification route that clears verification URL fragments
+- authenticated app shell
+- conservative session state with memory-first token storage
+- optional local-storage session persistence for local development only
+- documented browser-cookie auth and CSRF client-mode planning boundary
+- incident list UI backed by explicit mock data only in the current client
+  implementation
+- incident detail metadata UI
+- stream and chunk metadata review
+- contact public-key metadata views
+- sharing-grant metadata views
+- wrapped-key metadata views
+- safe loading, empty, and error states
+- visible prototype and emergency-reliance warnings
+- frontend CI for typecheck, lint, unit tests, build, and Playwright smoke tests
 
 ## Planned Account Portal Scope
 
 Planned account portal work includes:
 
-* public landing and pricing/account-entry pages
-* payment-gated account creation
-* login/logout
-* account profile page
-* password change flow
-* session status and session revocation flows
-* account billing status display
-* subscription/payment status handling
-* clear account-disabled, payment-required, expired-session, unauthorized, and forbidden states
-* browser-safe API error handling
-* browser token-storage review and hardening
-* browser-cookie auth mode and CSRF handling, once server/deployment review
+- public landing and pricing/account-entry pages
+- payment-gated account creation
+- login/logout
+- account profile page
+- password change flow
+- session status and session revocation flows
+- account billing status display
+- subscription/payment status handling
+- clear account-disabled, payment-required, expired-session, unauthorized, and forbidden states
+- browser-safe API error handling
+- browser token-storage review and hardening
+- browser-cookie auth mode and CSRF handling, once server/deployment review
   approves credentialed CORS for exact origins
 
 Payment-gated registration must be implemented as a backend-supported account
@@ -128,14 +129,15 @@ behavior.
 
 Planned authenticated incident-review work includes:
 
-* live owned-incident listing once the backend adds and documents that API
-* incident detail review
-* stream and chunk metadata review
-* viewer-token creation and revocation UI
-* encrypted bundle download affordances with clear warnings
-* deletion request/status UI for account-owned incidents, if backend support is available
-* mode, capture-profile, escalation-policy, sharing-state, deletion-state, and retention metadata display
-* safe empty/error/loading states for all incident views
+- live owned-incident listing in the client against the current server route,
+  once the API client enables it and tests the live response shape
+- incident detail review
+- stream and chunk metadata review
+- viewer-token creation and revocation UI
+- encrypted bundle download affordances with clear warnings
+- deletion request/status UI for account-owned incidents, if backend support is available
+- mode, capture-profile, escalation-policy, sharing-state, deletion-state, and retention metadata display
+- safe empty/error/loading states for all incident views
 
 The web client must not expose private admin/operator behavior or route `/v1/admin/...` functionality from a public edge.
 
@@ -143,13 +145,13 @@ The web client must not expose private admin/operator behavior or route `/v1/adm
 
 Planned sharing/contact work includes:
 
-* contact public-key registration and management
-* contact public-key state display
-* sharing-grant creation and revocation
-* incident-scoped and stream-scoped grant management
-* wrapped-key metadata review and delivery status
-* clear warnings that wrapped-key metadata is access-enabling metadata
-* trusted-contact access design, once separately scoped and threat-modeled
+- contact public-key registration and management
+- contact public-key state display
+- sharing-grant creation and revocation
+- incident-scoped and stream-scoped grant management
+- wrapped-key metadata review and delivery status
+- clear warnings that wrapped-key metadata is access-enabling metadata
+- trusted-contact access design, once separately scoped and threat-modeled
 
 Sharing metadata support does not imply browser decryption, trusted-contact decryption, raw key access, key escrow, or playable export.
 
@@ -157,11 +159,11 @@ Sharing metadata support does not imply browser decryption, trusted-contact decr
 
 Future trusted-contact work may include:
 
-* trusted-contact account access
-* trusted-contact incident access views
-* grant-aware incident metadata review
-* wrapped-key metadata delivery to authorized trusted contacts
-* careful UX for emergency and non-emergency access states
+- trusted-contact account access
+- trusted-contact incident access views
+- grant-aware incident metadata review
+- wrapped-key metadata delivery to authorized trusted contacts
+- careful UX for emergency and non-emergency access states
 
 Trusted-contact flows must be designed and reviewed before implementation. They must not imply emergency-services integration or guaranteed emergency response.
 
@@ -171,37 +173,37 @@ This repository does not currently implement recording or capture behavior.
 
 A future browser-based recording prototype may be added as a separately scoped feature for desktop/browser use cases. Possible capture modes may include:
 
-* microphone-only recording
-* camera and microphone recording
-* screen, window, or tab recording
-* screen capture with microphone audio
+- microphone-only recording
+- camera and microphone recording
+- screen, window, or tab recording
+- screen capture with microphone audio
 
 Browser recording must be treated as experimental. It must not be presented as a replacement for native iOS or Android recording clients, and it must not be described as reliable emergency capture.
 
 Before implementation, browser recording must be separately designed, documented, threat-modeled, and tested. The design must cover:
 
-* browser permission prompts and explicit user consent
-* browser and operating-system compatibility limits
-* screen, camera, microphone, and system-audio support differences
-* tab close, browser crash, sleep, permission loss, and background reliability limits
-* local encrypted staging before upload
-* chunking behavior
-* upload retry and idempotency behavior
-* user-visible recording state
-* safe failure states
-* privacy and safety wording
-* browser token-storage and XSS implications
+- browser permission prompts and explicit user consent
+- browser and operating-system compatibility limits
+- screen, camera, microphone, and system-audio support differences
+- tab close, browser crash, sleep, permission loss, and background reliability limits
+- local encrypted staging before upload
+- chunking behavior
+- upload retry and idempotency behavior
+- user-visible recording state
+- safe failure states
+- privacy and safety wording
+- browser token-storage and XSS implications
 
 If implemented, browser recording must preserve these boundaries:
 
-* no backend decryption
-* no browser decryption unless separately scoped
-* no raw server-held media keys
-* no key escrow
-* no break-glass access
-* no playable media export unless separately scoped
-* no emergency-services integration
-* no claim of production readiness or emergency reliability
+- no backend decryption
+- no browser decryption unless separately scoped
+- no raw server-held media keys
+- no key escrow
+- no break-glass access
+- no playable media export unless separately scoped
+- no emergency-services integration
+- no claim of production readiness or emergency reliability
 
 Browser recording is intended for possible desktop/browser interaction records, meetings, calls, evidence notes, or other non-mobile capture contexts. Native platform clients remain the intended direction for safety-critical mobile recording and stronger lifecycle reliability.
 
@@ -209,22 +211,22 @@ Browser recording is intended for possible desktop/browser interaction records, 
 
 This repository must not implement:
 
-* production mobile-client behavior
-* browser decryption
-* backend decryption
-* trusted-contact decryption
-* raw media-key handling
-* raw server-held keys
-* key escrow
-* break-glass key access
-* playable media export
-* emergency dispatch
-* push, SMS, or Messenger notifications
-* OAuth or JWT unless explicitly scoped later
-* public admin dashboards
-* backend implementation
-* protocol repository behavior
-* production safety workflows
+- production mobile-client behavior
+- browser decryption
+- backend decryption
+- trusted-contact decryption
+- raw media-key handling
+- raw server-held keys
+- key escrow
+- break-glass key access
+- playable media export
+- emergency dispatch
+- push, SMS, or Messenger notifications
+- OAuth or JWT unless explicitly scoped later
+- public admin dashboards
+- backend implementation
+- protocol repository behavior
+- production safety workflows
 
 Users and trusted contacts remain responsible for contacting emergency services.
 
@@ -234,17 +236,17 @@ The web client may be designed for a future public Proofline service, but this r
 
 Public deployment requires separate backend and infrastructure work, including:
 
-* TLS and edge hardening
-* public API exposure review
-* admin/operator route exclusion from public edges
-* payment-gated account creation
-* abuse controls and rate limiting
-* browser credential-storage review
-* credentialed CORS and CSRF review for any browser-cookie auth mode
-* CSP/XSS and browser security-header review
-* logging and error-redaction review
-* backup/restore and deletion/retention operational review
-* monitoring and incident response planning
+- TLS and edge hardening
+- public API exposure review
+- admin/operator route exclusion from public edges
+- payment-gated account creation
+- abuse controls and rate limiting
+- browser credential-storage review
+- credentialed CORS and CSRF review for any browser-cookie auth mode
+- CSP/XSS and browser security-header review
+- logging and error-redaction review
+- backup/restore and deletion/retention operational review
+- monitoring and incident response planning
 
 Until those requirements are implemented and reviewed, the web client remains an experimental prototype.
 
@@ -256,11 +258,13 @@ do not imply production readiness or public `/v1` API readiness.
 
 The server currently confirms bearer session auth, `POST /v1/auth/login`,
 `POST /v1/auth/register`, `POST /v1/auth/email/verify`,
-`POST /v1/auth/logout`, `GET /v1/account`, incident create/read-by-ID, contact
-public-key routes, sharing-grant routes, and wrapped-key routes. Current
-`open-proofline/server` does not expose `GET /v1/incidents`; live mode disables
-owned incident listing instead of calling an unconfirmed route. Mock mode uses
-prototype incident records only and must not be treated as backend truth.
+`POST /v1/auth/logout`, `GET /v1/account`, owner-scoped incident list/detail
+routes, contact public-key routes, sharing-grant routes, and wrapped-key
+routes. Current `open-proofline/server` documents authenticated
+`GET /v1/incidents`, but this client still disables the live owned-incident
+list until the API client and tests are updated for that response shape. Mock
+mode uses prototype incident records only and must not be treated as backend
+truth.
 
 Public registration is controlled by the server's
 `SAFE_ACCOUNT_REGISTRATION_MODE`. `disabled` and `admin_only` reject public
