@@ -7,7 +7,11 @@ This web client is experimental and not production-ready.
 - Session tokens are kept in memory by default.
 - Optional local-storage session persistence is behind
   `VITE_PROOFLINE_SESSION_STORAGE=localStorage` for local development only.
+- Browser-cookie auth mode stores session state in an HttpOnly server cookie
+  and keeps CSRF tokens in API-client memory only.
 - Expired or malformed loaded sessions are cleared before authenticating the UI.
+- Loaded sessions are cleared when the configured API mode or auth mode no
+  longer matches the stored session metadata.
 - API responses are parsed with Zod before use where route shapes are known.
 - UI states avoid showing raw tokens, Authorization headers, request bodies,
   plaintext, raw keys, wrapped-key ciphertext, stored paths, or object keys.
@@ -33,13 +37,14 @@ persisted in browser storage, screenshotted, copied into public issue drafts,
 included in analytics, or exposed in UI beyond the transient browser URL
 fragment needed to complete verification.
 
-## Browser Cookie Auth And CSRF Planning Boundary
+## Browser Cookie Auth And CSRF
 
-The implemented live client remains bearer-token based. A future browser-cookie
-auth mode must be a separate client mode, not an additive flag on top of bearer
-auth. In that mode, authenticated requests would use
-`credentials: "include"` with the reviewed API origin and must not attach an
-`Authorization` header. Bearer mode must not rely on browser session cookies.
+The implemented live client supports bearer-token auth and explicit
+browser-cookie auth mode. Cookie auth is a separate client mode, not an
+additive flag on top of bearer auth. In that mode, authenticated requests use
+`credentials: "include"` with the reviewed API origin and do not attach an
+`Authorization` header. Bearer mode uses `credentials: "omit"` and must not
+rely on browser session cookies.
 
 Current `open-proofline/server` behavior rejects mixed bearer and browser-cookie
 credentials with `400 ambiguous_credentials`. The frontend must treat that as a
@@ -47,12 +52,12 @@ security invariant: a request builder should make the credential mode
 unambiguous before the request is sent, and tests should verify that both
 credential types cannot be attached together.
 
-Cookie-authenticated unsafe requests require a session-bound CSRF header. A
-future implementation should fetch the token from `GET /v1/auth/web/csrf`,
-store it in memory only, attach the returned header name to unsafe methods, and
-clear it on logout or session reset. Missing or rejected CSRF tokens should
-produce a controlled error state and a token refresh attempt where appropriate,
-not a fallback to bearer credentials.
+Cookie-authenticated unsafe requests require a session-bound CSRF header. The
+client fetches the token from `GET /v1/auth/web/csrf`, stores it in memory only,
+attaches the returned header name to unsafe methods, refreshes after
+`403 csrf_required`, and clears it on logout or session reset. Missing or
+rejected CSRF tokens produce controlled request failures or token refreshes, not
+a fallback to bearer credentials.
 
 Credentialed CORS and cookie attributes are deployment-sensitive server
 configuration. The web client documentation may describe the required

@@ -31,11 +31,16 @@ does not require a live backend for the bootstrap smoke test.
 ```text
 VITE_PROOFLINE_API_BASE_URL=http://127.0.0.1:8080
 VITE_PROOFLINE_API_MODE=mock
+VITE_PROOFLINE_AUTH_MODE=bearer
 VITE_PROOFLINE_SESSION_STORAGE=memory
 ```
 
 Use `VITE_PROOFLINE_API_MODE=live` only when a local backend is running and the
 route assumptions have been checked against `open-proofline/server/docs/api.md`.
-The current live client uses bearer-token auth. There is no browser-cookie auth
-environment switch yet; do not add one without updating the API client contract,
-CSRF handling, tests, and deployment guidance together.
+The default live auth mode is bearer-token auth. For local browser-cookie auth
+testing, use `VITE_PROOFLINE_AUTH_MODE=cookie` only with a backend configured
+for reviewed local origins, for example `SAFE_WEB_AUTH_ENABLED=true`,
+`SAFE_WEB_ALLOWED_ORIGINS=http://127.0.0.1:5173`, a non-`__Host-` local cookie
+name, and `SAFE_WEB_SESSION_COOKIE_SECURE=false`. Production cookie mode still
+requires HTTPS, exact allowed origins, secure cookies, CSRF review, and public
+API deployment review in `open-proofline/server`.

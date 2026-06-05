@@ -1,13 +1,22 @@
 import { http, HttpResponse } from "msw";
-import { expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { server } from "../test/setup";
-import { createProoflineApiClient } from "./client";
+import { CredentialModeError, createProoflineApiClient } from "./client";
 import { ApiError, safeErrorMessage } from "./errors";
+
+beforeEach(() => {
+  vi.stubEnv("VITE_PROOFLINE_AUTH_MODE", "bearer");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 test("parses live account responses with zod", async () => {
   server.use(
-    http.get("*/v1/account", () =>
-      HttpResponse.json({
+    http.get("*/v1/account", ({ request }) => {
+      expect(request.credentials).toBe("omit");
+      return HttpResponse.json({
         account: {
           id: "acct_live",
           username: "live-user",
@@ -19,8 +28,8 @@ test("parses live account responses with zod", async () => {
           updated_at: "2026-06-01T00:30:00Z",
           password_changed_at: "2026-06-01T00:15:00Z",
         },
-      }),
-    ),
+      });
+    }),
   );
 
   const client = createProoflineApiClient({
@@ -39,6 +48,182 @@ test("parses live account responses with zod", async () => {
     updated_at: "2026-06-01T00:30:00Z",
     password_changed_at: "2026-06-01T00:15:00Z",
   });
+});
+
+test("parses cookie login responses without retaining raw tokens", async () => {
+  server.use(
+    http.post("*/v1/auth/web/login", async ({ request }) => {
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      await expect(request.json()).resolves.toEqual({
+        username: "cookie-user",
+        password: "valid-password",
+      });
+      return HttpResponse.json(
+        {
+          session_id: "ses_cookie",
+          account: {
+            id: "acct_cookie",
+            username: "cookie-user",
+            role: "user",
+          },
+          token: "raw-cookie-session-token-must-not-retain",
+          created_at: "2026-06-01T00:00:00Z",
+          expires_at: "2026-06-01T01:00:00Z",
+        },
+        { status: 201 },
+      );
+    }),
+    http.get("*/v1/auth/web/csrf", ({ request }) => {
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      return HttpResponse.json({
+        csrf_token: "csrf-token",
+        header_name: "X-CSRF-Token",
+      });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    authMode: "cookie",
+  });
+
+  const response = await client.login({
+    username: "cookie-user",
+    password: "valid-password",
+  });
+
+  expect(response).toEqual({
+    session_id: "ses_cookie",
+    account: {
+      id: "acct_cookie",
+      username: "cookie-user",
+      role: "user",
+    },
+    created_at: "2026-06-01T00:00:00Z",
+    expires_at: "2026-06-01T01:00:00Z",
+  });
+  expect("token" in response).toBe(false);
+});
+
+test("uses cookie credentials without authorization headers for authenticated reads", async () => {
+  server.use(
+    http.get("*/v1/account", ({ request }) => {
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      return HttpResponse.json({
+        account: {
+          id: "acct_cookie",
+          username: "cookie-user",
+          role: "user",
+        },
+      });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    authMode: "cookie",
+  });
+
+  await expect(client.getCurrentAccount()).resolves.toMatchObject({
+    id: "acct_cookie",
+    username: "cookie-user",
+  });
+});
+
+test("attaches cookie CSRF headers to unsafe cookie logout requests", async () => {
+  server.use(
+    http.get("*/v1/auth/web/csrf", ({ request }) => {
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      return HttpResponse.json({
+        csrf_token: "csrf-token",
+        header_name: "X-CSRF-Token",
+      });
+    }),
+    http.post("*/v1/auth/web/logout", ({ request }) => {
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      expect(request.headers.get("x-csrf-token")).toBe("csrf-token");
+      return HttpResponse.json({ revoked: true });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    authMode: "cookie",
+  });
+
+  await expect(client.logout()).resolves.toBeUndefined();
+});
+
+test("refreshes cookie CSRF state once after a rejected unsafe request", async () => {
+  let csrfFetches = 0;
+  let logoutAttempts = 0;
+  server.use(
+    http.get("*/v1/auth/web/csrf", () => {
+      csrfFetches += 1;
+      return HttpResponse.json({
+        csrf_token: csrfFetches === 1 ? "stale-csrf" : "fresh-csrf",
+        header_name: "X-CSRF-Token",
+      });
+    }),
+    http.post("*/v1/auth/web/logout", ({ request }) => {
+      logoutAttempts += 1;
+      if (logoutAttempts === 1) {
+        expect(request.headers.get("x-csrf-token")).toBe("stale-csrf");
+        return HttpResponse.json(
+          {
+            error: {
+              code: "csrf_required",
+              message: "CSRF token is required",
+            },
+          },
+          { status: 403 },
+        );
+      }
+      expect(request.headers.get("x-csrf-token")).toBe("fresh-csrf");
+      return HttpResponse.json({ revoked: true });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    authMode: "cookie",
+  });
+
+  await expect(client.logout()).resolves.toBeUndefined();
+  expect(csrfFetches).toBe(2);
+  expect(logoutAttempts).toBe(2);
+});
+
+test("rejects mixed cookie mode and bearer tokens before sending authenticated requests", async () => {
+  let requestCount = 0;
+  server.use(
+    http.get("*/v1/account", () => {
+      requestCount += 1;
+      return HttpResponse.json({
+        account: {
+          id: "acct_cookie",
+          username: "cookie-user",
+          role: "user",
+        },
+      });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    authMode: "cookie",
+    getToken: () => "test-session-token",
+  });
+
+  await expect(client.getCurrentAccount()).rejects.toBeInstanceOf(
+    CredentialModeError,
+  );
+  expect(requestCount).toBe(0);
 });
 
 test("submits public registration and parses accepted responses", async () => {
