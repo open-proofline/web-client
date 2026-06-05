@@ -119,3 +119,35 @@ test("navigates internal incident routes without full page reloads", async ({
   await expect(page.getByText("Experimental")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
+
+test("opens the account profile and changes a mock password", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Account overview" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Account" }).click();
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(
+    page.getByRole("heading", { name: "Account profile" }),
+  ).toBeVisible();
+  await expect(page.getByText("prototype-user")).toBeVisible();
+
+  await page.getByLabel("Current password").fill("prototype-password");
+  await page
+    .getByLabel("New password", { exact: true })
+    .fill("replacement-password");
+  await page.getByLabel("Confirm new password").fill("replacement-password");
+  await page.getByRole("button", { name: "Change password" }).click();
+
+  await expect(page.getByRole("status")).toContainText("Password changed.");
+  await expect(page.getByLabel("Current password")).toHaveValue("");
+  await expect(page.getByLabel("New password", { exact: true })).toHaveValue(
+    "",
+  );
+  await expect(page.getByLabel("Confirm new password")).toHaveValue("");
+  await expectNoHorizontalOverflow(page);
+});

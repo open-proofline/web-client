@@ -36,6 +36,7 @@ From current `open-proofline/server` docs and route registration:
 - `POST /v1/auth/web/logout`
 - `GET /v1/auth/web/csrf`
 - `GET /v1/account`
+- `POST /v1/account/password`
 - `POST /v1/incidents`
 - `GET /v1/incidents`
 - `GET /v1/incidents/{incident_id}`
@@ -55,6 +56,18 @@ The web client calls `GET /v1/incidents` in live mode and parses the
 `{ "incidents": [...] }` response with Zod before rendering records. Mock mode
 still returns typed prototype incident records for browser smoke tests and UI
 review, but those records are not backend truth.
+
+## Account Profile And Password Change
+
+The account profile route reads safe account metadata from `GET /v1/account`.
+Password changes call authenticated `POST /v1/account/password` with
+`current_password` and `new_password`, parse the returned `{ "account": ... }`
+body, and keep the current browser session active. Current server behavior
+revokes other sessions for the account after a successful password change.
+
+The UI maps password-change failures to fixed safe messages and does not log or
+persist passwords, request bodies, session tokens, Authorization headers,
+browser session cookies, or CSRF token values.
 
 ## Frontend Metadata Boundary
 

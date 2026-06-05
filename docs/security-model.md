@@ -12,6 +12,8 @@ This web client is experimental and not production-ready.
 - Expired or malformed loaded sessions are cleared before authenticating the UI.
 - Loaded sessions are cleared when the configured API mode or auth mode no
   longer matches the stored session metadata.
+- Password changes use the authenticated account route, keep the active session
+  usable after success, and rely on the server to revoke other account sessions.
 - API responses are parsed with Zod before use where route shapes are known.
 - UI states avoid showing raw tokens, Authorization headers, request bodies,
   plaintext, raw keys, wrapped-key ciphertext, stored paths, or object keys.

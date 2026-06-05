@@ -113,8 +113,6 @@ Planned account portal work includes:
 - public landing and pricing/account-entry pages
 - payment-gated account creation
 - login/logout
-- account profile page
-- password change flow
 - session status and session revocation flows
 - account billing status display
 - subscription/payment status handling
@@ -264,12 +262,17 @@ do not imply production readiness or public `/v1` API readiness.
 
 The server currently confirms bearer session auth, browser-cookie auth routes,
 `POST /v1/auth/register`, `POST /v1/auth/email/verify`, `GET /v1/account`,
-owner-scoped incident list/detail routes, contact public-key routes,
-sharing-grant routes, and wrapped-key routes. Current `open-proofline/server`
-documents authenticated
+`POST /v1/account/password`, owner-scoped incident list/detail routes, contact
+public-key routes, sharing-grant routes, and wrapped-key routes. Current
+`open-proofline/server` documents authenticated
 `GET /v1/incidents`, and this client parses that response shape in live mode.
 Mock mode uses prototype incident records only and must not be treated as
 backend truth.
+
+Authenticated users can open the account profile route to review safe account
+metadata and change their password through `POST /v1/account/password`. The
+server keeps the active session usable after a successful password change and
+revokes other sessions for the account.
 
 Public registration is controlled by the server's
 `SAFE_ACCOUNT_REGISTRATION_MODE`. `disabled` and `admin_only` reject public

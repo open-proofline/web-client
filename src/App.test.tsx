@@ -600,6 +600,341 @@ test("renders authenticated mock incident detail metadata sections", async () =>
   expect(screen.getByText("No key delivery")).toBeInTheDocument();
 });
 
+test("redirects unauthenticated account profile visits to login", async () => {
+  renderRoute("/account");
+
+  expect(
+    await screen.findByRole("heading", { name: "Sign in" }),
+  ).toBeInTheDocument();
+});
+
+test("changes a live account password and keeps the current session active", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  let resolvePasswordChange!: () => void;
+  const passwordRequest = vi.fn();
+  server.use(
+    http.get("*/v1/account", () =>
+      HttpResponse.json({
+        account: {
+          id: "acct_live",
+          username: "live-user",
+          email: "live-user@example.invalid",
+          email_verified_at: "2026-06-01T00:20:00Z",
+          account_state: "active",
+          role: "user",
+          created_at: "2026-06-01T00:00:00Z",
+          updated_at: "2026-06-01T00:30:00Z",
+          password_changed_at: "2026-06-01T00:15:00Z",
+        },
+      }),
+    ),
+    http.post("*/v1/account/password", async ({ request }) => {
+      passwordRequest();
+      expect(request.credentials).toBe("omit");
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      await expect(request.json()).resolves.toEqual({
+        current_password: "current-password",
+        new_password: "replacement-password",
+      });
+      await new Promise<void>((resolve) => {
+        resolvePasswordChange = resolve;
+      });
+      return HttpResponse.json({
+        account: {
+          id: "acct_live",
+          username: "live-user",
+          email: "live-user@example.invalid",
+          email_verified_at: "2026-06-01T00:20:00Z",
+          account_state: "active",
+          role: "user",
+          created_at: "2026-06-01T00:00:00Z",
+          updated_at: "2026-06-01T00:50:00Z",
+          password_changed_at: "2026-06-01T00:50:00Z",
+        },
+      });
+    }),
+  );
+
+  renderRoute("/account");
+
+  expect(
+    await screen.findByRole("heading", { name: "Account profile" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("live-user")).toBeInTheDocument();
+  expect(screen.getByText("Password changed")).toBeInTheDocument();
+  expect(screen.getByText("2026-06-01T00:15:00Z")).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText("Current password"), {
+    target: { value: "current-password" },
+  });
+  fireEvent.change(screen.getByLabelText("New password"), {
+    target: { value: "replacement-password" },
+  });
+  fireEvent.change(screen.getByLabelText("Confirm new password"), {
+    target: { value: "replacement-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+
+  expect(
+    await screen.findByRole("button", { name: "Changing password" }),
+  ).toBeDisabled();
+  expect(passwordRequest).toHaveBeenCalledTimes(1);
+  resolvePasswordChange();
+
+  expect(await screen.findByRole("status")).toHaveTextContent(
+    "This browser session remains active; other sessions were revoked by the server.",
+  );
+  expect(screen.getAllByText("2026-06-01T00:50:00Z")).toHaveLength(2);
+  expect(screen.getByLabelText("Current password")).toHaveValue("");
+  expect(screen.getByLabelText("New password")).toHaveValue("");
+  expect(screen.getByLabelText("Confirm new password")).toHaveValue("");
+  expect(screen.queryByText("current-password")).toBeNull();
+  expect(screen.queryByText("replacement-password")).toBeNull();
+});
+
+test("does not show stale account metadata after switching sessions", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  let resolveBobAccount!: () => void;
+  server.use(
+    http.post("*/v1/auth/login", async ({ request }) => {
+      const credentials = (await request.json()) as { username: string };
+      return HttpResponse.json({
+        session_id:
+          credentials.username === "bob-user" ? "ses_bob" : "ses_alice",
+        account: {
+          id: credentials.username === "bob-user" ? "acct_bob" : "acct_alice",
+          username: credentials.username,
+          role: "user",
+        },
+        token:
+          credentials.username === "bob-user" ? "token-bob" : "token-alice",
+        created_at: "2026-06-01T00:00:00Z",
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      });
+    }),
+    http.post("*/v1/auth/logout", () => HttpResponse.json({ revoked: true })),
+    http.get("*/v1/account", async ({ request }) => {
+      const authorization = request.headers.get("authorization");
+      if (authorization === "Bearer token-bob") {
+        await new Promise<void>((resolve) => {
+          resolveBobAccount = resolve;
+        });
+        return HttpResponse.json({
+          account: {
+            id: "acct_bob",
+            username: "bob-user",
+            role: "user",
+          },
+        });
+      }
+      return HttpResponse.json({
+        account: {
+          id: "acct_alice",
+          username: "alice-user",
+          role: "user",
+        },
+      });
+    }),
+  );
+
+  renderRoute("/login");
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "alice-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "alice-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Account overview" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole("link", { name: "Account" })[0]!);
+  expect(
+    await screen.findByRole("heading", { name: "Account profile" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("alice-user")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByLabelText("Account menu"));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
+  expect(
+    await screen.findByRole("heading", { name: "Sign in" }),
+  ).toBeInTheDocument();
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "bob-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "bob-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Account overview" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole("link", { name: "Account" })[0]!);
+
+  expect(
+    await screen.findByText("Loading account metadata."),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("alice-user")).toBeNull();
+
+  resolveBobAccount();
+  expect(await screen.findByText("bob-user")).toBeInTheDocument();
+  expect(screen.queryByText("alice-user")).toBeNull();
+});
+
+test("blocks password-change validation failures before calling the API", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  const passwordRequest = vi.fn();
+  server.use(
+    http.get("*/v1/account", () =>
+      HttpResponse.json({
+        account: {
+          id: "acct_live",
+          username: "live-user",
+          role: "user",
+        },
+      }),
+    ),
+    http.post("*/v1/account/password", () => {
+      passwordRequest();
+      return HttpResponse.json({ account: { id: "acct_live" } });
+    }),
+  );
+
+  renderRoute("/account");
+
+  await screen.findByRole("heading", { name: "Account profile" });
+  fireEvent.change(screen.getByLabelText("Current password"), {
+    target: { value: "current-password" },
+  });
+  fireEvent.change(screen.getByLabelText("New password"), {
+    target: { value: "short" },
+  });
+  fireEvent.change(screen.getByLabelText("Confirm new password"), {
+    target: { value: "different-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+
+  expect(
+    await screen.findByText("Password must be at least 12 bytes."),
+  ).toBeInTheDocument();
+  expect(screen.getByText("New passwords must match.")).toBeInTheDocument();
+  expect(passwordRequest).toHaveBeenCalledTimes(0);
+});
+
+test("maps invalid current password errors to safe account UI text", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/account", () =>
+      HttpResponse.json({
+        account: {
+          id: "acct_live",
+          username: "live-user",
+          role: "user",
+        },
+      }),
+    ),
+    http.post("*/v1/account/password", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "invalid_credentials",
+            message: "current password is invalid",
+          },
+        },
+        { status: 401 },
+      ),
+    ),
+  );
+
+  renderRoute("/account");
+
+  await submitPasswordChange();
+
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Current password was not accepted.",
+  );
+});
+
+test("maps unauthorized password-change errors to safe account UI text", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/account", () =>
+      HttpResponse.json({
+        account: {
+          id: "acct_live",
+          username: "live-user",
+          role: "user",
+        },
+      }),
+    ),
+    http.post("*/v1/account/password", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "authentication_required",
+            message: "authentication is required",
+          },
+        },
+        { status: 401 },
+      ),
+    ),
+  );
+
+  renderRoute("/account");
+
+  await submitPasswordChange();
+
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Sign in again before changing your password.",
+  );
+});
+
+test("keeps generic password-change failures generic", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/account", () =>
+      HttpResponse.json({
+        account: {
+          id: "acct_live",
+          username: "live-user",
+          role: "user",
+        },
+      }),
+    ),
+    http.post("*/v1/account/password", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "unavailable",
+            message: "backend private account detail",
+          },
+        },
+        { status: 503 },
+      ),
+    ),
+  );
+
+  renderRoute("/account");
+
+  await submitPasswordChange();
+
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Password could not be changed.",
+  );
+  expect(screen.queryByText("backend private account detail")).toBeNull();
+});
+
 test("renders live incident list records without displaying private fields", async () => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
   saveLiveSession();
@@ -741,6 +1076,20 @@ test("shows generic dependent metadata errors on incident detail", async () => {
     screen.getByText("Key delivery details could not be loaded."),
   ).toBeInTheDocument();
 });
+
+async function submitPasswordChange() {
+  await screen.findByRole("heading", { name: "Account profile" });
+  fireEvent.change(screen.getByLabelText("Current password"), {
+    target: { value: "current-password" },
+  });
+  fireEvent.change(screen.getByLabelText("New password"), {
+    target: { value: "replacement-password" },
+  });
+  fireEvent.change(screen.getByLabelText("Confirm new password"), {
+    target: { value: "replacement-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+}
 
 function saveLiveSession() {
   saveTestSession("live", "live-user");
