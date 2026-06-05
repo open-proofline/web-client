@@ -74,7 +74,7 @@ export class CredentialModeError extends Error {
 }
 
 export const prooflineQueryKeys = {
-  account: ["account"] as const,
+  account: (sessionId: string) => ["account", sessionId] as const,
   incidents: ["incidents"] as const,
   incident: (incidentId: string) => ["incident", incidentId] as const,
   contactPublicKeys: ["contact-public-keys"] as const,

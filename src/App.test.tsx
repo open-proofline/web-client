@@ -695,6 +695,99 @@ test("changes a live account password and keeps the current session active", asy
   expect(screen.queryByText("replacement-password")).toBeNull();
 });
 
+test("does not show stale account metadata after switching sessions", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  let resolveBobAccount!: () => void;
+  server.use(
+    http.post("*/v1/auth/login", async ({ request }) => {
+      const credentials = (await request.json()) as { username: string };
+      return HttpResponse.json({
+        session_id:
+          credentials.username === "bob-user" ? "ses_bob" : "ses_alice",
+        account: {
+          id: credentials.username === "bob-user" ? "acct_bob" : "acct_alice",
+          username: credentials.username,
+          role: "user",
+        },
+        token:
+          credentials.username === "bob-user" ? "token-bob" : "token-alice",
+        created_at: "2026-06-01T00:00:00Z",
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      });
+    }),
+    http.post("*/v1/auth/logout", () => HttpResponse.json({ revoked: true })),
+    http.get("*/v1/account", async ({ request }) => {
+      const authorization = request.headers.get("authorization");
+      if (authorization === "Bearer token-bob") {
+        await new Promise<void>((resolve) => {
+          resolveBobAccount = resolve;
+        });
+        return HttpResponse.json({
+          account: {
+            id: "acct_bob",
+            username: "bob-user",
+            role: "user",
+          },
+        });
+      }
+      return HttpResponse.json({
+        account: {
+          id: "acct_alice",
+          username: "alice-user",
+          role: "user",
+        },
+      });
+    }),
+  );
+
+  renderRoute("/login");
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "alice-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "alice-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Account overview" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole("link", { name: "Account" })[0]!);
+  expect(
+    await screen.findByRole("heading", { name: "Account profile" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("alice-user")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByLabelText("Account menu"));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
+  expect(
+    await screen.findByRole("heading", { name: "Sign in" }),
+  ).toBeInTheDocument();
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "bob-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "bob-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Account overview" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole("link", { name: "Account" })[0]!);
+
+  expect(
+    await screen.findByText("Loading account metadata."),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("alice-user")).toBeNull();
+
+  resolveBobAccount();
+  expect(await screen.findByText("bob-user")).toBeInTheDocument();
+  expect(screen.queryByText("alice-user")).toBeNull();
+});
+
 test("blocks password-change validation failures before calling the API", async () => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
   saveLiveSession();

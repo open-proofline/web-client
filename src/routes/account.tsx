@@ -66,17 +66,20 @@ function passwordChangeErrorMessage(error: unknown): string {
 }
 
 function AccountPage() {
-  const { isAuthenticated, apiClient, changePassword } = useAuth();
+  const { isAuthenticated, apiClient, changePassword, session } = useAuth();
   const queryClient = useQueryClient();
+  const accountQueryKey = prooflineQueryKeys.account(
+    session?.sessionId ?? "signed-out",
+  );
   const account = useQuery({
-    queryKey: prooflineQueryKeys.account,
+    queryKey: accountQueryKey,
     queryFn: () => apiClient.getCurrentAccount(),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && session !== null,
   });
   const passwordChange = useMutation({
     mutationFn: changePassword,
     onSuccess: (updatedAccount) => {
-      queryClient.setQueryData(prooflineQueryKeys.account, updatedAccount);
+      queryClient.setQueryData(accountQueryKey, updatedAccount);
     },
   });
 
