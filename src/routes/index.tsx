@@ -1,11 +1,7 @@
 import { Link, Navigate, createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/use-auth";
-import {
-  isUnsupportedLiveRouteError,
-  ownedIncidentListRoute,
-  prooflineQueryKeys,
-} from "../api/client";
+import { prooflineQueryKeys } from "../api/client";
 import { rootRoute } from "./__root";
 import { Button } from "../components/catalyst/button";
 import { EmptyState } from "../components/proofline/EmptyState";
@@ -35,10 +31,6 @@ function DashboardPage() {
     incidents.data?.filter(
       (incident) => incident.sharing_state === "trusted_contact_access",
     ).length ?? 0;
-  const incidentListUnsupported = isUnsupportedLiveRouteError(
-    incidents.error,
-    ownedIncidentListRoute,
-  );
 
   return (
     <div className="space-y-6">
@@ -54,7 +46,7 @@ function DashboardPage() {
             <p className="mt-3 text-proofline-text-muted">
               {apiClient.mode === "mock"
                 ? "Sample records are shown for local testing only."
-                : "Live mode can open a known incident. A full incident list is not available yet."}
+                : "Live mode shows incident records returned by the authenticated API."}
             </p>
           </>
         }
@@ -65,11 +57,11 @@ function DashboardPage() {
         <Metric label="Connection mode" value={apiClient.mode} />
         <Metric
           label="Open records"
-          value={incidentListUnsupported ? "Not available yet" : openCount}
+          value={incidents.isError ? "Unavailable" : openCount}
         />
         <Metric
           label="Shared records"
-          value={incidentListUnsupported ? "Not available yet" : sharedCount}
+          value={incidents.isError ? "Unavailable" : sharedCount}
         />
       </section>
 
@@ -82,19 +74,15 @@ function DashboardPage() {
         title="Recent incident records"
         trailing={
           <span>
-            {incidentListUnsupported
-              ? "List not available yet"
-              : incidents.isLoading
-                ? "Loading"
-                : `${incidents.data?.length ?? 0} visible`}
+            {incidents.isLoading
+              ? "Loading"
+              : `${incidents.data?.length ?? 0} visible`}
           </span>
         }
       >
         {incidents.isError ? (
           <InlineStatus role="alert" tone="danger">
-            {incidentListUnsupported
-              ? "The live incident list is not available yet. Sample mode can still show test records."
-              : "Incident records could not be loaded."}
+            Incident records could not be loaded.
           </InlineStatus>
         ) : incidents.isLoading ? (
           <p className="text-sm text-proofline-text-muted">

@@ -38,17 +38,15 @@ From current `open-proofline/server` docs and route registration:
 - `GET /v1/incidents/{incident_id}/wrapped-keys`
 - `GET /v1/wrapped-keys/{wrapped_key_id}`
 
-## Live Owned Incident List Client Gap
+## Live Owned Incident List Client
 
 Current `open-proofline/server` documents and registers authenticated
 `GET /v1/incidents` for owner-scoped public-safe incident metadata.
 
-The current web client still does not call `GET /v1/incidents` in live mode.
-That is now a client implementation gap, not a backend route limitation. Mock
-mode still returns typed prototype incident records for browser smoke tests and
-UI review, but those records are not backend truth. Enabling live
-owned-incident listing should update the API client, Zod parsing, route tests,
-and browser smoke expectations together.
+The web client calls `GET /v1/incidents` in live mode and parses the
+`{ "incidents": [...] }` response with Zod before rendering records. Mock mode
+still returns typed prototype incident records for browser smoke tests and UI
+review, but those records are not backend truth.
 
 ## Frontend Metadata Boundary
 

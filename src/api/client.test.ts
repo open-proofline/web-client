@@ -1,11 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { expect, test } from "vitest";
 import { server } from "../test/setup";
-import {
-  createProoflineApiClient,
-  isUnsupportedLiveRouteError,
-  ownedIncidentListRoute,
-} from "./client";
+import { createProoflineApiClient } from "./client";
 import { ApiError, safeErrorMessage } from "./errors";
 
 test("parses live account responses with zod", async () => {
@@ -242,20 +238,68 @@ test("rejects invalid live account responses with a safe error message", async (
   );
 });
 
-test("does not call an unconfirmed live owned incident list route", async () => {
+test("parses live owned incident list responses without retaining private fields", async () => {
+  server.use(
+    http.get("*/v1/incidents", ({ request }) => {
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      return HttpResponse.json({
+        incidents: [
+          {
+            id: "inc_live",
+            created_at: "2026-06-01T00:00:00Z",
+            updated_at: "2026-06-01T00:10:00Z",
+            status: "open",
+            client_label: "owner phone",
+            incident_mode: "interaction_record",
+            capture_profile: "audio_location",
+            escalation_policy: "none",
+            sharing_state: "private",
+            deletion_state: "active",
+            owner_account_id: "acct_private",
+            notes: "private note",
+            stored_path: "incidents/inc_live/private.enc",
+            object_key: "private/object/key",
+            wrapped_key_ciphertext: "wrapped-ciphertext",
+            plaintext: "private plaintext",
+            raw_key: "raw-key",
+          },
+        ],
+      });
+    }),
+  );
+
   const client = createProoflineApiClient({
     mode: "live",
     getToken: () => "test-session-token",
   });
 
-  let caughtError: unknown;
-  try {
-    await client.listOwnedIncidents();
-  } catch (error) {
-    caughtError = error;
-  }
+  const incidents = await client.listOwnedIncidents();
 
-  expect(isUnsupportedLiveRouteError(caughtError, ownedIncidentListRoute)).toBe(
-    true,
-  );
+  expect(incidents).toEqual([
+    {
+      id: "inc_live",
+      created_at: "2026-06-01T00:00:00Z",
+      updated_at: "2026-06-01T00:10:00Z",
+      status: "open",
+      client_label: "owner phone",
+      incident_mode: "interaction_record",
+      capture_profile: "audio_location",
+      escalation_policy: "none",
+      sharing_state: "private",
+      deletion_state: "active",
+    },
+  ]);
+  const incident = incidents[0];
+  if (!incident) {
+    throw new Error("expected parsed incident");
+  }
+  expect("owner_account_id" in incident).toBe(false);
+  expect("notes" in incident).toBe(false);
+  expect("stored_path" in incident).toBe(false);
+  expect("object_key" in incident).toBe(false);
+  expect("wrapped_key_ciphertext" in incident).toBe(false);
+  expect("plaintext" in incident).toBe(false);
+  expect("raw_key" in incident).toBe(false);
 });
