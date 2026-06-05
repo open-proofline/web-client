@@ -9,6 +9,8 @@ import {
 } from "react";
 import {
   createProoflineApiClient,
+  defaultProoflineAuthMode,
+  defaultProoflineClientMode,
   type ProoflineApiClient,
 } from "../api/client";
 import { ApiError, safeErrorMessage } from "../api/errors";
@@ -37,22 +39,41 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(() => loadSession());
-  const token = session?.token ?? null;
+  const clientMode = defaultProoflineClientMode();
+  const authMode = defaultProoflineAuthMode(clientMode);
+  const [session, setSession] = useState<Session | null>(() => {
+    const loadedSession = loadSession();
+    if (
+      loadedSession &&
+      (loadedSession.mode !== clientMode || loadedSession.authMode !== authMode)
+    ) {
+      clearSession();
+      return null;
+    }
+    return loadedSession;
+  });
+  const token =
+    session?.authMode === "bearer" && session.token ? session.token : null;
 
   const apiClient = useMemo(
     () =>
       createProoflineApiClient({
+        mode: clientMode,
+        authMode,
         getToken: () => token,
       }),
-    [token],
+    [authMode, clientMode, token],
   );
 
   const login = useCallback(
     async (credentials: { username: string; password: string }) => {
       try {
         const response = await apiClient.login(credentials);
-        const nextSession = sessionFromLogin(response, apiClient.mode);
+        const nextSession = sessionFromLogin(
+          response,
+          apiClient.mode,
+          apiClient.authMode,
+        );
         saveSession(nextSession);
         setSession(nextSession);
         return { ok: true as const };
@@ -78,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await apiClient.logout();
     } finally {
+      apiClient.clearAuthenticationState();
       clearSession();
       setSession(null);
     }

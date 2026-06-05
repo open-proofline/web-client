@@ -42,7 +42,14 @@ Use live mode only against a reviewed local backend:
 
 ```text
 VITE_PROOFLINE_API_MODE=live
+VITE_PROOFLINE_AUTH_MODE=bearer
 VITE_PROOFLINE_API_BASE_URL=http://127.0.0.1:8080
+```
+
+For reviewed local browser-cookie auth testing, also set:
+
+```text
+VITE_PROOFLINE_AUTH_MODE=cookie
 ```
 
 ## Development
@@ -87,7 +94,7 @@ The current bootstrap includes:
 - authenticated app shell
 - conservative session state with memory-first token storage
 - optional local-storage session persistence for local development only
-- documented browser-cookie auth and CSRF client-mode planning boundary
+- explicit bearer-token and browser-cookie auth client modes
 - incident list UI backed by mock data in prototype mode and authenticated
   owner-scoped `GET /v1/incidents` responses in live mode
 - incident detail metadata UI
@@ -114,8 +121,8 @@ Planned account portal work includes:
 - clear account-disabled, payment-required, expired-session, unauthorized, and forbidden states
 - browser-safe API error handling
 - browser token-storage review and hardening
-- browser-cookie auth mode and CSRF handling, once server/deployment review
-  approves credentialed CORS for exact origins
+- deployment review for browser-cookie auth, credentialed CORS, and exact
+  reviewed origins
 
 Payment-gated registration must be implemented as a backend-supported account
 lifecycle, not just a frontend form. The current server paid-registration mode
@@ -255,11 +262,11 @@ do not imply production readiness or public `/v1` API readiness.
 
 ## API Boundary
 
-The server currently confirms bearer session auth, `POST /v1/auth/login`,
-`POST /v1/auth/register`, `POST /v1/auth/email/verify`,
-`POST /v1/auth/logout`, `GET /v1/account`, owner-scoped incident list/detail
-routes, contact public-key routes, sharing-grant routes, and wrapped-key
-routes. Current `open-proofline/server` documents authenticated
+The server currently confirms bearer session auth, browser-cookie auth routes,
+`POST /v1/auth/register`, `POST /v1/auth/email/verify`, `GET /v1/account`,
+owner-scoped incident list/detail routes, contact public-key routes,
+sharing-grant routes, and wrapped-key routes. Current `open-proofline/server`
+documents authenticated
 `GET /v1/incidents`, and this client parses that response shape in live mode.
 Mock mode uses prototype incident records only and must not be treated as
 backend truth.
@@ -285,9 +292,11 @@ private deployment details, or user safety data.
 
 ## Session Storage
 
-Session tokens are kept in memory by default. A local-storage adapter exists for
-developer convenience only behind `VITE_PROOFLINE_SESSION_STORAGE=localStorage`.
-Browser token persistence must be reviewed before any production use.
+Bearer session tokens are kept in memory by default. A local-storage adapter
+exists for developer convenience only behind
+`VITE_PROOFLINE_SESSION_STORAGE=localStorage`. Browser token persistence must
+be reviewed before any production use. Cookie-mode sessions do not store bearer
+tokens; the browser session cookie is HttpOnly and managed by the server.
 
 ## Catalyst And Tailwind
 

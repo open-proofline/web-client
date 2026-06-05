@@ -27,6 +27,7 @@ function renderRoute(path: string) {
 
 beforeEach(() => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "mock");
+  vi.stubEnv("VITE_PROOFLINE_AUTH_MODE", "bearer");
 });
 
 afterEach(() => {
@@ -360,6 +361,89 @@ test("keeps generic login failures generic", async () => {
   ).toBeNull();
 });
 
+test("logs in and out with browser-cookie auth mode", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  vi.stubEnv("VITE_PROOFLINE_AUTH_MODE", "cookie");
+  let csrfRequests = 0;
+  let incidentListRequests = 0;
+  let logoutRequests = 0;
+  server.use(
+    http.post("*/v1/auth/web/login", async ({ request }) => {
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      await expect(request.json()).resolves.toEqual({
+        username: "cookie-user",
+        password: "valid-password",
+      });
+      return HttpResponse.json(
+        {
+          session_id: "ses_cookie",
+          account: {
+            id: "acct_cookie",
+            username: "cookie-user",
+            role: "user",
+          },
+          token: "raw-cookie-session-token-must-not-display",
+          created_at: "2026-06-01T00:00:00Z",
+          expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        },
+        { status: 201 },
+      );
+    }),
+    http.get("*/v1/auth/web/csrf", ({ request }) => {
+      csrfRequests += 1;
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      return HttpResponse.json({
+        csrf_token: "csrf-token",
+        header_name: "X-CSRF-Token",
+      });
+    }),
+    http.get("*/v1/incidents", ({ request }) => {
+      incidentListRequests += 1;
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      return HttpResponse.json({ incidents: [] });
+    }),
+    http.post("*/v1/auth/web/logout", ({ request }) => {
+      logoutRequests += 1;
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      expect(request.headers.get("x-csrf-token")).toBe("csrf-token");
+      return HttpResponse.json({ revoked: true });
+    }),
+  );
+
+  renderRoute("/login");
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "cookie-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "valid-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Account overview" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText("Account menu"));
+  expect(screen.getByText("cookie-user")).toBeInTheDocument();
+  expect(screen.queryByText("raw-cookie-session-token-must-not-display")).toBe(
+    null,
+  );
+  expect(screen.queryByText("csrf-token")).toBeNull();
+
+  fireEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Sign in" }),
+  ).toBeInTheDocument();
+  expect(csrfRequests).toBe(1);
+  expect(incidentListRequests).toBeGreaterThanOrEqual(1);
+  expect(logoutRequests).toBe(1);
+});
+
 test("verifies email links and clears URL fragments", async () => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
   window.history.pushState(null, "", "/verify-email#token=unit-token");
@@ -439,6 +523,19 @@ test("redirects authenticated login visits to the dashboard", async () => {
     }),
   ).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Sign in" })).toBeNull();
+});
+
+test("clears stale bearer sessions when cookie auth mode is configured", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  vi.stubEnv("VITE_PROOFLINE_AUTH_MODE", "cookie");
+  saveLiveSession();
+
+  renderRoute("/");
+
+  expect(
+    await screen.findByRole("heading", { name: "Sign in" }),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("Account overview")).toBeNull();
 });
 
 test("logs in with mock credentials and renders the dashboard", async () => {
@@ -665,5 +762,6 @@ function saveTestSession(mode: "mock" | "live", username: string) {
     createdAt: "2026-06-01T00:00:00Z",
     expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     mode,
+    authMode: "bearer",
   });
 }

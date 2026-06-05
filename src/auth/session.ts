@@ -1,7 +1,9 @@
 import {
   sessionSchema,
+  type AuthMode,
   type LoginResponse,
   type Session,
+  type WebLoginResponse,
 } from "../api/schemas";
 
 const storageKey = "proofline.web-client.session";
@@ -18,17 +20,28 @@ function hasUsableExpiration(session: Session): boolean {
 }
 
 export function sessionFromLogin(
-  response: LoginResponse,
+  response: LoginResponse | WebLoginResponse,
   mode: Session["mode"],
+  authMode: AuthMode,
 ): Session {
-  return {
+  const session = {
     sessionId: response.session_id,
     account: response.account,
-    token: response.token,
     createdAt: response.created_at,
     expiresAt: response.expires_at,
     mode,
+    authMode,
   };
+  if (authMode === "bearer") {
+    if (!("token" in response)) {
+      throw new Error("bearer login response did not include a token");
+    }
+    return {
+      ...session,
+      token: response.token,
+    };
+  }
+  return session;
 }
 
 export function loadSession(): Session | null {

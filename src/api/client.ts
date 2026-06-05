@@ -9,8 +9,11 @@ import {
   registrationAcceptedResponseSchema,
   sharingGrantResponseSchema,
   sharingGrantsResponseSchema,
+  webCSRFResponseSchema,
+  webLoginResponseSchema,
   wrappedKeyResponseSchema,
   wrappedKeysResponseSchema,
+  type AuthMode,
   type Account,
   type ContactPublicKey,
   type EmailVerificationResponse,
@@ -19,15 +22,18 @@ import {
   type LoginResponse,
   type RegistrationAcceptedResponse,
   type SharingGrant,
+  type WebCSRFResponse,
+  type WebLoginResponse,
   type WrappedKey,
 } from "./schemas";
 import { apiErrorFromResponse } from "./errors";
 
-type ClientMode = "mock" | "live";
+export type ClientMode = "mock" | "live";
 
 type ClientOptions = {
   baseUrl?: string;
   mode?: ClientMode;
+  authMode?: AuthMode;
   getToken?: () => string | null;
 };
 
@@ -43,7 +49,24 @@ type VerifyAccountEmailRequest = {
 
 type RequestOptions = {
   includeAuth?: boolean;
+  includeCredentials?: boolean;
+  retryCSRF?: boolean;
+  skipCSRF?: boolean;
 };
+
+type WebCSRFState = {
+  token: string;
+  headerName: string;
+};
+
+export class CredentialModeError extends Error {
+  readonly code = "mixed_credential_mode";
+
+  constructor(message: string) {
+    super(message);
+    this.name = "CredentialModeError";
+  }
+}
 
 export const prooflineQueryKeys = {
   account: ["account"] as const,
@@ -58,8 +81,20 @@ export const prooflineQueryKeys = {
 const defaultBaseUrl =
   import.meta.env.VITE_PROOFLINE_API_BASE_URL ?? "http://127.0.0.1:8080";
 
-function defaultClientMode(): ClientMode {
+export function defaultProoflineClientMode(): ClientMode {
   return import.meta.env.VITE_PROOFLINE_API_MODE === "live" ? "live" : "mock";
+}
+
+export function defaultProoflineAuthMode(
+  mode: ClientMode = defaultProoflineClientMode(),
+): AuthMode {
+  if (mode !== "live") {
+    return "bearer";
+  }
+  const configured = import.meta.env.VITE_PROOFLINE_AUTH_MODE;
+  return configured === "cookie" || configured === "browser-cookie"
+    ? "cookie"
+    : "bearer";
 }
 
 const mockAccount: Account = {
@@ -225,18 +260,24 @@ const mockWrappedKeys: WrappedKey[] = [mockWrappedKey];
 export class ProoflineApiClient {
   readonly baseUrl: string;
   readonly mode: ClientMode;
+  readonly authMode: AuthMode;
   private readonly getToken: () => string | null;
+  private webCSRF: WebCSRFState | null = null;
 
   constructor(options: ClientOptions = {}) {
     this.baseUrl = (options.baseUrl ?? defaultBaseUrl).replace(/\/+$/, "");
-    this.mode = options.mode ?? defaultClientMode();
+    this.mode = options.mode ?? defaultProoflineClientMode();
+    this.authMode =
+      this.mode === "live"
+        ? (options.authMode ?? defaultProoflineAuthMode(this.mode))
+        : "bearer";
     this.getToken = options.getToken ?? (() => null);
   }
 
   async login(credentials: {
     username: string;
     password: string;
-  }): Promise<LoginResponse> {
+  }): Promise<LoginResponse | WebLoginResponse> {
     if (this.mode === "mock") {
       return {
         session_id: "ses_prototype",
@@ -245,6 +286,21 @@ export class ProoflineApiClient {
         created_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
       };
+    }
+
+    if (this.authMode === "cookie") {
+      const response = webLoginResponseSchema.parse(
+        await this.request(
+          "/v1/auth/web/login",
+          {
+            method: "POST",
+            body: JSON.stringify(credentials),
+          },
+          { includeAuth: false, includeCredentials: true },
+        ),
+      );
+      await this.refreshWebCSRF();
+      return response;
     }
 
     return loginResponseSchema.parse(
@@ -299,7 +355,14 @@ export class ProoflineApiClient {
     if (this.mode === "mock") {
       return;
     }
-    await this.request("/v1/auth/logout", { method: "POST" });
+    try {
+      await this.request(
+        this.authMode === "cookie" ? "/v1/auth/web/logout" : "/v1/auth/logout",
+        { method: "POST" },
+      );
+    } finally {
+      this.clearAuthenticationState();
+    }
   }
 
   async getCurrentAccount(): Promise<Account> {
@@ -394,6 +457,29 @@ export class ProoflineApiClient {
     ).wrapped_key;
   }
 
+  async refreshWebCSRF(): Promise<WebCSRFResponse | null> {
+    if (this.mode !== "live" || this.authMode !== "cookie") {
+      this.webCSRF = null;
+      return null;
+    }
+    const response = webCSRFResponseSchema.parse(
+      await this.request(
+        "/v1/auth/web/csrf",
+        {},
+        { skipCSRF: true, retryCSRF: false },
+      ),
+    );
+    this.webCSRF = {
+      token: response.csrf_token,
+      headerName: response.header_name ?? "X-CSRF-Token",
+    };
+    return response;
+  }
+
+  clearAuthenticationState(): void {
+    this.webCSRF = null;
+  }
+
   private async request(
     path: string,
     init: RequestInit = {},
@@ -404,18 +490,65 @@ export class ProoflineApiClient {
       headers.set("content-type", "application/json");
     }
 
-    const token = options.includeAuth === false ? null : this.getToken();
+    const includeAuth = options.includeAuth !== false;
+    const method = (init.method ?? "GET").toUpperCase();
+    const usesCookieAuth =
+      this.authMode === "cookie" &&
+      (includeAuth || options.includeCredentials === true);
+
+    if (this.authMode === "cookie" && headers.has("authorization")) {
+      throw new CredentialModeError(
+        "Cookie auth mode cannot send Authorization headers.",
+      );
+    }
+
+    const token =
+      includeAuth && this.authMode === "bearer" ? this.getToken() : null;
+    if (includeAuth && this.authMode === "cookie" && this.getToken()) {
+      throw new CredentialModeError(
+        "Cookie auth mode cannot use a bearer token.",
+      );
+    }
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
+    }
+
+    if (
+      usesCookieAuth &&
+      includeAuth &&
+      requiresWebCSRF(method) &&
+      !options.skipCSRF
+    ) {
+      if (!this.webCSRF) {
+        await this.refreshWebCSRF();
+      }
+      if (this.webCSRF) {
+        headers.set(this.webCSRF.headerName, this.webCSRF.token);
+      }
     }
 
     const response = await fetch(`${this.baseUrl}${path}`, {
       ...init,
       headers,
+      credentials: usesCookieAuth ? "include" : "omit",
     });
 
     if (!response.ok) {
-      throw await apiErrorFromResponse(response);
+      const apiError = await apiErrorFromResponse(response);
+      if (
+        usesCookieAuth &&
+        includeAuth &&
+        requiresWebCSRF(method) &&
+        !options.skipCSRF &&
+        options.retryCSRF !== false &&
+        apiError.status === 403 &&
+        apiError.code === "csrf_required"
+      ) {
+        this.webCSRF = null;
+        await this.refreshWebCSRF();
+        return this.request(path, init, { ...options, retryCSRF: false });
+      }
+      throw apiError;
     }
 
     if (response.status === 204) {
@@ -423,6 +556,17 @@ export class ProoflineApiClient {
     }
 
     return response.json();
+  }
+}
+
+function requiresWebCSRF(method: string): boolean {
+  switch (method) {
+    case "GET":
+    case "HEAD":
+    case "OPTIONS":
+      return false;
+    default:
+      return true;
   }
 }
 

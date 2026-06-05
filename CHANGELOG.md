@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Implemented an explicit browser-cookie auth client mode with in-memory CSRF
+  handling.
 - Enabled live owned-incident listing against authenticated
   `GET /v1/incidents` responses.
 - Added the reusable documentation and prompt review workflow and refreshed

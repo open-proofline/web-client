@@ -16,6 +16,14 @@ prototype data so browser smoke tests do not require a live backend.
 
 `VITE_PROOFLINE_API_MODE=live` calls the current server API.
 
+Live mode supports two explicit auth modes:
+
+- `VITE_PROOFLINE_AUTH_MODE=bearer` uses bearer-session login/logout and omits
+  browser credentials from API requests.
+- `VITE_PROOFLINE_AUTH_MODE=cookie` uses the browser-cookie auth routes,
+  includes browser credentials only for cookie-authenticated requests, and
+  never attaches an `Authorization` header.
+
 ## Confirmed Backend Routes
 
 From current `open-proofline/server` docs and route registration:
@@ -91,22 +99,22 @@ Mock mode returns explicit prototype-only responses for these methods; it does
 not create accounts, send email, verify real tokens, or model payment/billing
 state.
 
-## Browser Cookie Auth And CSRF Planning Boundary
+## Browser Cookie Auth And CSRF
 
-The current frontend implementation uses bearer-session auth in live mode:
-`POST /v1/auth/login` returns a bearer token, authenticated requests attach
-`Authorization: Bearer ...`, and session storage is memory-first with optional
-local-storage persistence for local development only.
+Bearer mode remains the default live mode. `POST /v1/auth/login` returns a
+bearer token, authenticated bearer-mode requests attach
+`Authorization: Bearer ...`, and bearer session storage is memory-first with
+optional local-storage persistence for local development only. Bearer-mode
+fetches use `credentials: "omit"` so browser session cookies are not relied on.
 
-`open-proofline/server` also documents browser-cookie auth routes for a future
-web-client mode:
+Cookie mode is selected explicitly with `VITE_PROOFLINE_AUTH_MODE=cookie` and
+uses the server browser-cookie auth routes:
 
 - `POST /v1/auth/web/login`
 - `POST /v1/auth/web/logout`
 - `GET /v1/auth/web/csrf`
 
-That mode is not implemented in this client yet. When it is implemented, the
-API client must choose one credential mode per live client instance:
+The API client chooses one credential mode per live client instance:
 
 - bearer mode: call the existing bearer login/logout routes and never send
   `credentials: "include"` for session cookies;
@@ -116,26 +124,26 @@ API client must choose one credential mode per live client instance:
 
 The modes must not be mixed for the same request. Current server behavior
 rejects requests that include both bearer credentials and a browser session
-cookie with `400 ambiguous_credentials`; tests for a cookie-mode implementation
-should assert that authenticated requests cannot add both.
+cookie with `400 ambiguous_credentials`; the client treats that as a local
+invariant and refuses to send bearer tokens from cookie-mode authenticated
+requests.
 
-Cookie-mode CSRF handling should be explicit in the client contract:
+Cookie-mode CSRF handling is explicit in the client contract:
 
 - fetch the CSRF token from `GET /v1/auth/web/csrf` after a successful cookie
   login and before the first unsafe cookie-authenticated request;
 - cache the token in memory only, scoped to the active browser session;
 - attach the returned header name, defaulting to `X-CSRF-Token` per current
   server docs, to unsafe methods such as `POST` and `PATCH`;
-- refresh the token after login, after a `403 csrf_required`, and after any
-  auth/session reset;
+- refresh the token after login, after a `403 csrf_required`, and before unsafe
+  cookie-authenticated requests when no in-memory CSRF token is available;
 - clear the cached token on logout and when account/session state is cleared.
 
 Credentialed CORS is a deployment boundary, not a frontend-only switch. A
 cookie-mode client must be used only with exact reviewed origins configured in
 `open-proofline/server`; wildcard origins are not acceptable for credentialed
-requests. Browser tests should cover web login, CSRF fetch, unsafe request
-header attachment, logout cleanup, and failure behavior when the CSRF token is
-missing or rejected.
+requests. Browser tests cover web login, CSRF fetch, unsafe request header
+attachment, logout cleanup, and rejected CSRF refresh behavior.
 
 ## Logging Boundary
 

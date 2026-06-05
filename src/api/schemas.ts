@@ -33,14 +33,46 @@ export const emailVerificationResponseSchema = z.object({
   status: z.literal("verified"),
 });
 
-export const sessionSchema = z.object({
-  sessionId: z.string(),
+export const authModeSchema = z.enum(["bearer", "cookie"]);
+
+export const webLoginResponseSchema = z.object({
+  session_id: z.string(),
   account: accountSchema,
-  token: z.string(),
-  createdAt: z.string(),
-  expiresAt: z.string(),
-  mode: z.enum(["mock", "live"]),
+  created_at: z.string(),
+  expires_at: z.string(),
 });
+
+export const webCSRFResponseSchema = z.object({
+  csrf_token: z.string(),
+  header_name: z.string().optional(),
+});
+
+export const sessionSchema = z
+  .object({
+    sessionId: z.string(),
+    account: accountSchema,
+    token: z.string().optional(),
+    createdAt: z.string(),
+    expiresAt: z.string(),
+    mode: z.enum(["mock", "live"]),
+    authMode: authModeSchema.default("bearer"),
+  })
+  .superRefine((session, context) => {
+    if (session.authMode === "bearer" && !session.token) {
+      context.addIssue({
+        code: "custom",
+        message: "bearer sessions require a token",
+        path: ["token"],
+      });
+    }
+    if (session.authMode === "cookie" && session.token) {
+      context.addIssue({
+        code: "custom",
+        message: "cookie sessions must not store bearer tokens",
+        path: ["token"],
+      });
+    }
+  });
 
 export const incidentSchema = z.object({
   id: z.string(),
@@ -182,6 +214,9 @@ export type RegistrationAcceptedResponse = z.infer<
 export type EmailVerificationResponse = z.infer<
   typeof emailVerificationResponseSchema
 >;
+export type AuthMode = z.infer<typeof authModeSchema>;
+export type WebLoginResponse = z.infer<typeof webLoginResponseSchema>;
+export type WebCSRFResponse = z.infer<typeof webCSRFResponseSchema>;
 export type Session = z.infer<typeof sessionSchema>;
 export type Incident = z.infer<typeof incidentSchema>;
 export type IncidentsResponse = z.infer<typeof incidentsResponseSchema>;

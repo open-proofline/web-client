@@ -6,9 +6,8 @@ in `open-proofline/server`.
 ## Assets
 
 - Opaque bearer session tokens returned by the server.
-- Future browser session cookies, if cookie auth mode is implemented.
-- Future CSRF tokens for cookie-authenticated unsafe requests, if cookie auth
-  mode is implemented.
+- Browser session cookies when cookie auth mode is enabled.
+- CSRF tokens for cookie-authenticated unsafe requests.
 - Raw email-verification tokens carried in verification URL fragments.
 - Account metadata visible to the authenticated user.
 - Incident, stream, chunk, contact public-key, sharing-grant, and wrapped-key
@@ -20,8 +19,8 @@ in `open-proofline/server`.
 - Browser JavaScript is not trusted with raw media keys in this prototype.
 - The backend remains authoritative for authorization.
 - Registration availability and account activation are backend decisions.
-- Browser-cookie auth, credentialed CORS, cookie attributes, and CSRF header
-  names remain server/deployment decisions until a client mode is implemented.
+- Credentialed CORS, cookie attributes, and CSRF header names remain
+  server/deployment decisions.
 - Bearer-token auth and browser-cookie auth must remain mutually exclusive for
   a given authenticated request.
 - Catalyst components are app-internal UI source, not a redistributed kit.
@@ -35,9 +34,9 @@ in `open-proofline/server`.
   debugging tools, copied issue text, or analytics if handled carelessly.
 - Registration UI wording could expose account-existence state if it diverges
   from the server's generic verification-required response.
-- A future cookie-auth mode could accidentally mix bearer and cookie
-  credentials, triggering server rejection and weakening client-side reasoning
-  about which credential protects the request.
+- Cookie-auth mode could accidentally mix bearer and cookie credentials,
+  triggering server rejection and weakening client-side reasoning about which
+  credential protects the request.
 - Missing, stale, logged, or over-persisted CSRF tokens could break unsafe
   cookie-authenticated requests or expand the effect of XSS.
 - Credentialed CORS configured with broad or unreviewed origins could expose
@@ -50,6 +49,6 @@ in `open-proofline/server`.
 ## Out Of Scope
 
 Recording, decryption, key escrow, break-glass access, trusted-contact
-decryption, browser-cookie auth implementation, payment processing,
-public-production account portal claims, emergency notifications, and playable
-media export are out of scope until explicitly designed and reviewed.
+decryption, payment processing, public-production account portal claims,
+emergency notifications, and playable media export are out of scope until
+explicitly designed and reviewed.
