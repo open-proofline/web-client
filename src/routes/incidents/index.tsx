@@ -1,10 +1,6 @@
 import { Link, Navigate, createRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  isUnsupportedLiveRouteError,
-  ownedIncidentListRoute,
-  prooflineQueryKeys,
-} from "../../api/client";
+import { prooflineQueryKeys } from "../../api/client";
 import { useAuth } from "../../auth/use-auth";
 import { EmptyState } from "../../components/proofline/EmptyState";
 import {
@@ -28,11 +24,6 @@ function IncidentsIndexPage() {
     return <Navigate to="/login" />;
   }
 
-  const incidentListUnsupported = isUnsupportedLiveRouteError(
-    incidents.error,
-    ownedIncidentListRoute,
-  );
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -41,16 +32,14 @@ function IncidentsIndexPage() {
         body={
           apiClient.mode === "mock"
             ? "Sample records are shown for local testing only."
-            : "Live mode can open a known incident. A full incident list is not available yet."
+            : "Live mode shows incident records returned by the authenticated API."
         }
       />
 
       <ContentSection title="Recent records">
         {incidents.isError ? (
           <InlineStatus role="alert" tone="danger">
-            {incidentListUnsupported
-              ? "The live incident list is not available yet."
-              : "Incident records could not be loaded."}
+            Incident records could not be loaded.
           </InlineStatus>
         ) : incidents.isLoading ? (
           <p className="text-sm text-proofline-text-muted">

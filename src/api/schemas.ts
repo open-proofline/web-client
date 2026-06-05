@@ -55,6 +55,10 @@ export const incidentSchema = z.object({
   deletion_state: z.string().optional(),
 });
 
+export const incidentsResponseSchema = z.object({
+  incidents: z.array(incidentSchema),
+});
+
 export const streamSchema = z.object({
   id: z.string(),
   incident_id: z.string(),
@@ -180,6 +184,7 @@ export type EmailVerificationResponse = z.infer<
 >;
 export type Session = z.infer<typeof sessionSchema>;
 export type Incident = z.infer<typeof incidentSchema>;
+export type IncidentsResponse = z.infer<typeof incidentsResponseSchema>;
 export type IncidentDetail = z.infer<typeof incidentDetailSchema>;
 export type Stream = z.infer<typeof streamSchema>;
 export type Chunk = z.infer<typeof chunkSchema>;

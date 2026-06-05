@@ -1,9 +1,60 @@
 import { expect, test } from "vitest";
 import {
   incidentDetailSchema,
+  incidentsResponseSchema,
   wrappedKeyResponseSchema,
   wrappedKeysResponseSchema,
 } from "./schemas";
+
+test("incident list parsing drops private owner and storage fields", () => {
+  const parsed = incidentsResponseSchema.parse({
+    incidents: [
+      {
+        id: "inc_test",
+        created_at: "2026-06-01T00:00:00Z",
+        updated_at: "2026-06-01T00:10:00Z",
+        status: "open",
+        client_label: "owner phone",
+        incident_mode: "interaction_record",
+        capture_profile: "audio_location",
+        escalation_policy: "none",
+        sharing_state: "private",
+        deletion_state: "active",
+        owner_account_id: "acct_private",
+        notes: "private note",
+        stored_path: "incidents/inc_test/private.enc",
+        object_key: "private/object/key",
+        wrapped_key_ciphertext: "wrapped-ciphertext",
+        plaintext: "private plaintext",
+        raw_key: "raw-key",
+      },
+    ],
+  });
+
+  expect(parsed.incidents).toHaveLength(1);
+  const incident = parsed.incidents[0];
+  expect(incident).toBeDefined();
+  if (!incident) {
+    throw new Error("expected parsed incident");
+  }
+  expect(incident).toMatchObject({
+    id: "inc_test",
+    status: "open",
+    client_label: "owner phone",
+    incident_mode: "interaction_record",
+    capture_profile: "audio_location",
+    escalation_policy: "none",
+    sharing_state: "private",
+    deletion_state: "active",
+  });
+  expect("owner_account_id" in incident).toBe(false);
+  expect("notes" in incident).toBe(false);
+  expect("stored_path" in incident).toBe(false);
+  expect("object_key" in incident).toBe(false);
+  expect("wrapped_key_ciphertext" in incident).toBe(false);
+  expect("plaintext" in incident).toBe(false);
+  expect("raw_key" in incident).toBe(false);
+});
 
 test("incident detail parsing drops private chunk storage paths", () => {
   const parsed = incidentDetailSchema.parse({

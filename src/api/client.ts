@@ -3,6 +3,7 @@ import {
   contactPublicKeyResponseSchema,
   contactPublicKeysResponseSchema,
   incidentDetailSchema,
+  incidentsResponseSchema,
   emailVerificationResponseSchema,
   loginResponseSchema,
   registrationAcceptedResponseSchema,
@@ -43,29 +44,6 @@ type VerifyAccountEmailRequest = {
 type RequestOptions = {
   includeAuth?: boolean;
 };
-
-export const ownedIncidentListRoute = "GET /v1/incidents";
-
-export class UnsupportedLiveRouteError extends Error {
-  readonly code = "unsupported_live_route";
-  readonly route: string;
-
-  constructor(route: string, message: string) {
-    super(message);
-    this.name = "UnsupportedLiveRouteError";
-    this.route = route;
-  }
-}
-
-export function isUnsupportedLiveRouteError(
-  error: unknown,
-  route?: string,
-): error is UnsupportedLiveRouteError {
-  return (
-    error instanceof UnsupportedLiveRouteError &&
-    (route === undefined || error.route === route)
-  );
-}
 
 export const prooflineQueryKeys = {
   account: ["account"] as const,
@@ -337,10 +315,8 @@ export class ProoflineApiClient {
       return mockIncidents;
     }
 
-    throw new UnsupportedLiveRouteError(
-      ownedIncidentListRoute,
-      "Current open-proofline/server does not expose GET /v1/incidents for owned incident listing.",
-    );
+    return incidentsResponseSchema.parse(await this.request("/v1/incidents"))
+      .incidents;
   }
 
   async readIncident(incidentId: string): Promise<IncidentDetail> {

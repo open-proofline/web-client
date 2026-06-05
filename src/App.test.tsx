@@ -503,9 +503,92 @@ test("renders authenticated mock incident detail metadata sections", async () =>
   expect(screen.getByText("No key delivery")).toBeInTheDocument();
 });
 
-test("shows the live incident list limitation", async () => {
+test("renders live incident list records without displaying private fields", async () => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
   saveLiveSession();
+  server.use(
+    http.get("*/v1/incidents", () =>
+      HttpResponse.json({
+        incidents: [
+          {
+            id: "inc_live",
+            created_at: "2026-06-01T00:00:00Z",
+            updated_at: "2026-06-01T00:10:00Z",
+            status: "open",
+            client_label: "owner phone",
+            incident_mode: "interaction_record",
+            capture_profile: "audio_location",
+            escalation_policy: "none",
+            sharing_state: "private",
+            deletion_state: "active",
+            owner_account_id: "acct_private",
+            notes: "private note",
+            stored_path: "incidents/inc_live/private.enc",
+            object_key: "private/object/key",
+            wrapped_key_ciphertext: "wrapped-ciphertext",
+            plaintext: "private plaintext",
+            raw_key: "raw-key",
+          },
+        ],
+      }),
+    ),
+  );
+
+  renderRoute("/incidents");
+
+  expect(
+    await screen.findByRole("heading", { name: "Incident records" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(
+      "Live mode shows incident records returned by the authenticated API.",
+    ),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("inc_live")).toBeInTheDocument();
+  expect(screen.getByText("owner phone")).toBeInTheDocument();
+  expect(screen.queryByText("acct_private")).toBeNull();
+  expect(screen.queryByText("private note")).toBeNull();
+  expect(screen.queryByText("incidents/inc_live/private.enc")).toBeNull();
+  expect(screen.queryByText("private/object/key")).toBeNull();
+  expect(screen.queryByText("wrapped-ciphertext")).toBeNull();
+  expect(screen.queryByText("private plaintext")).toBeNull();
+  expect(screen.queryByText("raw-key")).toBeNull();
+});
+
+test("shows an accessible live incident list empty state", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/incidents", () => HttpResponse.json({ incidents: [] })),
+  );
+
+  renderRoute("/incidents");
+
+  expect(
+    await screen.findByRole("heading", { name: "Incident records" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("No records")).toBeInTheDocument();
+  expect(
+    screen.getByText("Incident records will appear here when available."),
+  ).toBeInTheDocument();
+});
+
+test("shows a generic live incident list request failure", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/incidents", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "unavailable",
+            message: "backend private detail",
+          },
+        },
+        { status: 503 },
+      ),
+    ),
+  );
 
   renderRoute("/incidents");
 
@@ -513,8 +596,9 @@ test("shows the live incident list limitation", async () => {
     await screen.findByRole("heading", { name: "Incident records" }),
   ).toBeInTheDocument();
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "The live incident list is not available yet.",
+    "Incident records could not be loaded.",
   );
+  expect(screen.queryByText("backend private detail")).toBeNull();
 });
 
 test("shows generic dependent metadata errors on incident detail", async () => {

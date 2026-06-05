@@ -88,8 +88,8 @@ The current bootstrap includes:
 - conservative session state with memory-first token storage
 - optional local-storage session persistence for local development only
 - documented browser-cookie auth and CSRF client-mode planning boundary
-- incident list UI backed by explicit mock data only in the current client
-  implementation
+- incident list UI backed by mock data in prototype mode and authenticated
+  owner-scoped `GET /v1/incidents` responses in live mode
 - incident detail metadata UI
 - stream and chunk metadata review
 - contact public-key metadata views
@@ -129,8 +129,7 @@ behavior.
 
 Planned authenticated incident-review work includes:
 
-- live owned-incident listing in the client against the current server route,
-  once the API client enables it and tests the live response shape
+- live owned-incident listing in the client against the current server route
 - incident detail review
 - stream and chunk metadata review
 - viewer-token creation and revocation UI
@@ -261,10 +260,9 @@ The server currently confirms bearer session auth, `POST /v1/auth/login`,
 `POST /v1/auth/logout`, `GET /v1/account`, owner-scoped incident list/detail
 routes, contact public-key routes, sharing-grant routes, and wrapped-key
 routes. Current `open-proofline/server` documents authenticated
-`GET /v1/incidents`, but this client still disables the live owned-incident
-list until the API client and tests are updated for that response shape. Mock
-mode uses prototype incident records only and must not be treated as backend
-truth.
+`GET /v1/incidents`, and this client parses that response shape in live mode.
+Mock mode uses prototype incident records only and must not be treated as
+backend truth.
 
 Public registration is controlled by the server's
 `SAFE_ACCOUNT_REGISTRATION_MODE`. `disabled` and `admin_only` reject public
