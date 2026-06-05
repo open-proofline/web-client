@@ -133,6 +133,90 @@ test("uses cookie credentials without authorization headers for authenticated re
   });
 });
 
+test("changes account passwords with bearer authentication", async () => {
+  server.use(
+    http.post("*/v1/account/password", async ({ request }) => {
+      expect(request.credentials).toBe("omit");
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      await expect(request.json()).resolves.toEqual({
+        current_password: "current-password",
+        new_password: "replacement-password",
+      });
+      return HttpResponse.json({
+        account: {
+          id: "acct_live",
+          username: "live-user",
+          role: "user",
+          password_changed_at: "2026-06-01T00:45:00Z",
+        },
+      });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  await expect(
+    client.changePassword({
+      currentPassword: "current-password",
+      newPassword: "replacement-password",
+    }),
+  ).resolves.toMatchObject({
+    id: "acct_live",
+    username: "live-user",
+    password_changed_at: "2026-06-01T00:45:00Z",
+  });
+});
+
+test("attaches cookie CSRF headers to unsafe password-change requests", async () => {
+  server.use(
+    http.get("*/v1/auth/web/csrf", ({ request }) => {
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      return HttpResponse.json({
+        csrf_token: "csrf-token",
+        header_name: "X-CSRF-Token",
+      });
+    }),
+    http.post("*/v1/account/password", async ({ request }) => {
+      expect(request.credentials).toBe("include");
+      expect(request.headers.get("authorization")).toBeNull();
+      expect(request.headers.get("x-csrf-token")).toBe("csrf-token");
+      await expect(request.json()).resolves.toEqual({
+        current_password: "current-password",
+        new_password: "replacement-password",
+      });
+      return HttpResponse.json({
+        account: {
+          id: "acct_cookie",
+          username: "cookie-user",
+          role: "user",
+          password_changed_at: "2026-06-01T00:45:00Z",
+        },
+      });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    authMode: "cookie",
+  });
+
+  await expect(
+    client.changePassword({
+      currentPassword: "current-password",
+      newPassword: "replacement-password",
+    }),
+  ).resolves.toMatchObject({
+    id: "acct_cookie",
+    password_changed_at: "2026-06-01T00:45:00Z",
+  });
+});
+
 test("attaches cookie CSRF headers to unsafe cookie logout requests", async () => {
   server.use(
     http.get("*/v1/auth/web/csrf", ({ request }) => {

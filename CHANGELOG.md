@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added an authenticated account profile route with safe account metadata and
+  password-change handling.
 - Implemented an explicit browser-cookie auth client mode with in-memory CSRF
   handling.
 - Enabled live owned-incident listing against authenticated

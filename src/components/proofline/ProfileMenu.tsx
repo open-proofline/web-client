@@ -77,17 +77,27 @@ export function ProfileMenu({ session, onLogout }: ProfileMenuProps) {
 
           <div className="p-1">
             {isSignedIn ? (
-              <button
-                type="button"
-                role="menuitem"
-                className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-proofline-text-muted hover:bg-proofline-surface-elevated hover:text-proofline-text focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
-                onClick={() => {
-                  setIsOpen(false);
-                  void onLogout();
-                }}
-              >
-                Sign out
-              </button>
+              <>
+                <RouterLink
+                  to="/account"
+                  role="menuitem"
+                  className="block rounded-md px-3 py-2 text-sm font-medium text-proofline-text-muted hover:bg-proofline-surface-elevated hover:text-proofline-text focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Account profile
+                </RouterLink>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-proofline-text-muted hover:bg-proofline-surface-elevated hover:text-proofline-text focus:outline-2 focus:outline-offset-2 focus:outline-proofline-focus"
+                  onClick={() => {
+                    setIsOpen(false);
+                    void onLogout();
+                  }}
+                >
+                  Sign out
+                </button>
+              </>
             ) : (
               <>
                 <RouterLink

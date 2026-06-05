@@ -14,7 +14,7 @@ import {
   type ProoflineApiClient,
 } from "../api/client";
 import { ApiError, safeErrorMessage } from "../api/errors";
-import type { Session } from "../api/schemas";
+import type { Account, Session } from "../api/schemas";
 import {
   clearSession,
   loadSession,
@@ -34,6 +34,10 @@ type AuthContextValue = {
     | { ok: false; code?: "email_verification_required"; message: string }
   >;
   logout: () => Promise<void>;
+  changePassword: (request: {
+    currentPassword: string;
+    newPassword: string;
+  }) => Promise<Account>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -105,6 +109,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [apiClient]);
 
+  const changePassword = useCallback(
+    async (request: { currentPassword: string; newPassword: string }) => {
+      const account = await apiClient.changePassword(request);
+      setSession((currentSession) => {
+        if (!currentSession) {
+          return currentSession;
+        }
+        const nextSession = { ...currentSession, account };
+        saveSession(nextSession);
+        return nextSession;
+      });
+      return account;
+    },
+    [apiClient],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       apiClient,
@@ -112,8 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(session),
       login,
       logout,
+      changePassword,
     }),
-    [apiClient, session, login, logout],
+    [apiClient, session, login, logout, changePassword],
   );
 
   return createElement(AuthContext.Provider, { value }, children);

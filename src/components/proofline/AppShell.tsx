@@ -11,6 +11,7 @@ import { useAuth } from "../../auth/use-auth";
 const navigation = [
   { to: "/", label: "Overview" },
   { to: "/incidents", label: "Records" },
+  { to: "/account", label: "Account" },
 ];
 
 export function AppShell() {

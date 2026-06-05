@@ -13,8 +13,8 @@ flowchart LR
 
 ## Boundaries
 
-- The app handles account login, public registration, email verification, and
-  incident metadata review.
+- The app handles account login, public registration, email verification,
+  account profile/password management, and incident metadata review.
 - The live API client supports explicit bearer-token and browser-cookie auth
   modes. Cookie mode uses server-managed HttpOnly cookies, in-memory CSRF
   tokens, and `credentials: "include"` only for cookie-authenticated requests.

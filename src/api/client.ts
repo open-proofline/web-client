@@ -47,6 +47,11 @@ type VerifyAccountEmailRequest = {
   token: string;
 };
 
+type ChangePasswordRequest = {
+  currentPassword: string;
+  newPassword: string;
+};
+
 type RequestOptions = {
   includeAuth?: boolean;
   includeCredentials?: boolean;
@@ -371,6 +376,27 @@ export class ProoflineApiClient {
     }
     return accountResponseSchema.parse(await this.request("/v1/account"))
       .account;
+  }
+
+  async changePassword(request: ChangePasswordRequest): Promise<Account> {
+    if (this.mode === "mock") {
+      const changedAt = new Date().toISOString();
+      return {
+        ...mockAccount,
+        updated_at: changedAt,
+        password_changed_at: changedAt,
+      };
+    }
+
+    return accountResponseSchema.parse(
+      await this.request("/v1/account/password", {
+        method: "POST",
+        body: JSON.stringify({
+          current_password: request.currentPassword,
+          new_password: request.newPassword,
+        }),
+      }),
+    ).account;
   }
 
   async listOwnedIncidents(): Promise<Incident[]> {
