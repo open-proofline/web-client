@@ -267,8 +267,19 @@ const wrappedKeyFixture = {
     ephemeral_public_key: "public-metadata",
   },
   wrapped_key_state: "active",
+  revoked_at: "2026-06-01T00:10:00Z",
+  revoked_by_account_id: "acct_test",
+  rotated_at: "2026-06-01T00:20:00Z",
   created_at: "2026-06-01T00:00:00Z",
   updated_at: "2026-06-01T00:00:00Z",
+  raw_media_key: "raw-media-key",
+  contact_private_key: "contact-private-key",
+  plaintext: "private plaintext",
+  request_body: "private request",
+  stored_path: "incidents/inc_test/private.enc",
+  object_key: "private/object/key",
+  browser_fragment_secret: "fragment-secret",
+  private_deployment_detail: "private deployment detail",
 };
 
 test("wrapped-key list parsing drops wrapped-key ciphertext", () => {
@@ -292,8 +303,20 @@ test("wrapped-key list parsing drops wrapped-key ciphertext", () => {
       ephemeral_public_key: "public-metadata",
     },
     wrapped_key_state: "active",
+    revoked_at: "2026-06-01T00:10:00Z",
+    rotated_at: "2026-06-01T00:20:00Z",
   });
+  expect("owner_account_id" in wrappedKey).toBe(false);
   expect("wrapped_key_ciphertext" in wrappedKey).toBe(false);
+  expect("revoked_by_account_id" in wrappedKey).toBe(false);
+  expect("raw_media_key" in wrappedKey).toBe(false);
+  expect("contact_private_key" in wrappedKey).toBe(false);
+  expect("plaintext" in wrappedKey).toBe(false);
+  expect("request_body" in wrappedKey).toBe(false);
+  expect("stored_path" in wrappedKey).toBe(false);
+  expect("object_key" in wrappedKey).toBe(false);
+  expect("browser_fragment_secret" in wrappedKey).toBe(false);
+  expect("private_deployment_detail" in wrappedKey).toBe(false);
 });
 
 test("wrapped-key detail parsing drops wrapped-key ciphertext", () => {
@@ -306,6 +329,18 @@ test("wrapped-key detail parsing drops wrapped-key ciphertext", () => {
     contact_id: "ctc_test",
     contact_public_key_id: "cpk_test",
     wrapped_key_state: "active",
+    revoked_at: "2026-06-01T00:10:00Z",
+    rotated_at: "2026-06-01T00:20:00Z",
   });
+  expect("owner_account_id" in parsed.wrapped_key).toBe(false);
   expect("wrapped_key_ciphertext" in parsed.wrapped_key).toBe(false);
+  expect("revoked_by_account_id" in parsed.wrapped_key).toBe(false);
+  expect("raw_media_key" in parsed.wrapped_key).toBe(false);
+  expect("contact_private_key" in parsed.wrapped_key).toBe(false);
+  expect("plaintext" in parsed.wrapped_key).toBe(false);
+  expect("request_body" in parsed.wrapped_key).toBe(false);
+  expect("stored_path" in parsed.wrapped_key).toBe(false);
+  expect("object_key" in parsed.wrapped_key).toBe(false);
+  expect("browser_fragment_secret" in parsed.wrapped_key).toBe(false);
+  expect("private_deployment_detail" in parsed.wrapped_key).toBe(false);
 });

@@ -1111,6 +1111,127 @@ test("creates and revokes live sharing grants from active contact keys", async (
   expect(screen.getByRole("button", { name: "Revoke" })).toBeDisabled();
 });
 
+test("revokes live wrapped-key delivery without displaying sensitive fields", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  let wrappedKeys: Record<string, unknown>[] = [
+    {
+      wrapped_key_id: "wkey_live",
+      owner_account_id: "acct_live",
+      incident_id: "inc_live",
+      stream_id: "str_audio",
+      grant_id: "sgr_live",
+      recipient_type: "trusted_contact",
+      contact_id: "ctc_live",
+      contact_public_key_id: "cpk_live",
+      contact_public_key_version: 1,
+      media_key_id: "media-key-live",
+      wrapping_algorithm: "age-v1-x25519",
+      wrapping_algorithm_version: "1",
+      public_wrapping_metadata: {
+        profile: "age-v1-x25519",
+        recipient: {
+          raw_media_key: "raw-media-key",
+        },
+      },
+      wrapped_key_state: "active",
+      created_at: "2026-06-01T00:00:00Z",
+      updated_at: "2026-06-01T00:00:00Z",
+      wrapped_key_ciphertext: "wrapped-ciphertext",
+      raw_media_key: "raw-media-key",
+      contact_private_key: "contact-private-key",
+      plaintext: "private plaintext",
+      request_body: "private request",
+      stored_path: "incidents/inc_live/private.enc",
+      object_key: "private/object/key",
+    },
+  ];
+  server.use(
+    http.get("*/v1/incidents/inc_live", () =>
+      HttpResponse.json({
+        incident: {
+          id: "inc_live",
+          status: "closed",
+          deletion_state: "active",
+        },
+        streams: [
+          {
+            id: "str_audio",
+            incident_id: "inc_live",
+            media_type: "audio",
+            status: "complete",
+          },
+        ],
+        chunks: [],
+        checkins: [],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "incident_deletion_not_found",
+            message: "incident deletion was not found",
+          },
+        },
+        { status: 404 },
+      ),
+    ),
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json({ contact_public_keys: [] }),
+    ),
+    http.get("*/v1/incidents/inc_live/sharing-grants", () =>
+      HttpResponse.json({ sharing_grants: [] }),
+    ),
+    http.get("*/v1/incidents/inc_live/wrapped-keys", () =>
+      HttpResponse.json({ wrapped_keys: wrappedKeys }),
+    ),
+    http.post("*/v1/wrapped-keys/wkey_live/revoke", () => {
+      const revoked = {
+        ...wrappedKeys[0],
+        wrapped_key_state: "revoked",
+        updated_at: "2026-06-01T00:10:00Z",
+        revoked_at: "2026-06-01T00:10:00Z",
+        revoked_by_account_id: "acct_live",
+      };
+      wrappedKeys = [];
+      return HttpResponse.json({ wrapped_key: revoked });
+    }),
+  );
+
+  renderRoute("/incidents/inc_live");
+
+  expect(
+    await screen.findByRole("heading", { name: "inc_live" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("wkey_live")).toBeInTheDocument();
+  expect(screen.getByText("media-key-live")).toBeInTheDocument();
+  expect(screen.getAllByText("age-v1-x25519")).toHaveLength(2);
+  expect(screen.getByText("Yes")).toBeInTheDocument();
+  expect(
+    screen.getByText(
+      /Revocation stops future delivery of a wrapped-key record/,
+    ),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("wrapped-ciphertext")).toBeNull();
+  expect(screen.queryByText("raw-media-key")).toBeNull();
+  expect(screen.queryByText("contact-private-key")).toBeNull();
+  expect(screen.queryByText("private plaintext")).toBeNull();
+  expect(screen.queryByText("private request")).toBeNull();
+  expect(screen.queryByText("incidents/inc_live/private.enc")).toBeNull();
+  expect(screen.queryByText("private/object/key")).toBeNull();
+  expect(screen.queryByText("acct_live")).toBeNull();
+
+  fireEvent.click(screen.getByRole("button", { name: "Revoke delivery" }));
+
+  expect(await screen.findByText("Key delivery revoked.")).toBeInTheDocument();
+  expect(await screen.findByText("No key delivery")).toBeInTheDocument();
+  expect(screen.queryByText("wkey_live")).toBeNull();
+  expect(screen.queryByText("wrapped-ciphertext")).toBeNull();
+  expect(screen.queryByText("raw-media-key")).toBeNull();
+  expect(screen.queryByText("acct_live")).toBeNull();
+});
+
 test("shows safe sharing-grant empty state without active contact keys", async () => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
   saveLiveSession();

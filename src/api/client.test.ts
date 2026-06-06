@@ -921,3 +921,69 @@ test("revokes live sharing grants through the revoke route", async () => {
     revoked_by_account_id: "acct_live",
   });
 });
+
+test("revokes live wrapped keys without retaining sensitive fields", async () => {
+  server.use(
+    http.post("*/v1/wrapped-keys/wkey_live/revoke", ({ request }) => {
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      return HttpResponse.json({
+        wrapped_key: {
+          wrapped_key_id: "wkey_live",
+          owner_account_id: "acct_live",
+          incident_id: "inc_live",
+          stream_id: "str_live",
+          grant_id: "sgr_live",
+          recipient_type: "trusted_contact",
+          contact_id: "ctc_live",
+          contact_public_key_id: "cpk_live",
+          contact_public_key_version: 1,
+          media_key_id: "media-key-live",
+          wrapping_algorithm: "age-v1-x25519",
+          wrapping_algorithm_version: "1",
+          public_wrapping_metadata: {
+            profile: "age-v1-x25519",
+          },
+          wrapped_key_state: "revoked",
+          created_at: "2026-06-01T00:00:00Z",
+          updated_at: "2026-06-01T00:10:00Z",
+          revoked_at: "2026-06-01T00:10:00Z",
+          revoked_by_account_id: "acct_live",
+          wrapped_key_ciphertext: "wrapped-ciphertext",
+          raw_media_key: "raw-media-key",
+          contact_private_key: "contact-private-key",
+          plaintext: "private plaintext",
+          request_body: "private request",
+          stored_path: "incidents/inc_live/private.enc",
+          object_key: "private/object/key",
+        },
+      });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  const wrappedKey = await client.revokeWrappedKey("wkey_live");
+
+  expect(wrappedKey).toMatchObject({
+    wrapped_key_id: "wkey_live",
+    wrapped_key_state: "revoked",
+    revoked_at: "2026-06-01T00:10:00Z",
+    public_wrapping_metadata: {
+      profile: "age-v1-x25519",
+    },
+  });
+  expect("owner_account_id" in wrappedKey).toBe(false);
+  expect("revoked_by_account_id" in wrappedKey).toBe(false);
+  expect("wrapped_key_ciphertext" in wrappedKey).toBe(false);
+  expect("raw_media_key" in wrappedKey).toBe(false);
+  expect("contact_private_key" in wrappedKey).toBe(false);
+  expect("plaintext" in wrappedKey).toBe(false);
+  expect("request_body" in wrappedKey).toBe(false);
+  expect("stored_path" in wrappedKey).toBe(false);
+  expect("object_key" in wrappedKey).toBe(false);
+});

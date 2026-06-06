@@ -101,7 +101,7 @@ The current bootstrap includes:
 - stream and chunk metadata review
 - contact public-key metadata views and account-level management
 - sharing-grant metadata views and incident-scoped management
-- wrapped-key metadata views
+- wrapped-key metadata views and delivery revocation
 - owner incident deletion status and request UI
 - safe loading, empty, and error states
 - visible prototype and emergency-reliance warnings
@@ -149,11 +149,9 @@ The web client must not expose private admin/operator behavior or route `/v1/adm
 
 Planned sharing/contact work includes:
 
-- wrapped-key metadata review and delivery status
-- clear warnings that wrapped-key metadata is access-enabling metadata
 - trusted-contact access design, once separately scoped and threat-modeled
 
-Sharing metadata support does not imply browser decryption, trusted-contact decryption, raw key access, key escrow, or playable export.
+Sharing metadata support does not imply browser decryption, trusted-contact decryption, raw key access, key escrow, or playable export. Wrapped-key revocation stops future delivery only and cannot claw back material an authorized actor may already have received.
 
 ## Future Trusted-Contact Scope
 

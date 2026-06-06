@@ -9,6 +9,7 @@ import type {
   ContactPublicKey,
   IncidentDeletionStatus,
   SharingGrant,
+  WrappedKey,
 } from "../../api/schemas";
 import { ApiError } from "../../api/errors";
 import { useAuth } from "../../auth/use-auth";
@@ -65,6 +66,19 @@ function isActiveDeliveryGrant(grant: SharingGrant): boolean {
   return grant.grant_state === "active" && !isExpiredGrant(grant);
 }
 
+function isActiveWrappedKey(record: WrappedKey): boolean {
+  return record.wrapped_key_state === "active";
+}
+
+function publicWrappingProfile(record: WrappedKey): string | undefined {
+  const profile = record.public_wrapping_metadata?.profile;
+  if (typeof profile !== "string") {
+    return undefined;
+  }
+  const trimmed = profile.trim();
+  return trimmed || undefined;
+}
+
 function normalizeFutureExpiry(value: string): {
   expiresAt?: string;
   error?: string;
@@ -117,6 +131,9 @@ function IncidentDetailPage() {
   const [grantExpiresAt, setGrantExpiresAt] = useState("");
   const [grantErrors, setGrantErrors] = useState<SharingGrantFormErrors>({});
   const [grantResult, setGrantResult] = useState<ResultState>({
+    state: "idle",
+  });
+  const [wrappedKeyResult, setWrappedKeyResult] = useState<ResultState>({
     state: "idle",
   });
 
@@ -174,6 +191,20 @@ function IncidentDetailPage() {
       void queryClient.invalidateQueries({
         queryKey: prooflineQueryKeys.incident(incidentId),
       });
+    },
+  });
+  const revokeWrappedKey = useMutation({
+    mutationFn: (wrappedKeyId: string) =>
+      apiClient.revokeWrappedKey(wrappedKeyId),
+    onSuccess: (record) => {
+      queryClient.setQueryData<WrappedKey[]>(wrappedKeysQueryKey, (current) =>
+        (current ?? []).map((candidate) =>
+          candidate.wrapped_key_id === record.wrapped_key_id
+            ? record
+            : candidate,
+        ),
+      );
+      void queryClient.invalidateQueries({ queryKey: wrappedKeysQueryKey });
     },
   });
   const requestDeletion = useMutation({
@@ -258,6 +289,22 @@ function IncidentDetailPage() {
       setGrantResult({
         state: "error",
         message: "Sharing grant could not be revoked.",
+      });
+    }
+  }
+
+  async function handleRevokeWrappedKey(wrappedKeyId: string) {
+    setWrappedKeyResult({ state: "idle" });
+    try {
+      await revokeWrappedKey.mutateAsync(wrappedKeyId);
+      setWrappedKeyResult({
+        state: "success",
+        message: "Key delivery revoked.",
+      });
+    } catch {
+      setWrappedKeyResult({
+        state: "error",
+        message: "Key delivery could not be revoked.",
       });
     }
   }
@@ -640,35 +687,51 @@ function IncidentDetailPage() {
         title="Key delivery"
         count={wrappedKeys.data?.length ?? 0}
       >
-        {wrappedKeys.isError ? (
-          <MetadataError>
-            Key delivery details could not be loaded.
-          </MetadataError>
-        ) : wrappedKeys.isLoading ? (
-          <p className="text-sm text-proofline-text-muted">
-            Loading key delivery details.
-          </p>
-        ) : wrappedKeys.data?.length ? (
-          <div className="divide-y divide-proofline-border">
-            {wrappedKeys.data.map((record) => (
-              <MetadataRow
-                key={record.wrapped_key_id}
-                title={record.wrapped_key_id}
-                items={[
-                  { label: "Media key", value: record.media_key_id },
-                  { label: "Algorithm", value: record.wrapping_algorithm },
-                  { label: "Grant", value: record.grant_id },
-                ]}
-                status={<StatusBadge value={record.wrapped_key_state} />}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="No key delivery"
-            body="Key delivery details will appear here. This app does not unlock encrypted media."
-          />
-        )}
+        <div className="space-y-5">
+          <InlineStatus tone="info">
+            Revocation stops future delivery of a wrapped-key record. It cannot
+            claw back material an authorized actor may already have received,
+            and this app does not unwrap keys or decrypt media.
+          </InlineStatus>
+
+          {wrappedKeyResult.state === "success" ? (
+            <InlineStatus tone="success">
+              {wrappedKeyResult.message}
+            </InlineStatus>
+          ) : null}
+          {wrappedKeyResult.state === "error" ? (
+            <MetadataError>{wrappedKeyResult.message}</MetadataError>
+          ) : null}
+
+          {wrappedKeys.isError ? (
+            <MetadataError>
+              Key delivery details could not be loaded.
+            </MetadataError>
+          ) : wrappedKeys.isLoading ? (
+            <p className="text-sm text-proofline-text-muted">
+              Loading key delivery details.
+            </p>
+          ) : wrappedKeys.data?.length ? (
+            <div className="divide-y divide-proofline-border">
+              {wrappedKeys.data.map((record) => (
+                <WrappedKeyRow
+                  key={record.wrapped_key_id}
+                  record={record}
+                  isRevoking={
+                    revokeWrappedKey.isPending &&
+                    revokeWrappedKey.variables === record.wrapped_key_id
+                  }
+                  onRevoke={handleRevokeWrappedKey}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No key delivery"
+              body="Key delivery details will appear here. This app does not unlock encrypted media."
+            />
+          )}
+        </div>
       </MetadataSection>
     </div>
   );
@@ -747,6 +810,53 @@ function SharingGrantRow({
           onClick={() => onRevoke(grant.grant_id)}
         >
           {isRevoking ? "Revoking" : "Revoke"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function WrappedKeyRow({
+  record,
+  isRevoking,
+  onRevoke,
+}: {
+  record: WrappedKey;
+  isRevoking: boolean;
+  onRevoke: (wrappedKeyId: string) => void;
+}) {
+  const isActive = isActiveWrappedKey(record);
+  return (
+    <div className="grid gap-3 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+      <MetadataRow
+        title={record.wrapped_key_id}
+        items={[
+          { label: "Recipient", value: record.recipient_type },
+          { label: "Contact", value: record.contact_id },
+          { label: "Contact key", value: record.contact_public_key_id },
+          { label: "Scope", value: record.stream_id || "Incident" },
+          { label: "Media key", value: record.media_key_id },
+          { label: "Algorithm", value: record.wrapping_algorithm },
+          {
+            label: "Algorithm version",
+            value: record.wrapping_algorithm_version,
+          },
+          { label: "Public profile", value: publicWrappingProfile(record) },
+          { label: "Grant", value: record.grant_id },
+          { label: "Active delivery path", value: isActive ? "Yes" : "No" },
+          { label: "Revoked", value: record.revoked_at },
+          { label: "Rotated", value: record.rotated_at },
+        ]}
+        status={<StatusBadge value={record.wrapped_key_state} />}
+      />
+      <div className="lg:justify-self-end">
+        <Button
+          type="button"
+          color="red"
+          disabled={isRevoking || !isActive}
+          onClick={() => onRevoke(record.wrapped_key_id)}
+        >
+          {isRevoking ? "Revoking delivery" : "Revoke delivery"}
         </Button>
       </div>
     </div>

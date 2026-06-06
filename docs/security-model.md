@@ -22,6 +22,10 @@ This web client is experimental and not production-ready.
 - Sharing-grant management uses active contact public keys only, keeps expired
   or revoked grants out of active delivery paths, and does not add decryption,
   notification, or emergency-response behavior.
+- Wrapped-key delivery revocation stops future wrapped-key delivery for
+  account-owned records, does not recover material already received, and does
+  not expose wrapped-key ciphertext, owner-boundary account IDs, raw keys,
+  plaintext, stored paths, or object keys.
 - Registration responses use the server's generic verification-required success
   message and do not create a browser session.
 - The email-verification route reads the token from the URL fragment, submits

@@ -53,6 +53,7 @@ From current `open-proofline/server` docs and route registration:
 - `POST /v1/sharing-grants/{grant_id}/revoke`
 - `GET /v1/incidents/{incident_id}/wrapped-keys`
 - `GET /v1/wrapped-keys/{wrapped_key_id}`
+- `POST /v1/wrapped-keys/{wrapped_key_id}/revoke`
 
 ## Live Owned Incident List Client
 
@@ -103,8 +104,21 @@ narrative.
 Wrapped-key parsing does not retain `wrapped_key_ciphertext` in frontend state.
 The current server may return ciphertext on authenticated wrapped-key routes,
 but this metadata-review prototype keeps only wrapped-key identifiers, grant and
-contact bindings, wrapping metadata, and state until a separate trusted-contact
-delivery flow is designed and reviewed.
+contact bindings, reviewed public wrapping profile metadata, state, and safe
+timestamps until a separate trusted-contact delivery flow is designed and
+reviewed.
+
+Wrapped-key delivery revocation uses the server's authenticated owner-scoped
+route:
+
+- `POST /v1/wrapped-keys/{wrapped_key_id}/revoke`
+
+Revocation marks one wrapped-key record revoked and stops future delivery of
+that record. It cannot claw back material an authorized actor may already have
+received. The UI keeps revoke errors generic and does not expose owner-boundary
+account IDs, wrapped-key ciphertext, raw media keys, contact private keys,
+plaintext, request bodies, stored paths, object keys, or private deployment
+details.
 
 Contact public-key management uses the server's authenticated account-scoped
 routes:
