@@ -40,6 +40,8 @@ From current `open-proofline/server` docs and route registration:
 - `POST /v1/incidents`
 - `GET /v1/incidents`
 - `GET /v1/incidents/{incident_id}`
+- `POST /v1/incidents/{incident_id}/deletion`
+- `GET /v1/incidents/{incident_id}/deletion`
 - `GET /v1/contact-public-keys`
 - `GET /v1/contact-public-keys/{public_key_id}`
 - `GET /v1/incidents/{incident_id}/sharing-grants`
@@ -74,6 +76,24 @@ browser session cookies, or CSRF token values.
 Incident detail parsing keeps browser state focused on public-safe metadata.
 If backend chunk responses include private `stored_path` values for upload or
 storage internals, the frontend schema does not retain those fields.
+
+Owner-scoped incident deletion uses the server's authenticated deletion routes:
+
+- `GET /v1/incidents/{incident_id}/deletion`
+- `POST /v1/incidents/{incident_id}/deletion`
+
+The client treats `404 incident_deletion_not_found` from the status route as
+"no deletion request" and keeps other ownership, missing-incident, and backend
+errors generic in the UI. Deletion requests use a fixed non-sensitive
+`account_delete` reason code. Open incidents require explicit user confirmation
+before the client sends `allow_open: true`.
+
+Deletion status parsing keeps only the server's non-sensitive status fields:
+decision and incident identifiers, source, reason code, `allow_open`, state,
+item count, optional safe error code, and timestamps. It does not retain
+deletion item paths, object keys, request bodies, plaintext, raw keys,
+wrapped-key ciphertext, token hashes, private deployment details, or user safety
+narrative.
 
 Wrapped-key parsing does not retain `wrapped_key_ciphertext` in frontend state.
 The current server may return ciphertext on authenticated wrapped-key routes,

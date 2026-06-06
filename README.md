@@ -102,6 +102,7 @@ The current bootstrap includes:
 - contact public-key metadata views
 - sharing-grant metadata views
 - wrapped-key metadata views
+- owner incident deletion status and request UI
 - safe loading, empty, and error states
 - visible prototype and emergency-reliance warnings
 - frontend CI for typecheck, lint, unit tests, build, and Playwright smoke tests
@@ -139,7 +140,6 @@ Planned authenticated incident-review work includes:
 - stream and chunk metadata review
 - viewer-token creation and revocation UI
 - encrypted bundle download affordances with clear warnings
-- deletion request/status UI for account-owned incidents, if backend support is available
 - mode, capture-profile, escalation-policy, sharing-state, deletion-state, and retention metadata display
 - safe empty/error/loading states for all incident views
 

@@ -600,6 +600,237 @@ test("renders authenticated mock incident detail metadata sections", async () =>
   expect(screen.getByText("No key delivery")).toBeInTheDocument();
 });
 
+test("renders existing incident deletion status without private deletion internals", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/incidents/inc_live", () =>
+      HttpResponse.json({
+        incident: {
+          id: "inc_live",
+          status: "closed",
+          deletion_state: "deletion_pending",
+        },
+        streams: [],
+        chunks: [],
+        checkins: [],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json({
+        deletion: {
+          decision_id: "del_live",
+          incident_id: "inc_live",
+          source: "account_request",
+          reason_code: "account_delete",
+          actor_account_id: "acct_live",
+          allow_open: false,
+          state: "deletion_pending",
+          item_count: 2,
+          requested_at: "2026-06-01T00:00:00Z",
+          updated_at: "2026-06-01T00:01:00Z",
+          stored_path: "incidents/inc_live/private.enc",
+          object_key: "private/object/key",
+          wrapped_key_ciphertext: "wrapped-ciphertext",
+        },
+      }),
+    ),
+    ...emptyIncidentDetailHandlers("inc_live"),
+  );
+
+  renderRoute("/incidents/inc_live");
+
+  expect(
+    await screen.findByRole("heading", { name: "inc_live" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Deletion request" }),
+  ).toBeInTheDocument();
+  expect(await screen.findAllByText("deletion pending")).not.toHaveLength(0);
+  expect(screen.getByText("account_delete")).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Request deletion" }),
+  ).toBeNull();
+  expect(screen.queryByText("incidents/inc_live/private.enc")).toBeNull();
+  expect(screen.queryByText("private/object/key")).toBeNull();
+  expect(screen.queryByText("wrapped-ciphertext")).toBeNull();
+});
+
+test("requires confirmation before requesting deletion for an open incident", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  const deletionRequest = vi.fn();
+  server.use(
+    http.get("*/v1/incidents/inc_live", () =>
+      HttpResponse.json({
+        incident: {
+          id: "inc_live",
+          status: "open",
+          deletion_state: "active",
+        },
+        streams: [],
+        chunks: [],
+        checkins: [],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "incident_deletion_not_found",
+            message: "incident deletion was not found",
+          },
+        },
+        { status: 404 },
+      ),
+    ),
+    http.post("*/v1/incidents/inc_live/deletion", async ({ request }) => {
+      deletionRequest();
+      await expect(request.json()).resolves.toEqual({
+        reason_code: "account_delete",
+        allow_open: true,
+      });
+      return HttpResponse.json(
+        {
+          deletion: {
+            decision_id: "del_live",
+            incident_id: "inc_live",
+            source: "account_request",
+            reason_code: "account_delete",
+            allow_open: true,
+            state: "deletion_pending",
+            item_count: 0,
+            requested_at: "2026-06-01T00:00:00Z",
+            updated_at: "2026-06-01T00:00:00Z",
+          },
+        },
+        { status: 202 },
+      );
+    }),
+    ...emptyIncidentDetailHandlers("inc_live"),
+  );
+
+  renderRoute("/incidents/inc_live");
+
+  expect(
+    await screen.findByRole("heading", { name: "inc_live" }),
+  ).toBeInTheDocument();
+  const button = await screen.findByRole("button", {
+    name: "Request deletion",
+  });
+  expect(button).toBeDisabled();
+  fireEvent.click(
+    screen.getByRole("checkbox", {
+      name: "Confirm this open incident should be submitted for deletion.",
+    }),
+  );
+  expect(button).toBeEnabled();
+  fireEvent.click(button);
+
+  expect(await screen.findAllByText("deletion pending")).not.toHaveLength(0);
+  expect(deletionRequest).toHaveBeenCalledTimes(1);
+});
+
+test("shows generic deletion status and request errors", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/incidents/inc_live", () =>
+      HttpResponse.json({
+        incident: {
+          id: "inc_live",
+          status: "open",
+          deletion_state: "active",
+        },
+        streams: [],
+        chunks: [],
+        checkins: [],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "unavailable",
+            message: "backend private deletion detail",
+          },
+        },
+        { status: 503 },
+      ),
+    ),
+    ...emptyIncidentDetailHandlers("inc_live"),
+  );
+
+  renderRoute("/incidents/inc_live");
+
+  expect(
+    await screen.findByRole("heading", { name: "inc_live" }),
+  ).toBeInTheDocument();
+  expect(
+    await screen.findByText("Deletion status could not be loaded."),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("backend private deletion detail")).toBeNull();
+});
+
+test("shows a generic deletion request failure for missing or unowned incidents", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/incidents/inc_live", () =>
+      HttpResponse.json({
+        incident: {
+          id: "inc_live",
+          status: "open",
+          deletion_state: "active",
+        },
+        streams: [],
+        chunks: [],
+        checkins: [],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "incident_deletion_not_found",
+            message: "incident deletion was not found",
+          },
+        },
+        { status: 404 },
+      ),
+    ),
+    http.post("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "forbidden",
+            message: "private ownership detail",
+          },
+        },
+        { status: 403 },
+      ),
+    ),
+    ...emptyIncidentDetailHandlers("inc_live"),
+  );
+
+  renderRoute("/incidents/inc_live");
+
+  expect(
+    await screen.findByRole("heading", { name: "inc_live" }),
+  ).toBeInTheDocument();
+  fireEvent.click(
+    await screen.findByRole("checkbox", {
+      name: "Confirm this open incident should be submitted for deletion.",
+    }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Request deletion" }));
+
+  expect(
+    await screen.findByText("Deletion request could not be completed."),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("private ownership detail")).toBeNull();
+});
+
 test("redirects unauthenticated account profile visits to login", async () => {
   renderRoute("/account");
 
@@ -1049,6 +1280,17 @@ test("shows generic dependent metadata errors on incident detail", async () => {
         checkins: [],
       }),
     ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "incident_deletion_not_found",
+            message: "incident deletion was not found",
+          },
+        },
+        { status: 404 },
+      ),
+    ),
     http.get("*/v1/contact-public-keys", () =>
       HttpResponse.json({ error: { code: "unavailable" } }, { status: 503 }),
     ),
@@ -1113,4 +1355,18 @@ function saveTestSession(mode: "mock" | "live", username: string) {
     mode,
     authMode: "bearer",
   });
+}
+
+function emptyIncidentDetailHandlers(incidentId: string) {
+  return [
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json({ contact_public_keys: [] }),
+    ),
+    http.get(`*/v1/incidents/${incidentId}/sharing-grants`, () =>
+      HttpResponse.json({ sharing_grants: [] }),
+    ),
+    http.get(`*/v1/incidents/${incidentId}/wrapped-keys`, () =>
+      HttpResponse.json({ wrapped_keys: [] }),
+    ),
+  ];
 }

@@ -3,6 +3,7 @@ import {
   contactPublicKeyResponseSchema,
   contactPublicKeysResponseSchema,
   incidentDetailSchema,
+  incidentDeletionResponseSchema,
   incidentsResponseSchema,
   emailVerificationResponseSchema,
   loginResponseSchema,
@@ -19,6 +20,7 @@ import {
   type EmailVerificationResponse,
   type Incident,
   type IncidentDetail,
+  type IncidentDeletionStatus,
   type LoginResponse,
   type RegistrationAcceptedResponse,
   type SharingGrant,
@@ -26,7 +28,7 @@ import {
   type WebLoginResponse,
   type WrappedKey,
 } from "./schemas";
-import { apiErrorFromResponse } from "./errors";
+import { ApiError, apiErrorFromResponse } from "./errors";
 
 export type ClientMode = "mock" | "live";
 
@@ -50,6 +52,11 @@ type VerifyAccountEmailRequest = {
 type ChangePasswordRequest = {
   currentPassword: string;
   newPassword: string;
+};
+
+type RequestIncidentDeletionRequest = {
+  reasonCode?: string;
+  allowOpen: boolean;
 };
 
 type RequestOptions = {
@@ -77,6 +84,8 @@ export const prooflineQueryKeys = {
   account: (sessionId: string) => ["account", sessionId] as const,
   incidents: ["incidents"] as const,
   incident: (incidentId: string) => ["incident", incidentId] as const,
+  incidentDeletion: (incidentId: string) =>
+    ["incident-deletion", incidentId] as const,
   contactPublicKeys: ["contact-public-keys"] as const,
   sharingGrants: (incidentId: string) =>
     ["sharing-grants", incidentId] as const,
@@ -415,6 +424,69 @@ export class ProoflineApiClient {
     return incidentDetailSchema.parse(
       await this.request(`/v1/incidents/${encodeURIComponent(incidentId)}`),
     );
+  }
+
+  async readIncidentDeletion(
+    incidentId: string,
+  ): Promise<IncidentDeletionStatus | null> {
+    if (this.mode === "mock") {
+      return null;
+    }
+
+    try {
+      return incidentDeletionResponseSchema.parse(
+        await this.request(
+          `/v1/incidents/${encodeURIComponent(incidentId)}/deletion`,
+        ),
+      ).deletion;
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status === 404 &&
+        error.code === "incident_deletion_not_found"
+      ) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async requestIncidentDeletion(
+    incidentId: string,
+    request: RequestIncidentDeletionRequest,
+  ): Promise<IncidentDeletionStatus> {
+    if (this.mode === "mock") {
+      const now = new Date().toISOString();
+      return {
+        decision_id: `del_${incidentId}`,
+        incident_id: incidentId,
+        source: "account_request",
+        reason_code: request.reasonCode,
+        allow_open: request.allowOpen,
+        state: "deletion_pending",
+        item_count: 0,
+        requested_at: now,
+        updated_at: now,
+      };
+    }
+
+    const body =
+      request.reasonCode === undefined
+        ? { allow_open: request.allowOpen }
+        : {
+            reason_code: request.reasonCode,
+            allow_open: request.allowOpen,
+          };
+
+    return incidentDeletionResponseSchema.parse(
+      await this.request(
+        `/v1/incidents/${encodeURIComponent(incidentId)}/deletion`,
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      ),
+    ).deletion;
   }
 
   async listContactPublicKeys(): Promise<ContactPublicKey[]> {

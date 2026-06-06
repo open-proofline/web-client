@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Navigate, createRoute, useParams } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { prooflineQueryKeys } from "../../api/client";
+import type { IncidentDeletionStatus } from "../../api/schemas";
 import { useAuth } from "../../auth/use-auth";
+import { Button } from "../../components/catalyst/button";
 import { EmptyState } from "../../components/proofline/EmptyState";
 import {
   ContentSection,
@@ -16,10 +19,17 @@ import { rootRoute } from "../__root";
 function IncidentDetailPage() {
   const { incidentId } = useParams({ from: "/incidents/$incidentId" });
   const { isAuthenticated, apiClient } = useAuth();
+  const queryClient = useQueryClient();
+  const [confirmedOpenDeletion, setConfirmedOpenDeletion] = useState(false);
 
   const incident = useQuery({
     queryKey: prooflineQueryKeys.incident(incidentId),
     queryFn: () => apiClient.readIncident(incidentId),
+    enabled: isAuthenticated,
+  });
+  const deletion = useQuery({
+    queryKey: prooflineQueryKeys.incidentDeletion(incidentId),
+    queryFn: () => apiClient.readIncidentDeletion(incidentId),
     enabled: isAuthenticated,
   });
   const contacts = useQuery({
@@ -36,6 +46,30 @@ function IncidentDetailPage() {
     queryKey: prooflineQueryKeys.wrappedKeys(incidentId),
     queryFn: () => apiClient.listWrappedKeys(incidentId),
     enabled: isAuthenticated,
+  });
+  const requestDeletion = useMutation({
+    mutationFn: () => {
+      const detail = incident.data;
+      if (!detail) {
+        throw new Error("incident detail is not loaded");
+      }
+      return apiClient.requestIncidentDeletion(incidentId, {
+        reasonCode: "account_delete",
+        allowOpen: detail.incident.status === "open",
+      });
+    },
+    onSuccess: (status) => {
+      queryClient.setQueryData(
+        prooflineQueryKeys.incidentDeletion(incidentId),
+        status,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: prooflineQueryKeys.incident(incidentId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: prooflineQueryKeys.incidents,
+      });
+    },
   });
 
   if (!isAuthenticated) {
@@ -62,6 +96,9 @@ function IncidentDetailPage() {
   }
 
   const detail = incident.data;
+  const isOpenIncident = detail.incident.status === "open";
+  const requestDisabled =
+    requestDeletion.isPending || (isOpenIncident && !confirmedOpenDeletion);
 
   return (
     <div className="space-y-6">
@@ -109,6 +146,71 @@ function IncidentDetailPage() {
             { label: "Client label", value: detail.incident.client_label },
           ]}
         />
+      </ContentSection>
+
+      <ContentSection
+        title="Deletion request"
+        trailing={
+          deletion.data ? (
+            <StatusBadge value={deletion.data.state} />
+          ) : (
+            "No request"
+          )
+        }
+      >
+        {deletion.isLoading ? (
+          <p role="status" className="text-sm text-proofline-text-muted">
+            Loading deletion status.
+          </p>
+        ) : deletion.isError ? (
+          <MetadataError>Deletion status could not be loaded.</MetadataError>
+        ) : deletion.data ? (
+          <IncidentDeletionStatusView status={deletion.data} />
+        ) : (
+          <div className="space-y-4">
+            <p className="text-sm leading-6 text-proofline-text-secondary">
+              Request server-side deletion for this owned incident. This does
+              not expose storage paths, object keys, request bodies, plaintext,
+              raw keys, or wrapped-key ciphertext.
+            </p>
+            {isOpenIncident ? (
+              <InlineStatus tone="warning">
+                This incident is open. Confirm that it should be placed into
+                deletion before sending the request.
+              </InlineStatus>
+            ) : null}
+            {isOpenIncident ? (
+              <label className="flex gap-3 rounded-md border border-proofline-border bg-proofline-surface-elevated p-3 text-sm leading-6 text-proofline-text-secondary">
+                <input
+                  type="checkbox"
+                  className="mt-1 size-4 rounded border-proofline-border text-proofline-primary focus:ring-proofline-focus"
+                  checked={confirmedOpenDeletion}
+                  onChange={(event) =>
+                    setConfirmedOpenDeletion(event.currentTarget.checked)
+                  }
+                />
+                <span>
+                  Confirm this open incident should be submitted for deletion.
+                </span>
+              </label>
+            ) : null}
+            {requestDeletion.isError ? (
+              <MetadataError>
+                Deletion request could not be completed.
+              </MetadataError>
+            ) : null}
+            <Button
+              type="button"
+              color="red"
+              disabled={requestDisabled}
+              onClick={() => requestDeletion.mutate()}
+            >
+              {requestDeletion.isPending
+                ? "Requesting deletion"
+                : "Request deletion"}
+            </Button>
+          </div>
+        )}
       </ContentSection>
 
       <MetadataSection title="Streams" count={detail.streams.length}>
@@ -254,6 +356,35 @@ function IncidentDetailPage() {
           />
         )}
       </MetadataSection>
+    </div>
+  );
+}
+
+function IncidentDeletionStatusView({
+  status,
+}: {
+  status: IncidentDeletionStatus;
+}) {
+  return (
+    <div className="space-y-4">
+      <MetadataGrid
+        items={[
+          { label: "State", value: status.state },
+          { label: "Source", value: status.source },
+          { label: "Reason code", value: status.reason_code },
+          { label: "Open allowed", value: status.allow_open ? "yes" : "no" },
+          { label: "Items", value: status.item_count },
+          { label: "Requested", value: status.requested_at },
+          { label: "Updated", value: status.updated_at },
+          { label: "Started", value: status.started_at },
+          { label: "Completed", value: status.completed_at },
+          { label: "Error code", value: status.error_code },
+        ]}
+      />
+      <InlineStatus tone="info">
+        Deletion status is server-controlled metadata. This app does not expose
+        deletion item paths or private storage details.
+      </InlineStatus>
     </div>
   );
 }
