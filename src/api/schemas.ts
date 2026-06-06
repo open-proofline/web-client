@@ -204,7 +204,6 @@ export const sharingGrantResponseSchema = z.object({
 
 export const wrappedKeySchema = z.object({
   wrapped_key_id: z.string(),
-  owner_account_id: z.string().optional(),
   incident_id: z.string(),
   stream_id: z.string().nullable().optional(),
   grant_id: z.string(),
@@ -219,6 +218,8 @@ export const wrappedKeySchema = z.object({
   wrapped_key_state: z.string(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
+  revoked_at: z.string().optional(),
+  rotated_at: z.string().optional(),
 });
 
 export const wrappedKeysResponseSchema = z.object({

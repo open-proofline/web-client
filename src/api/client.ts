@@ -278,7 +278,6 @@ const mockSharingGrants: SharingGrant[] = [mockSharingGrant];
 
 const mockWrappedKey: WrappedKey = {
   wrapped_key_id: "wkey_prototype_001",
-  owner_account_id: "acct_prototype",
   incident_id: "inc_prototype_002",
   stream_id: null,
   grant_id: "sgr_prototype_001",
@@ -785,6 +784,36 @@ export class ProoflineApiClient {
     return wrappedKeyResponseSchema.parse(
       await this.request(
         `/v1/wrapped-keys/${encodeURIComponent(wrappedKeyId)}`,
+      ),
+    ).wrapped_key;
+  }
+
+  async revokeWrappedKey(wrappedKeyId: string): Promise<WrappedKey> {
+    if (this.mode === "mock") {
+      const updatedAt = new Date().toISOString();
+      const record = mockWrappedKeys.find(
+        (candidate) => candidate.wrapped_key_id === wrappedKeyId,
+      );
+      const nextRecord: WrappedKey = {
+        ...(record ?? mockWrappedKey),
+        wrapped_key_id: wrappedKeyId,
+        wrapped_key_state: "revoked",
+        updated_at: updatedAt,
+        revoked_at: updatedAt,
+      };
+      const index = mockWrappedKeys.findIndex(
+        (candidate) => candidate.wrapped_key_id === wrappedKeyId,
+      );
+      if (index >= 0) {
+        mockWrappedKeys[index] = nextRecord;
+      }
+      return nextRecord;
+    }
+
+    return wrappedKeyResponseSchema.parse(
+      await this.request(
+        `/v1/wrapped-keys/${encodeURIComponent(wrappedKeyId)}/revoke`,
+        { method: "POST" },
       ),
     ).wrapped_key;
   }
