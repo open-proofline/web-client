@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added an adaptable static-host security header template with placeholder
+  origins and deployment-review boundaries.
 - Documented the viewer-token create/revoke UI design and no-account
   read-only viewer boundary.
 - Added incident-detail wrapped-key delivery revocation for account-owned

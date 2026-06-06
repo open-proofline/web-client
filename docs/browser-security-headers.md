@@ -33,6 +33,10 @@ Use exact origins for the deployed static site and reviewed API origin. If the
 API is served from the same origin, `connect-src 'self'` may be enough. If the
 API is on a separate origin, add only that reviewed origin.
 
+A reusable `_headers`-style example is available in
+[Static Host Headers Template](static-host-headers-template.md). Treat it as a
+deployment-review starting point, not as production approval.
+
 ```http
 Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.example.invalid
 X-Content-Type-Options: nosniff
