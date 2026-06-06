@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import {
+  contactPublicKeyResponseSchema,
   incidentDeletionResponseSchema,
   incidentDetailSchema,
   incidentsResponseSchema,
@@ -152,6 +153,51 @@ test("incident deletion status parsing drops deletion item internals", () => {
   expect("raw_key" in parsed.deletion).toBe(false);
   expect("wrapped_key_ciphertext" in parsed.deletion).toBe(false);
   expect("user_safety_narrative" in parsed.deletion).toBe(false);
+});
+
+test("contact public-key parsing drops private key material and request internals", () => {
+  const parsed = contactPublicKeyResponseSchema.parse({
+    contact_public_key: {
+      public_key_id: "cpk_test",
+      owner_account_id: "acct_test",
+      contact_id: "ctc_test",
+      version: 1,
+      display_label: "Trusted contact",
+      wrapping_algorithm: "age-v1-x25519",
+      public_key: "age1public",
+      public_key_fingerprint: "fingerprint-test",
+      key_state: "active",
+      created_at: "2026-06-01T00:00:00Z",
+      updated_at: "2026-06-01T00:00:00Z",
+      revoked_at: "2026-06-01T00:10:00Z",
+      contact_private_key: "must-not-retain",
+      raw_media_key: "raw-media-key",
+      plaintext: "private plaintext",
+      wrapped_key_ciphertext: "wrapped-ciphertext",
+      request_body: "private request",
+      stored_path: "incidents/inc_test/private.enc",
+      object_key: "private/object/key",
+      browser_fragment_secret: "fragment-secret",
+      private_deployment_detail: "private deployment",
+    },
+  });
+
+  expect(parsed.contact_public_key).toMatchObject({
+    public_key_id: "cpk_test",
+    contact_id: "ctc_test",
+    display_label: "Trusted contact",
+    key_state: "active",
+    revoked_at: "2026-06-01T00:10:00Z",
+  });
+  expect("contact_private_key" in parsed.contact_public_key).toBe(false);
+  expect("raw_media_key" in parsed.contact_public_key).toBe(false);
+  expect("plaintext" in parsed.contact_public_key).toBe(false);
+  expect("wrapped_key_ciphertext" in parsed.contact_public_key).toBe(false);
+  expect("request_body" in parsed.contact_public_key).toBe(false);
+  expect("stored_path" in parsed.contact_public_key).toBe(false);
+  expect("object_key" in parsed.contact_public_key).toBe(false);
+  expect("browser_fragment_secret" in parsed.contact_public_key).toBe(false);
+  expect("private_deployment_detail" in parsed.contact_public_key).toBe(false);
 });
 
 const wrappedKeyFixture = {

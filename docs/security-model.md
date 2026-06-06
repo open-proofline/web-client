@@ -17,6 +17,8 @@ This web client is experimental and not production-ready.
 - API responses are parsed with Zod before use where route shapes are known.
 - UI states avoid showing raw tokens, Authorization headers, request bodies,
   plaintext, raw keys, wrapped-key ciphertext, stored paths, or object keys.
+- Contact public-key management sends only reviewed public-key metadata fields
+  and keeps revoked keys visibly ineligible for new sharing grants.
 - Registration responses use the server's generic verification-required success
   message and do not create a browser session.
 - The email-verification route reads the token from the URL fragment, submits

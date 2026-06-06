@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added account-level contact public-key management for create, update, and
+  revoke flows.
 - Added owner incident deletion status and request UI for the authenticated
   incident detail route.
 - Added an authenticated account profile route with safe account metadata and

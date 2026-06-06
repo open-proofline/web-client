@@ -42,8 +42,11 @@ From current `open-proofline/server` docs and route registration:
 - `GET /v1/incidents/{incident_id}`
 - `POST /v1/incidents/{incident_id}/deletion`
 - `GET /v1/incidents/{incident_id}/deletion`
+- `POST /v1/contact-public-keys`
 - `GET /v1/contact-public-keys`
 - `GET /v1/contact-public-keys/{public_key_id}`
+- `PATCH /v1/contact-public-keys/{public_key_id}`
+- `POST /v1/contact-public-keys/{public_key_id}/revoke`
 - `GET /v1/incidents/{incident_id}/sharing-grants`
 - `GET /v1/sharing-grants/{grant_id}`
 - `GET /v1/incidents/{incident_id}/wrapped-keys`
@@ -100,6 +103,27 @@ The current server may return ciphertext on authenticated wrapped-key routes,
 but this metadata-review prototype keeps only wrapped-key identifiers, grant and
 contact bindings, wrapping metadata, and state until a separate trusted-contact
 delivery flow is designed and reviewed.
+
+Contact public-key management uses the server's authenticated account-scoped
+routes:
+
+- `POST /v1/contact-public-keys`
+- `GET /v1/contact-public-keys`
+- `GET /v1/contact-public-keys/{public_key_id}`
+- `PATCH /v1/contact-public-keys/{public_key_id}`
+- `POST /v1/contact-public-keys/{public_key_id}/revoke`
+
+The client sends tightly shaped request bodies for display label, wrapping
+algorithm, public key, fingerprint, optional `contact_id`, and reviewed
+`key_state`. It does not send or retain contact private keys, raw media keys,
+plaintext, wrapped-key ciphertext, browser fragment secrets, request bodies,
+stored paths, object keys, or private deployment details.
+
+Contact-key states are `pending_verification`, `active`, `replaced`, `revoked`,
+and `lost`. Only `active` keys are eligible for new sharing grants. The UI keeps
+revoked keys visibly ineligible and does not offer reactivation controls for
+revoked records; the server also rejects revoked-key reactivation with
+`409 invalid_contact_key_state`.
 
 ## Public Registration Contracts
 

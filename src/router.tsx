@@ -6,6 +6,7 @@ import {
 import { incidentDetailRoute } from "./routes/incidents/$incidentId";
 import { incidentsRoute } from "./routes/incidents/index";
 import { accountRoute } from "./routes/account";
+import { contactKeysRoute } from "./routes/contact-keys";
 import { indexRoute } from "./routes/index";
 import { loginRoute } from "./routes/login";
 import { registerRoute } from "./routes/register";
@@ -18,6 +19,7 @@ const routeTree = rootRoute.addChildren([
   registerRoute,
   verifyEmailRoute,
   accountRoute,
+  contactKeysRoute,
   incidentsRoute,
   incidentDetailRoute,
 ]);

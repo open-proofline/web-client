@@ -652,3 +652,157 @@ test("requests live incident deletion with a safe reason code", async () => {
   expect("object_key" in deletion).toBe(false);
   expect("wrapped_key_ciphertext" in deletion).toBe(false);
 });
+
+test("creates live contact public keys with only public metadata fields", async () => {
+  server.use(
+    http.post("*/v1/contact-public-keys", async ({ request }) => {
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      await expect(request.json()).resolves.toEqual({
+        contact_id: "ctc_live",
+        display_label: "Trusted contact",
+        wrapping_algorithm: "age-v1-x25519",
+        public_key: "age1public",
+        public_key_fingerprint: "fingerprint-live",
+        key_state: "pending_verification",
+      });
+      return HttpResponse.json(
+        {
+          contact_public_key: {
+            public_key_id: "cpk_live",
+            owner_account_id: "acct_live",
+            contact_id: "ctc_live",
+            version: 2,
+            display_label: "Trusted contact",
+            wrapping_algorithm: "age-v1-x25519",
+            public_key: "age1public",
+            public_key_fingerprint: "fingerprint-live",
+            key_state: "pending_verification",
+            created_at: "2026-06-01T00:00:00Z",
+            updated_at: "2026-06-01T00:00:00Z",
+            contact_private_key: "must-not-retain",
+            raw_media_key: "raw-media-key",
+            plaintext: "private plaintext",
+            wrapped_key_ciphertext: "wrapped-ciphertext",
+            request_body: "private request",
+            stored_path: "incidents/inc_live/private.enc",
+            object_key: "private/object/key",
+          },
+        },
+        { status: 201 },
+      );
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  const contactKey = await client.createContactPublicKey({
+    contactId: "ctc_live",
+    displayLabel: "Trusted contact",
+    wrappingAlgorithm: "age-v1-x25519",
+    publicKey: "age1public",
+    publicKeyFingerprint: "fingerprint-live",
+    keyState: "pending_verification",
+  });
+
+  expect(contactKey).toMatchObject({
+    public_key_id: "cpk_live",
+    contact_id: "ctc_live",
+    key_state: "pending_verification",
+  });
+  expect("contact_private_key" in contactKey).toBe(false);
+  expect("raw_media_key" in contactKey).toBe(false);
+  expect("plaintext" in contactKey).toBe(false);
+  expect("wrapped_key_ciphertext" in contactKey).toBe(false);
+  expect("request_body" in contactKey).toBe(false);
+  expect("stored_path" in contactKey).toBe(false);
+  expect("object_key" in contactKey).toBe(false);
+});
+
+test("updates live contact public-key label and state", async () => {
+  server.use(
+    http.patch("*/v1/contact-public-keys/cpk_live", async ({ request }) => {
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      await expect(request.json()).resolves.toEqual({
+        display_label: "Verified contact",
+        key_state: "active",
+      });
+      return HttpResponse.json({
+        contact_public_key: {
+          public_key_id: "cpk_live",
+          owner_account_id: "acct_live",
+          contact_id: "ctc_live",
+          version: 1,
+          display_label: "Verified contact",
+          wrapping_algorithm: "age-v1-x25519",
+          public_key: "age1public",
+          public_key_fingerprint: "fingerprint-live",
+          key_state: "active",
+          created_at: "2026-06-01T00:00:00Z",
+          updated_at: "2026-06-01T00:10:00Z",
+        },
+      });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  await expect(
+    client.updateContactPublicKey("cpk_live", {
+      displayLabel: "Verified contact",
+      keyState: "active",
+    }),
+  ).resolves.toMatchObject({
+    public_key_id: "cpk_live",
+    display_label: "Verified contact",
+    key_state: "active",
+  });
+});
+
+test("revokes live contact public keys through the revoke route", async () => {
+  server.use(
+    http.post("*/v1/contact-public-keys/cpk_live/revoke", ({ request }) => {
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      return HttpResponse.json({
+        contact_public_key: {
+          public_key_id: "cpk_live",
+          owner_account_id: "acct_live",
+          contact_id: "ctc_live",
+          version: 1,
+          display_label: "Verified contact",
+          wrapping_algorithm: "age-v1-x25519",
+          public_key: "age1public",
+          public_key_fingerprint: "fingerprint-live",
+          key_state: "revoked",
+          created_at: "2026-06-01T00:00:00Z",
+          updated_at: "2026-06-01T00:10:00Z",
+          revoked_at: "2026-06-01T00:10:00Z",
+        },
+      });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  await expect(client.revokeContactPublicKey("cpk_live")).resolves.toMatchObject(
+    {
+      public_key_id: "cpk_live",
+      key_state: "revoked",
+      revoked_at: "2026-06-01T00:10:00Z",
+    },
+  );
+});

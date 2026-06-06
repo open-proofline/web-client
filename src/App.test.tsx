@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, vi } from "vitest";
 import { AuthProvider } from "./auth/use-auth";
@@ -598,6 +598,350 @@ test("renders authenticated mock incident detail metadata sections", async () =>
   expect(screen.getByText("str_audio_001")).toBeInTheDocument();
   expect(screen.getByText("No shared access")).toBeInTheDocument();
   expect(screen.getByText("No key delivery")).toBeInTheDocument();
+});
+
+test("renders live contact-key empty state", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json({ contact_public_keys: [] }),
+    ),
+  );
+
+  renderRoute("/contact-keys");
+
+  expect(
+    await screen.findByRole("heading", { name: "Contact public keys" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("No contact keys")).toBeInTheDocument();
+  expect(
+    screen.getByText(
+      "Only active contact keys are eligible for new sharing grants. This app does not handle contact private keys, media keys, decryption, or wrapped-key ciphertext.",
+    ),
+  ).toBeInTheDocument();
+});
+
+test("creates live contact public keys without displaying private fields", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  const contactKeys: unknown[] = [];
+  server.use(
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json({ contact_public_keys: contactKeys }),
+    ),
+    http.post("*/v1/contact-public-keys", async ({ request }) => {
+      await expect(request.json()).resolves.toEqual({
+        display_label: "Trusted contact",
+        wrapping_algorithm: "age-v1-x25519",
+        public_key: "age1public",
+        public_key_fingerprint: "fingerprint-live",
+        key_state: "pending_verification",
+      });
+      const contactKey = {
+        public_key_id: "cpk_live",
+        owner_account_id: "acct_live",
+        contact_id: "ctc_live",
+        version: 1,
+        display_label: "Trusted contact",
+        wrapping_algorithm: "age-v1-x25519",
+        public_key: "age1public",
+        public_key_fingerprint: "fingerprint-live",
+        key_state: "pending_verification",
+        created_at: "2026-06-01T00:00:00Z",
+        updated_at: "2026-06-01T00:00:00Z",
+        contact_private_key: "must-not-display",
+        raw_media_key: "raw-media-key",
+        plaintext: "private plaintext",
+        wrapped_key_ciphertext: "wrapped-ciphertext",
+        request_body: "private request",
+        stored_path: "incidents/inc_live/private.enc",
+        object_key: "private/object/key",
+      };
+      contactKeys.push(contactKey);
+      return HttpResponse.json(
+        { contact_public_key: contactKey },
+        { status: 201 },
+      );
+    }),
+  );
+
+  renderRoute("/contact-keys");
+
+  expect(
+    await screen.findByRole("heading", { name: "Contact public keys" }),
+  ).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Display label"), {
+    target: { value: "Trusted contact" },
+  });
+  fireEvent.change(screen.getByLabelText("Public key"), {
+    target: { value: "age1public" },
+  });
+  fireEvent.change(screen.getByLabelText("Fingerprint"), {
+    target: { value: "fingerprint-live" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save contact key" }));
+
+  expect(
+    await screen.findByText("Contact public key saved."),
+  ).toBeInTheDocument();
+  expect(await screen.findAllByText("Trusted contact")).not.toHaveLength(0);
+  expect(screen.getByText("fingerprint-live")).toBeInTheDocument();
+  expect(screen.queryByText("must-not-display")).toBeNull();
+  expect(screen.queryByText("raw-media-key")).toBeNull();
+  expect(screen.queryByText("private plaintext")).toBeNull();
+  expect(screen.queryByText("wrapped-ciphertext")).toBeNull();
+  expect(screen.queryByText("private request")).toBeNull();
+  expect(screen.queryByText("incidents/inc_live/private.enc")).toBeNull();
+  expect(screen.queryByText("private/object/key")).toBeNull();
+});
+
+test("updates and revokes live contact public keys with safe states", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  let contactKey: Record<string, unknown> = {
+    public_key_id: "cpk_live",
+    owner_account_id: "acct_live",
+    contact_id: "ctc_live",
+    version: 1,
+    display_label: "Trusted contact",
+    wrapping_algorithm: "age-v1-x25519",
+    public_key: "age1public",
+    public_key_fingerprint: "fingerprint-live",
+    key_state: "active",
+    created_at: "2026-06-01T00:00:00Z",
+    updated_at: "2026-06-01T00:00:00Z",
+  };
+  server.use(
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json({ contact_public_keys: [contactKey] }),
+    ),
+    http.patch("*/v1/contact-public-keys/cpk_live", async ({ request }) => {
+      await expect(request.json()).resolves.toEqual({
+        display_label: "Verified contact",
+        key_state: "lost",
+      });
+      contactKey = {
+        ...contactKey,
+        display_label: "Verified contact",
+        key_state: "lost",
+        updated_at: "2026-06-01T00:10:00Z",
+      };
+      return HttpResponse.json({ contact_public_key: contactKey });
+    }),
+    http.post("*/v1/contact-public-keys/cpk_live/revoke", () => {
+      contactKey = {
+        ...contactKey,
+        key_state: "revoked",
+        revoked_at: "2026-06-01T00:20:00Z",
+        updated_at: "2026-06-01T00:20:00Z",
+      };
+      return HttpResponse.json({ contact_public_key: contactKey });
+    }),
+  );
+
+  renderRoute("/contact-keys");
+
+  expect(await screen.findAllByText("Trusted contact")).not.toHaveLength(0);
+  expect(screen.getByText("Yes")).toBeInTheDocument();
+  const record = screen
+    .getAllByText("Trusted contact")
+    .find((element) => element.tagName !== "OPTION")
+    ?.closest(".space-y-4") as HTMLElement | null;
+  if (!record) {
+    throw new Error("expected contact key record");
+  }
+  fireEvent.change(within(record).getByLabelText("Display label"), {
+    target: { value: "Verified contact" },
+  });
+  fireEvent.change(within(record).getByLabelText("Reviewed state"), {
+    target: { value: "lost" },
+  });
+  fireEvent.click(within(record).getByRole("button", { name: "Save" }));
+
+  expect(await screen.findByText("Contact key updated.")).toBeInTheDocument();
+  expect(await screen.findAllByText("Verified contact")).not.toHaveLength(0);
+  expect(await screen.findByText("No")).toBeInTheDocument();
+
+  const updatedRecord = screen
+    .getAllByText("Verified contact")
+    .find((element) => element.tagName !== "OPTION")
+    ?.closest(".space-y-4") as HTMLElement | null;
+  if (!updatedRecord) {
+    throw new Error("expected updated contact key record");
+  }
+  fireEvent.click(within(updatedRecord).getByRole("button", { name: "Revoke" }));
+
+  expect(await screen.findByText("Contact key revoked.")).toBeInTheDocument();
+  expect(
+    await screen.findByText(
+      "Revoked keys are not eligible for new sharing grants and cannot be reactivated here.",
+    ),
+  ).toBeInTheDocument();
+  expect(
+    within(updatedRecord).getByRole("button", { name: "Revoke" }),
+  ).toBeDisabled();
+});
+
+test("shows generic contact-key loading and request errors", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "unavailable",
+            message: "backend private contact detail",
+          },
+        },
+        { status: 503 },
+      ),
+    ),
+    http.post("*/v1/contact-public-keys", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "invalid_public_key",
+            message: "private request detail",
+          },
+        },
+        { status: 400 },
+      ),
+    ),
+  );
+
+  renderRoute("/contact-keys");
+
+  expect(
+    await screen.findByRole("heading", { name: "Contact public keys" }),
+  ).toBeInTheDocument();
+  expect(
+    await screen.findByText("Contact keys could not be loaded."),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("backend private contact detail")).toBeNull();
+
+  fireEvent.change(screen.getByLabelText("Public key"), {
+    target: { value: "age1public" },
+  });
+  fireEvent.change(screen.getByLabelText("Fingerprint"), {
+    target: { value: "fingerprint-live" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save contact key" }));
+
+  expect(
+    await screen.findByText("Contact public key could not be saved."),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("private request detail")).toBeNull();
+});
+
+test("does not show stale contact-key metadata after switching sessions", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  let resolveBobContactKeys!: () => void;
+  server.use(
+    http.post("*/v1/auth/login", async ({ request }) => {
+      const credentials = (await request.json()) as { username: string };
+      return HttpResponse.json({
+        session_id:
+          credentials.username === "bob-user" ? "ses_bob" : "ses_alice",
+        account: {
+          id: credentials.username === "bob-user" ? "acct_bob" : "acct_alice",
+          username: credentials.username,
+          role: "user",
+        },
+        token:
+          credentials.username === "bob-user" ? "token-bob" : "token-alice",
+        created_at: "2026-06-01T00:00:00Z",
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      });
+    }),
+    http.post("*/v1/auth/logout", () => HttpResponse.json({ revoked: true })),
+    http.get("*/v1/contact-public-keys", async ({ request }) => {
+      const authorization = request.headers.get("authorization");
+      if (authorization === "Bearer token-bob") {
+        await new Promise<void>((resolve) => {
+          resolveBobContactKeys = resolve;
+        });
+        return HttpResponse.json({
+          contact_public_keys: [
+            {
+              public_key_id: "cpk_bob",
+              owner_account_id: "acct_bob",
+              contact_id: "ctc_bob",
+              version: 1,
+              display_label: "Bob trusted contact",
+              wrapping_algorithm: "age-v1-x25519",
+              public_key: "age1bob",
+              public_key_fingerprint: "fingerprint-bob",
+              key_state: "active",
+            },
+          ],
+        });
+      }
+      return HttpResponse.json({
+        contact_public_keys: [
+          {
+            public_key_id: "cpk_alice",
+            owner_account_id: "acct_alice",
+            contact_id: "ctc_alice",
+            version: 1,
+            display_label: "Alice trusted contact",
+            wrapping_algorithm: "age-v1-x25519",
+            public_key: "age1alice",
+            public_key_fingerprint: "fingerprint-alice",
+            key_state: "active",
+          },
+        ],
+      });
+    }),
+  );
+
+  renderRoute("/login");
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "alice-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "alice-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Account overview" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole("link", { name: "Contact keys" })[0]!);
+  expect(
+    await screen.findByRole("heading", { name: "Contact public keys" }),
+  ).toBeInTheDocument();
+  expect(await screen.findAllByText("Alice trusted contact")).not.toHaveLength(
+    0,
+  );
+
+  fireEvent.click(screen.getByLabelText("Account menu"));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
+  expect(
+    await screen.findByRole("heading", { name: "Sign in" }),
+  ).toBeInTheDocument();
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "bob-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "bob-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Account overview" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole("link", { name: "Contact keys" })[0]!);
+
+  expect(await screen.findByText("Loading contact keys.")).toBeInTheDocument();
+  expect(screen.queryByText("Alice trusted contact")).toBeNull();
+
+  resolveBobContactKeys();
+  expect(await screen.findAllByText("Bob trusted contact")).not.toHaveLength(0);
+  expect(screen.queryByText("Alice trusted contact")).toBeNull();
 });
 
 test("renders existing incident deletion status without private deletion internals", async () => {

@@ -99,7 +99,7 @@ The current bootstrap includes:
   owner-scoped `GET /v1/incidents` responses in live mode
 - incident detail metadata UI
 - stream and chunk metadata review
-- contact public-key metadata views
+- contact public-key metadata views and account-level management
 - sharing-grant metadata views
 - wrapped-key metadata views
 - owner incident deletion status and request UI
@@ -149,8 +149,6 @@ The web client must not expose private admin/operator behavior or route `/v1/adm
 
 Planned sharing/contact work includes:
 
-- contact public-key registration and management
-- contact public-key state display
 - sharing-grant creation and revocation
 - incident-scoped and stream-scoped grant management
 - wrapped-key metadata review and delivery status
