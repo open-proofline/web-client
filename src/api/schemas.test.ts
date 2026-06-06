@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import {
+  incidentDeletionResponseSchema,
   incidentDetailSchema,
   incidentsResponseSchema,
   wrappedKeyResponseSchema,
@@ -103,6 +104,54 @@ test("incident detail parsing drops private chunk storage paths", () => {
       "4f1ef7673557c98ec30a1e83d75f6a5b4796e08f4b2f470582d8d91f73c4bb5d",
   });
   expect("stored_path" in chunk).toBe(false);
+});
+
+test("incident deletion status parsing drops deletion item internals", () => {
+  const parsed = incidentDeletionResponseSchema.parse({
+    deletion: {
+      decision_id: "del_test",
+      incident_id: "inc_test",
+      source: "account_request",
+      reason_code: "account_delete",
+      actor_account_id: "acct_test",
+      allow_open: true,
+      state: "deletion_pending",
+      item_count: 2,
+      error_code: "blob_delete_failed",
+      requested_at: "2026-06-01T00:00:00Z",
+      updated_at: "2026-06-01T00:01:00Z",
+      started_at: "2026-06-01T00:00:30Z",
+      completed_at: "2026-06-01T00:01:00Z",
+      stored_path: "incidents/inc_test/private.enc",
+      object_key: "private/object/key",
+      token_hash: "token-hash",
+      request_body: "private request",
+      plaintext: "private plaintext",
+      raw_key: "raw-key",
+      wrapped_key_ciphertext: "wrapped-ciphertext",
+      user_safety_narrative: "private narrative",
+    },
+  });
+
+  expect(parsed.deletion).toMatchObject({
+    decision_id: "del_test",
+    incident_id: "inc_test",
+    source: "account_request",
+    reason_code: "account_delete",
+    actor_account_id: "acct_test",
+    allow_open: true,
+    state: "deletion_pending",
+    item_count: 2,
+    error_code: "blob_delete_failed",
+  });
+  expect("stored_path" in parsed.deletion).toBe(false);
+  expect("object_key" in parsed.deletion).toBe(false);
+  expect("token_hash" in parsed.deletion).toBe(false);
+  expect("request_body" in parsed.deletion).toBe(false);
+  expect("plaintext" in parsed.deletion).toBe(false);
+  expect("raw_key" in parsed.deletion).toBe(false);
+  expect("wrapped_key_ciphertext" in parsed.deletion).toBe(false);
+  expect("user_safety_narrative" in parsed.deletion).toBe(false);
 });
 
 const wrappedKeyFixture = {

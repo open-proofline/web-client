@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added owner incident deletion status and request UI for the authenticated
+  incident detail route.
 - Added an authenticated account profile route with safe account metadata and
   password-change handling.
 - Implemented an explicit browser-cookie auth client mode with in-memory CSRF

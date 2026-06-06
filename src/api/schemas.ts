@@ -133,6 +133,26 @@ export const incidentDetailSchema = z.object({
   checkins: z.array(checkinSchema).default([]),
 });
 
+export const incidentDeletionStatusSchema = z.object({
+  decision_id: z.string(),
+  incident_id: z.string(),
+  source: z.string(),
+  reason_code: z.string().optional(),
+  actor_account_id: z.string().optional(),
+  allow_open: z.boolean(),
+  state: z.string(),
+  item_count: z.number(),
+  error_code: z.string().optional(),
+  requested_at: z.string(),
+  updated_at: z.string(),
+  started_at: z.string().optional(),
+  completed_at: z.string().optional(),
+});
+
+export const incidentDeletionResponseSchema = z.object({
+  deletion: incidentDeletionStatusSchema,
+});
+
 export const contactPublicKeySchema = z.object({
   public_key_id: z.string(),
   owner_account_id: z.string().optional(),
@@ -221,6 +241,9 @@ export type Session = z.infer<typeof sessionSchema>;
 export type Incident = z.infer<typeof incidentSchema>;
 export type IncidentsResponse = z.infer<typeof incidentsResponseSchema>;
 export type IncidentDetail = z.infer<typeof incidentDetailSchema>;
+export type IncidentDeletionStatus = z.infer<
+  typeof incidentDeletionStatusSchema
+>;
 export type Stream = z.infer<typeof streamSchema>;
 export type Chunk = z.infer<typeof chunkSchema>;
 export type ContactPublicKey = z.infer<typeof contactPublicKeySchema>;

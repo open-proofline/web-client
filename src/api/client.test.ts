@@ -572,3 +572,83 @@ test("parses live owned incident list responses without retaining private fields
   expect("plaintext" in incident).toBe(false);
   expect("raw_key" in incident).toBe(false);
 });
+
+test("returns null when no incident deletion request exists", async () => {
+  server.use(
+    http.get("*/v1/incidents/inc_live/deletion", ({ request }) => {
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      return HttpResponse.json(
+        {
+          error: {
+            code: "incident_deletion_not_found",
+            message: "incident deletion was not found",
+          },
+        },
+        { status: 404 },
+      );
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  await expect(client.readIncidentDeletion("inc_live")).resolves.toBeNull();
+});
+
+test("requests live incident deletion with a safe reason code", async () => {
+  server.use(
+    http.post("*/v1/incidents/inc_live/deletion", async ({ request }) => {
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      await expect(request.json()).resolves.toEqual({
+        reason_code: "account_delete",
+        allow_open: true,
+      });
+      return HttpResponse.json(
+        {
+          deletion: {
+            decision_id: "del_live",
+            incident_id: "inc_live",
+            source: "account_request",
+            reason_code: "account_delete",
+            actor_account_id: "acct_live",
+            allow_open: true,
+            state: "deletion_pending",
+            item_count: 2,
+            requested_at: "2026-06-01T00:00:00Z",
+            updated_at: "2026-06-01T00:00:00Z",
+            stored_path: "incidents/inc_live/private.enc",
+            object_key: "private/object/key",
+            wrapped_key_ciphertext: "wrapped-ciphertext",
+          },
+        },
+        { status: 202 },
+      );
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  const deletion = await client.requestIncidentDeletion("inc_live", {
+    reasonCode: "account_delete",
+    allowOpen: true,
+  });
+
+  expect(deletion).toMatchObject({
+    decision_id: "del_live",
+    incident_id: "inc_live",
+    state: "deletion_pending",
+    item_count: 2,
+  });
+  expect("stored_path" in deletion).toBe(false);
+  expect("object_key" in deletion).toBe(false);
+  expect("wrapped_key_ciphertext" in deletion).toBe(false);
+});
