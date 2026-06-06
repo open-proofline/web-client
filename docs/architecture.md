@@ -26,6 +26,19 @@ flowchart LR
 `open-proofline/server` remains the source of truth for backend routes,
 authorization, encrypted bundle behavior, and security headers.
 
+## Product Design Boundary
+
+[End-user web-client design](end-user-web-client-design.md) defines the product
+direction for translating technical account, incident, contact, sharing,
+wrapped-key, viewer-link, and future capture concepts into normal user
+workflows. It does not change the current route tree or API client.
+
+Future UI work should lead with human status, next actions, access state,
+upload/location freshness, and safety boundaries. Raw IDs, stream and chunk
+details, sharing-grant fields, wrapped-key details, route names, and
+cryptographic terms belong in advanced, security, API, or developer contexts
+unless a user-facing flow explicitly needs them.
+
 ## Source Layout
 
 - `src/api/`: API client, Zod schemas, and safe error handling

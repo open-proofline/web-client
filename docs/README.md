@@ -4,6 +4,9 @@ These docs describe the current experimental web-client prototype. The backend
 source of truth remains `open-proofline/server`.
 
 - [Architecture](architecture.md)
+- [End-user web-client design](end-user-web-client-design.md): product
+  language, user journeys, trusted-contact direction, future viewer and capture
+  framing, and product-design backlog seeds.
 - [API client](api-client.md): current route contracts and bearer/cookie auth
   client modes.
 - [Security model](security-model.md): implemented controls, non-controls, and

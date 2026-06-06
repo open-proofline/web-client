@@ -52,3 +52,10 @@ Use these tokens through Tailwind utilities such as `bg-proofline-surface`,
 `focus:outline-proofline-focus`. Keep status UI text-labeled so success,
 warning, danger, and info states are not color-only. Preserve the prototype
 warning and emergency-reliance language whenever visual surfaces are changed.
+
+Product language and interaction hierarchy are documented in
+[End-user web-client design](end-user-web-client-design.md). Visual updates
+should use the existing dark purple, card-based, compact, safety-focused
+identity while moving normal user flows away from raw metadata labels and
+toward clear product concepts such as trusted contacts, viewer links, latest
+updates, upload status, and encrypted evidence.

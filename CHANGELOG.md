@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Documented end-user web-client product design direction for user-facing
+  language, trusted-contact invite/accept flows, viewer-link UX, future viewer
+  map/location behavior, future browser capture framing, and product-design
+  backlog seeds.
 - Added an adaptable static-host security header template with placeholder
   origins and deployment-review boundaries.
 - Documented the viewer-token create/revoke UI design and no-account
