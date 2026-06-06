@@ -15,6 +15,12 @@ The current backend source of truth remains
 must not make independent claims about backend behavior when the server docs
 disagree or have moved.
 
+End-user product language and interaction direction are documented in
+[End-User Web Client Design](docs/end-user-web-client-design.md). That document
+defines how the prototype should evolve from technical metadata review toward a
+normal user-facing account, incident review, trusted-contact, viewer-link, and
+future fallback capture experience without changing current runtime behavior.
+
 ## Stack
 
 - Vite, React, and TypeScript
@@ -82,7 +88,17 @@ default. Open self-registration requires reviewed server configuration and email
 verification before login; paid registration remains a fail-closed placeholder,
 not billing.
 
-The web client is responsible for the user-facing account portal, authenticated incident review, and future trusted-contact access flows. It is not the recording client, mobile app, backend, or protocol repository.
+The web client is responsible for the user-facing account portal,
+authenticated incident review, future trusted-contact access flows, future
+viewer-link owner controls, and the future no-account viewer experience. It is
+not the admin dashboard, recording client, mobile app, backend, or protocol
+repository.
+
+Current prototype screens still expose technical metadata concepts such as
+streams, chunks, contact public keys, sharing grants, and wrapped-key records.
+Future user-facing work should follow the end-user design document: lead with
+plain product language, show human status and next actions first, and move
+technical details behind advanced or developer-focused disclosure.
 
 ## Current Scope
 
@@ -137,7 +153,9 @@ Planned authenticated incident-review work includes:
 
 - live owned-incident listing in the client against the current server route
 - incident detail review
-- stream and chunk metadata review
+- end-user incident review language that foregrounds status, latest update,
+  upload state, shared access state, evidence protection, and next actions
+- stream and chunk metadata review behind advanced or technical details
 - viewer-token creation and revocation UI
 - encrypted bundle download affordances with clear warnings
 - mode, capture-profile, escalation-policy, sharing-state, deletion-state, and retention metadata display
@@ -150,6 +168,10 @@ The web client must not expose private admin/operator behavior or route `/v1/adm
 Planned sharing/contact work includes:
 
 - trusted-contact access design, once separately scoped and threat-modeled
+- invite/accept trusted-contact flows that avoid manual public-key handling as
+  the primary user experience
+- automatic client-managed key creation and public-key publication after the
+  backend, client, and key-custody design support it
 
 Sharing metadata support does not imply browser decryption, trusted-contact decryption, raw key access, key escrow, or playable export. Wrapped-key revocation stops future delivery only and cannot claw back material an authorized actor may already have received.
 
@@ -169,14 +191,18 @@ Trusted-contact flows must be designed and reviewed before implementation. They 
 
 This repository does not currently implement recording or capture behavior.
 
-A future browser-based recording prototype may be added as a separately scoped feature for desktop/browser use cases. Possible capture modes may include:
+A future browser-based recording prototype may be added as a separately scoped
+fallback and secondary capture method for desktop/browser use cases. Possible
+capture modes may include:
 
 - microphone-only recording
 - camera and microphone recording
 - screen, window, or tab recording
 - screen capture with microphone audio
 
-Browser recording must be treated as experimental. It must not be presented as a replacement for native iOS or Android recording clients, and it must not be described as reliable emergency capture.
+Browser recording must be treated as experimental. It must not be presented as
+a replacement for native iOS or Android recording clients, and it must not be
+described as reliable emergency capture or guaranteed background recording.
 
 Before implementation, browser recording must be separately designed, documented, threat-modeled, and tested. The design must cover:
 

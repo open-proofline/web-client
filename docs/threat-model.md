@@ -46,8 +46,11 @@ in `open-proofline/server`.
   cookie-authenticated requests or expand the effect of XSS.
 - Credentialed CORS configured with broad or unreviewed origins could expose
   browser-cookie auth beyond the intended static web-client origin.
-- UI wording could imply emergency dispatch, decryption, or production safety
-  features that do not exist.
+- UI wording could imply emergency dispatch, decryption, production safety
+  features, live tracking, notification delivery, or trusted-contact access
+  flows that do not exist. Product copy should follow
+  [End-user web-client design](end-user-web-client-design.md) so normal user
+  language stays clear without overpromising current behavior.
 - Dependency changes can introduce browser-side supply-chain risk.
 - Live API route assumptions can drift from `open-proofline/server`.
 

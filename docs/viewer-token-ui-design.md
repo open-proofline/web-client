@@ -4,6 +4,11 @@ This note scopes the planned browser UI for owner-created viewer tokens and
 the future web-client read-only viewer. The backend source of truth remains
 `open-proofline/server`.
 
+For broader product-language and no-account viewer direction, see
+[End-user web-client design](end-user-web-client-design.md). This document uses
+`viewer token` for the backend/security mechanism and `viewer link` for normal
+user-facing copy.
+
 ## Goals
 
 - Let an authenticated incident owner create a read-only viewer token for one
@@ -16,6 +21,8 @@ the future web-client read-only viewer. The backend source of truth remains
 - Keep the web-client viewer limited to read-only unencrypted incident data,
   such as safe incident status, latest check-in, current location, or device
   state when those fields are present in the server viewer contract.
+- Use `viewer link` as the default product label and reserve token mechanics
+  for security, API, and technical details.
 
 ## Current Server Contract
 
@@ -138,6 +145,9 @@ Viewer route behavior should be designed before implementation:
 - request only the server-defined read-only viewer payload;
 - show unencrypted incident status data that the server intentionally exposes to
   token holders;
+- present latest shared location, last update time, location freshness, and map
+  actions only when those fields are part of the reviewed server viewer
+  payload;
 - avoid encrypted evidence decryption, key unwrapping, playable export,
   account login, trusted-contact private-key handling, and emergency response
   claims;
