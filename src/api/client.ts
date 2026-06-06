@@ -73,6 +73,15 @@ export type UpdateContactPublicKeyRequest = {
   keyState?: string;
 };
 
+export type CreateSharingGrantRequest = {
+  streamId?: string;
+  recipientType?: string;
+  contactId: string;
+  contactPublicKeyId?: string;
+  dataClass?: string;
+  expiresAt?: string;
+};
+
 type RequestOptions = {
   includeAuth?: boolean;
   includeCredentials?: boolean;
@@ -102,9 +111,10 @@ export const prooflineQueryKeys = {
     ["incident-deletion", incidentId] as const,
   contactPublicKeys: (sessionId: string) =>
     ["contact-public-keys", sessionId] as const,
-  sharingGrants: (incidentId: string) =>
-    ["sharing-grants", incidentId] as const,
-  wrappedKeys: (incidentId: string) => ["wrapped-keys", incidentId] as const,
+  sharingGrants: (sessionId: string, incidentId: string) =>
+    ["sharing-grants", sessionId, incidentId] as const,
+  wrappedKeys: (sessionId: string, incidentId: string) =>
+    ["wrapped-keys", sessionId, incidentId] as const,
 };
 
 const defaultBaseUrl =
@@ -647,12 +657,111 @@ export class ProoflineApiClient {
     ).sharing_grants;
   }
 
+  async createSharingGrant(
+    incidentId: string,
+    request: CreateSharingGrantRequest,
+  ): Promise<SharingGrant> {
+    if (this.mode === "mock") {
+      const now = new Date().toISOString();
+      const activeContactKey = mockContactPublicKeys.find(
+        (contactKey) =>
+          contactKey.contact_id === request.contactId &&
+          contactKey.key_state === "active" &&
+          (!request.contactPublicKeyId ||
+            contactKey.public_key_id === request.contactPublicKeyId),
+      );
+      if (!activeContactKey) {
+        throw new ApiError("Sharing grant dependency was not found.", {
+          status: 404,
+          code: "sharing_grant_dependency_not_found",
+        });
+      }
+      const grant: SharingGrant = {
+        grant_id: `sgr_prototype_${Date.now()}`,
+        owner_account_id: mockAccount.id,
+        incident_id: incidentId,
+        recipient_type: request.recipientType ?? "trusted_contact",
+        contact_id: activeContactKey.contact_id,
+        contact_public_key_id: activeContactKey.public_key_id,
+        contact_public_key_version: activeContactKey.version ?? 1,
+        data_class: request.dataClass ?? "metadata_ciphertext",
+        grant_state: "active",
+        created_at: now,
+        updated_at: now,
+        ...(request.streamId ? { stream_id: request.streamId } : {}),
+        ...(request.expiresAt ? { expires_at: request.expiresAt } : {}),
+      };
+      mockSharingGrants.push(grant);
+      return grant;
+    }
+
+    const body: Record<string, string> = {
+      contact_id: request.contactId,
+    };
+    if (request.streamId) {
+      body.stream_id = request.streamId;
+    }
+    if (request.recipientType) {
+      body.recipient_type = request.recipientType;
+    }
+    if (request.contactPublicKeyId) {
+      body.contact_public_key_id = request.contactPublicKeyId;
+    }
+    if (request.dataClass) {
+      body.data_class = request.dataClass;
+    }
+    if (request.expiresAt) {
+      body.expires_at = request.expiresAt;
+    }
+
+    return sharingGrantResponseSchema.parse(
+      await this.request(
+        `/v1/incidents/${encodeURIComponent(incidentId)}/sharing-grants`,
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      ),
+    ).sharing_grant;
+  }
+
   async readSharingGrant(grantId: string): Promise<SharingGrant> {
     if (this.mode === "mock") {
       return mockSharingGrant;
     }
     return sharingGrantResponseSchema.parse(
       await this.request(`/v1/sharing-grants/${encodeURIComponent(grantId)}`),
+    ).sharing_grant;
+  }
+
+  async revokeSharingGrant(grantId: string): Promise<SharingGrant> {
+    if (this.mode === "mock") {
+      const updatedAt = new Date().toISOString();
+      const grant = mockSharingGrants.find(
+        (record) => record.grant_id === grantId,
+      );
+      const nextGrant: SharingGrant = {
+        ...(grant ?? mockSharingGrant),
+        grant_id: grantId,
+        grant_state: "revoked",
+        updated_at: updatedAt,
+        revoked_at: updatedAt,
+        revoked_by_account_id: mockAccount.id,
+      };
+      const index = mockSharingGrants.findIndex(
+        (record) => record.grant_id === grantId,
+      );
+      if (index >= 0) {
+        mockSharingGrants[index] = nextGrant;
+      }
+      return nextGrant;
+    }
+
+    return sharingGrantResponseSchema.parse(
+      await this.request(
+        `/v1/sharing-grants/${encodeURIComponent(grantId)}/revoke`,
+        { method: "POST" },
+      ),
     ).sharing_grant;
   }
 

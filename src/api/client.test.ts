@@ -806,3 +806,118 @@ test("revokes live contact public keys through the revoke route", async () => {
     },
   );
 });
+
+test("creates live sharing grants with only grant metadata fields", async () => {
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  server.use(
+    http.post(
+      "*/v1/incidents/inc_live/sharing-grants",
+      async ({ request }) => {
+        expect(request.headers.get("authorization")).toBe(
+          "Bearer test-session-token",
+        );
+        await expect(request.json()).resolves.toEqual({
+          stream_id: "str_live",
+          contact_id: "ctc_live",
+          contact_public_key_id: "cpk_live",
+          data_class: "metadata_ciphertext",
+          expires_at: expiresAt,
+        });
+        return HttpResponse.json(
+          {
+            sharing_grant: {
+              grant_id: "sgr_live",
+              owner_account_id: "acct_live",
+              incident_id: "inc_live",
+              stream_id: "str_live",
+              recipient_type: "trusted_contact",
+              contact_id: "ctc_live",
+              contact_public_key_id: "cpk_live",
+              contact_public_key_version: 1,
+              data_class: "metadata_ciphertext",
+              grant_state: "active",
+              created_at: "2026-06-01T00:00:00Z",
+              updated_at: "2026-06-01T00:00:00Z",
+              expires_at: expiresAt,
+              wrapped_key_ciphertext: "wrapped-ciphertext",
+              raw_media_key: "raw-media-key",
+              contact_private_key: "contact-private-key",
+              plaintext: "private plaintext",
+              request_body: "private request",
+              stored_path: "incidents/inc_live/private.enc",
+              object_key: "private/object/key",
+            },
+          },
+          { status: 201 },
+        );
+      },
+    ),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  const grant = await client.createSharingGrant("inc_live", {
+    streamId: "str_live",
+    contactId: "ctc_live",
+    contactPublicKeyId: "cpk_live",
+    dataClass: "metadata_ciphertext",
+    expiresAt,
+  });
+
+  expect(grant).toMatchObject({
+    grant_id: "sgr_live",
+    incident_id: "inc_live",
+    stream_id: "str_live",
+    contact_public_key_id: "cpk_live",
+    grant_state: "active",
+  });
+  expect("wrapped_key_ciphertext" in grant).toBe(false);
+  expect("raw_media_key" in grant).toBe(false);
+  expect("contact_private_key" in grant).toBe(false);
+  expect("plaintext" in grant).toBe(false);
+  expect("request_body" in grant).toBe(false);
+  expect("stored_path" in grant).toBe(false);
+  expect("object_key" in grant).toBe(false);
+});
+
+test("revokes live sharing grants through the revoke route", async () => {
+  server.use(
+    http.post("*/v1/sharing-grants/sgr_live/revoke", ({ request }) => {
+      expect(request.headers.get("authorization")).toBe(
+        "Bearer test-session-token",
+      );
+      return HttpResponse.json({
+        sharing_grant: {
+          grant_id: "sgr_live",
+          owner_account_id: "acct_live",
+          incident_id: "inc_live",
+          recipient_type: "trusted_contact",
+          contact_id: "ctc_live",
+          contact_public_key_id: "cpk_live",
+          contact_public_key_version: 1,
+          data_class: "metadata_ciphertext",
+          grant_state: "revoked",
+          created_at: "2026-06-01T00:00:00Z",
+          updated_at: "2026-06-01T00:10:00Z",
+          revoked_at: "2026-06-01T00:10:00Z",
+          revoked_by_account_id: "acct_live",
+        },
+      });
+    }),
+  );
+
+  const client = createProoflineApiClient({
+    mode: "live",
+    getToken: () => "test-session-token",
+  });
+
+  await expect(client.revokeSharingGrant("sgr_live")).resolves.toMatchObject({
+    grant_id: "sgr_live",
+    grant_state: "revoked",
+    revoked_at: "2026-06-01T00:10:00Z",
+    revoked_by_account_id: "acct_live",
+  });
+});

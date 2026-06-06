@@ -47,8 +47,10 @@ From current `open-proofline/server` docs and route registration:
 - `GET /v1/contact-public-keys/{public_key_id}`
 - `PATCH /v1/contact-public-keys/{public_key_id}`
 - `POST /v1/contact-public-keys/{public_key_id}/revoke`
+- `POST /v1/incidents/{incident_id}/sharing-grants`
 - `GET /v1/incidents/{incident_id}/sharing-grants`
 - `GET /v1/sharing-grants/{grant_id}`
+- `POST /v1/sharing-grants/{grant_id}/revoke`
 - `GET /v1/incidents/{incident_id}/wrapped-keys`
 - `GET /v1/wrapped-keys/{wrapped_key_id}`
 
@@ -124,6 +126,26 @@ and `lost`. Only `active` keys are eligible for new sharing grants. The UI keeps
 revoked keys visibly ineligible and does not offer reactivation controls for
 revoked records; the server also rejects revoked-key reactivation with
 `409 invalid_contact_key_state`.
+
+Sharing-grant management uses the server's authenticated owner-scoped routes:
+
+- `POST /v1/incidents/{incident_id}/sharing-grants`
+- `GET /v1/incidents/{incident_id}/sharing-grants`
+- `GET /v1/sharing-grants/{grant_id}`
+- `POST /v1/sharing-grants/{grant_id}/revoke`
+
+The client creates grants only from active contact public keys already returned
+for the active session. It sends tightly shaped request bodies for `contact_id`,
+optional `contact_public_key_id`, optional `stream_id`, `data_class`, and
+optional future `expires_at`. Missing incident, stream, or active contact-key
+dependencies stay generic in the UI as `sharing_grant_dependency_not_found`.
+
+Sharing grants authorize metadata and/or encrypted evidence access. They do not
+decrypt media, create trusted-contact sessions, notify emergency services, or
+guarantee emergency response. The UI marks expired or revoked grants as inactive
+delivery paths and does not retain wrapped-key ciphertext, raw media keys,
+contact private keys, plaintext, request bodies, stored paths, object keys, or
+private deployment details from grant responses.
 
 ## Public Registration Contracts
 

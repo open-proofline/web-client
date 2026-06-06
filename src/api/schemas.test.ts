@@ -4,6 +4,7 @@ import {
   incidentDeletionResponseSchema,
   incidentDetailSchema,
   incidentsResponseSchema,
+  sharingGrantResponseSchema,
   wrappedKeyResponseSchema,
   wrappedKeysResponseSchema,
 } from "./schemas";
@@ -198,6 +199,54 @@ test("contact public-key parsing drops private key material and request internal
   expect("object_key" in parsed.contact_public_key).toBe(false);
   expect("browser_fragment_secret" in parsed.contact_public_key).toBe(false);
   expect("private_deployment_detail" in parsed.contact_public_key).toBe(false);
+});
+
+test("sharing-grant parsing drops request internals and key material", () => {
+  const parsed = sharingGrantResponseSchema.parse({
+    sharing_grant: {
+      grant_id: "sgr_test",
+      owner_account_id: "acct_test",
+      incident_id: "inc_test",
+      stream_id: "str_test",
+      recipient_type: "trusted_contact",
+      contact_id: "ctc_test",
+      contact_public_key_id: "cpk_test",
+      contact_public_key_version: 1,
+      data_class: "metadata_ciphertext",
+      grant_state: "revoked",
+      created_at: "2026-06-01T00:00:00Z",
+      updated_at: "2026-06-01T00:10:00Z",
+      expires_at: "2026-06-08T00:00:00Z",
+      revoked_at: "2026-06-01T00:10:00Z",
+      revoked_by_account_id: "acct_test",
+      wrapped_key_ciphertext: "wrapped-ciphertext",
+      raw_media_key: "raw-media-key",
+      contact_private_key: "contact-private-key",
+      plaintext: "private plaintext",
+      request_body: "private request",
+      stored_path: "incidents/inc_test/private.enc",
+      object_key: "private/object/key",
+      browser_fragment_secret: "fragment-secret",
+      private_deployment_detail: "private deployment",
+    },
+  });
+
+  expect(parsed.sharing_grant).toMatchObject({
+    grant_id: "sgr_test",
+    contact_id: "ctc_test",
+    contact_public_key_id: "cpk_test",
+    grant_state: "revoked",
+    revoked_at: "2026-06-01T00:10:00Z",
+  });
+  expect("wrapped_key_ciphertext" in parsed.sharing_grant).toBe(false);
+  expect("raw_media_key" in parsed.sharing_grant).toBe(false);
+  expect("contact_private_key" in parsed.sharing_grant).toBe(false);
+  expect("plaintext" in parsed.sharing_grant).toBe(false);
+  expect("request_body" in parsed.sharing_grant).toBe(false);
+  expect("stored_path" in parsed.sharing_grant).toBe(false);
+  expect("object_key" in parsed.sharing_grant).toBe(false);
+  expect("browser_fragment_secret" in parsed.sharing_grant).toBe(false);
+  expect("private_deployment_detail" in parsed.sharing_grant).toBe(false);
 });
 
 const wrappedKeyFixture = {
