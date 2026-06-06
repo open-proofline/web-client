@@ -835,6 +835,115 @@ test("shows generic contact-key loading and request errors", async () => {
   expect(screen.queryByText("private request detail")).toBeNull();
 });
 
+test("does not show stale contact-key metadata after switching sessions", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  let resolveBobContactKeys!: () => void;
+  server.use(
+    http.post("*/v1/auth/login", async ({ request }) => {
+      const credentials = (await request.json()) as { username: string };
+      return HttpResponse.json({
+        session_id:
+          credentials.username === "bob-user" ? "ses_bob" : "ses_alice",
+        account: {
+          id: credentials.username === "bob-user" ? "acct_bob" : "acct_alice",
+          username: credentials.username,
+          role: "user",
+        },
+        token:
+          credentials.username === "bob-user" ? "token-bob" : "token-alice",
+        created_at: "2026-06-01T00:00:00Z",
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      });
+    }),
+    http.post("*/v1/auth/logout", () => HttpResponse.json({ revoked: true })),
+    http.get("*/v1/contact-public-keys", async ({ request }) => {
+      const authorization = request.headers.get("authorization");
+      if (authorization === "Bearer token-bob") {
+        await new Promise<void>((resolve) => {
+          resolveBobContactKeys = resolve;
+        });
+        return HttpResponse.json({
+          contact_public_keys: [
+            {
+              public_key_id: "cpk_bob",
+              owner_account_id: "acct_bob",
+              contact_id: "ctc_bob",
+              version: 1,
+              display_label: "Bob trusted contact",
+              wrapping_algorithm: "age-v1-x25519",
+              public_key: "age1bob",
+              public_key_fingerprint: "fingerprint-bob",
+              key_state: "active",
+            },
+          ],
+        });
+      }
+      return HttpResponse.json({
+        contact_public_keys: [
+          {
+            public_key_id: "cpk_alice",
+            owner_account_id: "acct_alice",
+            contact_id: "ctc_alice",
+            version: 1,
+            display_label: "Alice trusted contact",
+            wrapping_algorithm: "age-v1-x25519",
+            public_key: "age1alice",
+            public_key_fingerprint: "fingerprint-alice",
+            key_state: "active",
+          },
+        ],
+      });
+    }),
+  );
+
+  renderRoute("/login");
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "alice-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "alice-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Account overview" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole("link", { name: "Contact keys" })[0]!);
+  expect(
+    await screen.findByRole("heading", { name: "Contact public keys" }),
+  ).toBeInTheDocument();
+  expect(await screen.findAllByText("Alice trusted contact")).not.toHaveLength(
+    0,
+  );
+
+  fireEvent.click(screen.getByLabelText("Account menu"));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
+  expect(
+    await screen.findByRole("heading", { name: "Sign in" }),
+  ).toBeInTheDocument();
+
+  fireEvent.change(await screen.findByLabelText("Username"), {
+    target: { value: "bob-user" },
+  });
+  fireEvent.change(screen.getByLabelText("Password"), {
+    target: { value: "bob-password" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Account overview" }),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole("link", { name: "Contact keys" })[0]!);
+
+  expect(await screen.findByText("Loading contact keys.")).toBeInTheDocument();
+  expect(screen.queryByText("Alice trusted contact")).toBeNull();
+
+  resolveBobContactKeys();
+  expect(await screen.findAllByText("Bob trusted contact")).not.toHaveLength(0);
+  expect(screen.queryByText("Alice trusted contact")).toBeNull();
+});
+
 test("renders existing incident deletion status without private deletion internals", async () => {
   vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
   saveLiveSession();

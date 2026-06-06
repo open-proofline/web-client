@@ -18,9 +18,12 @@ import { rootRoute } from "../__root";
 
 function IncidentDetailPage() {
   const { incidentId } = useParams({ from: "/incidents/$incidentId" });
-  const { isAuthenticated, apiClient } = useAuth();
+  const { isAuthenticated, apiClient, session } = useAuth();
   const queryClient = useQueryClient();
   const [confirmedOpenDeletion, setConfirmedOpenDeletion] = useState(false);
+  const contactPublicKeysQueryKey = prooflineQueryKeys.contactPublicKeys(
+    session?.sessionId ?? "signed-out",
+  );
 
   const incident = useQuery({
     queryKey: prooflineQueryKeys.incident(incidentId),
@@ -33,9 +36,9 @@ function IncidentDetailPage() {
     enabled: isAuthenticated,
   });
   const contacts = useQuery({
-    queryKey: prooflineQueryKeys.contactPublicKeys,
+    queryKey: contactPublicKeysQueryKey,
     queryFn: () => apiClient.listContactPublicKeys(),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && session !== null,
   });
   const grants = useQuery({
     queryKey: prooflineQueryKeys.sharingGrants(incidentId),

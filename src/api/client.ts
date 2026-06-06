@@ -100,7 +100,8 @@ export const prooflineQueryKeys = {
   incident: (incidentId: string) => ["incident", incidentId] as const,
   incidentDeletion: (incidentId: string) =>
     ["incident-deletion", incidentId] as const,
-  contactPublicKeys: ["contact-public-keys"] as const,
+  contactPublicKeys: (sessionId: string) =>
+    ["contact-public-keys", sessionId] as const,
   sharingGrants: (incidentId: string) =>
     ["sharing-grants", incidentId] as const,
   wrappedKeys: (incidentId: string) => ["wrapped-keys", incidentId] as const,

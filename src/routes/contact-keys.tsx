@@ -97,12 +97,15 @@ function clearCreateFormError(
 }
 
 function ContactKeysPage() {
-  const { isAuthenticated, apiClient } = useAuth();
+  const { isAuthenticated, apiClient, session } = useAuth();
   const queryClient = useQueryClient();
+  const contactPublicKeysQueryKey = prooflineQueryKeys.contactPublicKeys(
+    session?.sessionId ?? "signed-out",
+  );
   const contactKeys = useQuery({
-    queryKey: prooflineQueryKeys.contactPublicKeys,
+    queryKey: contactPublicKeysQueryKey,
     queryFn: () => apiClient.listContactPublicKeys(),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && session !== null,
   });
   const [displayLabel, setDisplayLabel] = useState("");
   const [wrappingAlgorithm, setWrappingAlgorithm] =
@@ -143,7 +146,7 @@ function ContactKeysPage() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: prooflineQueryKeys.contactPublicKeys,
+        queryKey: contactPublicKeysQueryKey,
       });
     },
   });
@@ -379,8 +382,11 @@ function ContactKeysPage() {
 }
 
 function ContactKeyRow({ record }: { record: ContactPublicKey }) {
-  const { apiClient } = useAuth();
+  const { apiClient, session } = useAuth();
   const queryClient = useQueryClient();
+  const contactPublicKeysQueryKey = prooflineQueryKeys.contactPublicKeys(
+    session?.sessionId ?? "signed-out",
+  );
   const [displayLabel, setDisplayLabel] = useState(record.display_label ?? "");
   const [keyState, setKeyState] = useState(record.key_state);
   const [displayLabelError, setDisplayLabelError] = useState<string | null>(
@@ -396,7 +402,7 @@ function ContactKeyRow({ record }: { record: ContactPublicKey }) {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: prooflineQueryKeys.contactPublicKeys,
+        queryKey: contactPublicKeysQueryKey,
       });
     },
   });
@@ -404,7 +410,7 @@ function ContactKeyRow({ record }: { record: ContactPublicKey }) {
     mutationFn: () => apiClient.revokeContactPublicKey(record.public_key_id),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: prooflineQueryKeys.contactPublicKeys,
+        queryKey: contactPublicKeysQueryKey,
       });
     },
   });
