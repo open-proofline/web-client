@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added incident-scoped sharing-grant management for active contact keys,
+  optional stream scope, optional expiry, and revocation.
 - Added account-level contact public-key management for create, update, and
   revoke flows.
 - Added owner incident deletion status and request UI for the authenticated

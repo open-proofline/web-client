@@ -190,6 +190,8 @@ export const sharingGrantSchema = z.object({
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
   expires_at: z.string().nullable().optional(),
+  revoked_at: z.string().optional(),
+  revoked_by_account_id: z.string().optional(),
 });
 
 export const sharingGrantsResponseSchema = z.object({

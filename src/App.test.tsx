@@ -595,7 +595,7 @@ test("renders authenticated mock incident detail metadata sections", async () =>
   expect(
     screen.getByRole("heading", { name: "Key delivery" }),
   ).toBeInTheDocument();
-  expect(screen.getByText("str_audio_001")).toBeInTheDocument();
+  expect(screen.getAllByText("str_audio_001")).not.toHaveLength(0);
   expect(screen.getByText("No shared access")).toBeInTheDocument();
   expect(screen.getByText("No key delivery")).toBeInTheDocument();
 });
@@ -942,6 +942,392 @@ test("does not show stale contact-key metadata after switching sessions", async 
   resolveBobContactKeys();
   expect(await screen.findAllByText("Bob trusted contact")).not.toHaveLength(0);
   expect(screen.queryByText("Alice trusted contact")).toBeNull();
+});
+
+test("creates and revokes live sharing grants from active contact keys", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  let grants: Record<string, unknown>[] = [];
+  let sharingState = "private";
+  server.use(
+    http.get("*/v1/incidents/inc_live", () =>
+      HttpResponse.json({
+        incident: {
+          id: "inc_live",
+          status: "closed",
+          sharing_state: sharingState,
+          deletion_state: "active",
+        },
+        streams: [
+          {
+            id: "str_audio",
+            incident_id: "inc_live",
+            media_type: "audio",
+            status: "complete",
+          },
+        ],
+        chunks: [],
+        checkins: [],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "incident_deletion_not_found",
+            message: "incident deletion was not found",
+          },
+        },
+        { status: 404 },
+      ),
+    ),
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json({
+        contact_public_keys: [
+          {
+            public_key_id: "cpk_active",
+            owner_account_id: "acct_live",
+            contact_id: "ctc_active",
+            version: 1,
+            display_label: "Trusted contact",
+            wrapping_algorithm: "age-v1-x25519",
+            public_key_fingerprint: "fingerprint-active",
+            key_state: "active",
+          },
+          {
+            public_key_id: "cpk_pending",
+            owner_account_id: "acct_live",
+            contact_id: "ctc_pending",
+            version: 1,
+            display_label: "Pending contact",
+            wrapping_algorithm: "age-v1-x25519",
+            public_key_fingerprint: "fingerprint-pending",
+            key_state: "pending_verification",
+          },
+        ],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/sharing-grants", () =>
+      HttpResponse.json({ sharing_grants: grants }),
+    ),
+    http.post(
+      "*/v1/incidents/inc_live/sharing-grants",
+      async ({ request }) => {
+        await expect(request.json()).resolves.toEqual({
+          stream_id: "str_audio",
+          contact_id: "ctc_active",
+          contact_public_key_id: "cpk_active",
+          data_class: "metadata_ciphertext",
+          expires_at: expiresAt,
+        });
+        const grant = {
+          grant_id: "sgr_live",
+          owner_account_id: "acct_live",
+          incident_id: "inc_live",
+          stream_id: "str_audio",
+          recipient_type: "trusted_contact",
+          contact_id: "ctc_active",
+          contact_public_key_id: "cpk_active",
+          contact_public_key_version: 1,
+          data_class: "metadata_ciphertext",
+          grant_state: "active",
+          created_at: "2026-06-01T00:00:00Z",
+          updated_at: "2026-06-01T00:00:00Z",
+          expires_at: expiresAt,
+          wrapped_key_ciphertext: "wrapped-ciphertext",
+          raw_media_key: "raw-media-key",
+          request_body: "private request",
+          stored_path: "incidents/inc_live/private.enc",
+          object_key: "private/object/key",
+        };
+        grants = [grant];
+        sharingState = "shared";
+        return HttpResponse.json({ sharing_grant: grant }, { status: 201 });
+      },
+    ),
+    http.post("*/v1/sharing-grants/sgr_live/revoke", () => {
+      grants = grants.map((grant) =>
+        grant.grant_id === "sgr_live"
+          ? {
+              ...grant,
+              grant_state: "revoked",
+              revoked_at: "2026-06-01T00:20:00Z",
+              updated_at: "2026-06-01T00:20:00Z",
+            }
+          : grant,
+      );
+      sharingState = "private";
+      return HttpResponse.json({ sharing_grant: grants[0] });
+    }),
+    http.get("*/v1/incidents/inc_live/wrapped-keys", () =>
+      HttpResponse.json({ wrapped_keys: [] }),
+    ),
+  );
+
+  renderRoute("/incidents/inc_live");
+
+  expect(
+    await screen.findByRole("heading", { name: "inc_live" }),
+  ).toBeInTheDocument();
+  const contactKeySelect = (await screen.findByLabelText(
+    "Active contact key",
+  )) as HTMLSelectElement;
+  fireEvent.change(contactKeySelect, {
+    target: { value: "cpk_active" },
+  });
+  expect(
+    Array.from(contactKeySelect.options).some((option) =>
+      option.text.includes("Pending contact"),
+    ),
+  ).toBe(false);
+  fireEvent.change(screen.getByLabelText("Scope"), {
+    target: { value: "str_audio" },
+  });
+  fireEvent.change(screen.getByLabelText("Expires at"), {
+    target: { value: expiresAt },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Create sharing grant" }));
+
+  expect(await screen.findByText("Sharing grant created.")).toBeInTheDocument();
+  expect(await screen.findByText("sgr_live")).toBeInTheDocument();
+  expect(await screen.findByText("shared")).toBeInTheDocument();
+  expect(screen.queryByText("private")).toBeNull();
+  expect(screen.getByText("Active delivery path")).toBeInTheDocument();
+  expect(screen.getByText("Yes")).toBeInTheDocument();
+  expect(screen.queryByText("wrapped-ciphertext")).toBeNull();
+  expect(screen.queryByText("raw-media-key")).toBeNull();
+  expect(screen.queryByText("private request")).toBeNull();
+  expect(screen.queryByText("incidents/inc_live/private.enc")).toBeNull();
+  expect(screen.queryByText("private/object/key")).toBeNull();
+
+  fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
+
+  expect(await screen.findByText("Sharing grant revoked.")).toBeInTheDocument();
+  expect(await screen.findByText("revoked")).toBeInTheDocument();
+  expect(await screen.findByText("private")).toBeInTheDocument();
+  expect(screen.queryByText("shared")).toBeNull();
+  expect(screen.getAllByText("No").length).toBeGreaterThan(0);
+  expect(screen.getByRole("button", { name: "Revoke" })).toBeDisabled();
+});
+
+test("shows safe sharing-grant empty state without active contact keys", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/incidents/inc_live", () =>
+      HttpResponse.json({
+        incident: {
+          id: "inc_live",
+          status: "closed",
+          deletion_state: "active",
+        },
+        streams: [],
+        chunks: [],
+        checkins: [],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "incident_deletion_not_found",
+            message: "incident deletion was not found",
+          },
+        },
+        { status: 404 },
+      ),
+    ),
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json({
+        contact_public_keys: [
+          {
+            public_key_id: "cpk_pending",
+            owner_account_id: "acct_live",
+            contact_id: "ctc_pending",
+            version: 1,
+            display_label: "Pending contact",
+            wrapping_algorithm: "age-v1-x25519",
+            public_key_fingerprint: "fingerprint-pending",
+            key_state: "pending_verification",
+          },
+        ],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/sharing-grants", () =>
+      HttpResponse.json({ sharing_grants: [] }),
+    ),
+    http.get("*/v1/incidents/inc_live/wrapped-keys", () =>
+      HttpResponse.json({ wrapped_keys: [] }),
+    ),
+  );
+
+  renderRoute("/incidents/inc_live");
+
+  expect(
+    await screen.findByRole("heading", { name: "inc_live" }),
+  ).toBeInTheDocument();
+  expect(
+    await screen.findByText(
+      "No active contact keys are eligible for new sharing grants.",
+    ),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Create sharing grant" }),
+  ).toBeNull();
+});
+
+test("validates sharing-grant expiry before submission", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  const createGrant = vi.fn();
+  server.use(
+    http.get("*/v1/incidents/inc_live", () =>
+      HttpResponse.json({
+        incident: {
+          id: "inc_live",
+          status: "closed",
+          deletion_state: "active",
+        },
+        streams: [],
+        chunks: [],
+        checkins: [],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "incident_deletion_not_found",
+            message: "incident deletion was not found",
+          },
+        },
+        { status: 404 },
+      ),
+    ),
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json({
+        contact_public_keys: [
+          {
+            public_key_id: "cpk_active",
+            owner_account_id: "acct_live",
+            contact_id: "ctc_active",
+            version: 1,
+            display_label: "Trusted contact",
+            wrapping_algorithm: "age-v1-x25519",
+            public_key_fingerprint: "fingerprint-active",
+            key_state: "active",
+          },
+        ],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/sharing-grants", () =>
+      HttpResponse.json({ sharing_grants: [] }),
+    ),
+    http.post("*/v1/incidents/inc_live/sharing-grants", () => {
+      createGrant();
+      return HttpResponse.json({ sharing_grant: {} }, { status: 201 });
+    }),
+    http.get("*/v1/incidents/inc_live/wrapped-keys", () =>
+      HttpResponse.json({ wrapped_keys: [] }),
+    ),
+  );
+
+  renderRoute("/incidents/inc_live");
+
+  expect(
+    await screen.findByRole("heading", { name: "inc_live" }),
+  ).toBeInTheDocument();
+  fireEvent.change(await screen.findByLabelText("Active contact key"), {
+    target: { value: "cpk_active" },
+  });
+  fireEvent.change(screen.getByLabelText("Expires at"), {
+    target: { value: "2020-01-01T00:00:00Z" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Create sharing grant" }));
+
+  expect(
+    await screen.findByText("Expiry must be in the future."),
+  ).toBeInTheDocument();
+  expect(createGrant).toHaveBeenCalledTimes(0);
+});
+
+test("keeps sharing-grant dependency errors generic", async () => {
+  vi.stubEnv("VITE_PROOFLINE_API_MODE", "live");
+  saveLiveSession();
+  server.use(
+    http.get("*/v1/incidents/inc_live", () =>
+      HttpResponse.json({
+        incident: {
+          id: "inc_live",
+          status: "closed",
+          deletion_state: "active",
+        },
+        streams: [],
+        chunks: [],
+        checkins: [],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/deletion", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "incident_deletion_not_found",
+            message: "incident deletion was not found",
+          },
+        },
+        { status: 404 },
+      ),
+    ),
+    http.get("*/v1/contact-public-keys", () =>
+      HttpResponse.json({
+        contact_public_keys: [
+          {
+            public_key_id: "cpk_active",
+            owner_account_id: "acct_live",
+            contact_id: "ctc_active",
+            version: 1,
+            display_label: "Trusted contact",
+            wrapping_algorithm: "age-v1-x25519",
+            public_key_fingerprint: "fingerprint-active",
+            key_state: "active",
+          },
+        ],
+      }),
+    ),
+    http.get("*/v1/incidents/inc_live/sharing-grants", () =>
+      HttpResponse.json({ sharing_grants: [] }),
+    ),
+    http.post("*/v1/incidents/inc_live/sharing-grants", () =>
+      HttpResponse.json(
+        {
+          error: {
+            code: "sharing_grant_dependency_not_found",
+            message: "backend private dependency detail",
+          },
+        },
+        { status: 404 },
+      ),
+    ),
+    http.get("*/v1/incidents/inc_live/wrapped-keys", () =>
+      HttpResponse.json({ wrapped_keys: [] }),
+    ),
+  );
+
+  renderRoute("/incidents/inc_live");
+
+  expect(
+    await screen.findByRole("heading", { name: "inc_live" }),
+  ).toBeInTheDocument();
+  fireEvent.change(await screen.findByLabelText("Active contact key"), {
+    target: { value: "cpk_active" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Create sharing grant" }));
+
+  expect(
+    await screen.findByText("Sharing grant dependency was not available."),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("backend private dependency detail")).toBeNull();
 });
 
 test("renders existing incident deletion status without private deletion internals", async () => {
@@ -1651,12 +2037,15 @@ test("shows generic dependent metadata errors on incident detail", async () => {
   expect(
     await screen.findByRole("heading", { name: "inc_live" }),
   ).toBeInTheDocument();
-  expect(await screen.findAllByRole("alert")).toHaveLength(3);
+  expect(await screen.findAllByRole("alert")).toHaveLength(4);
   expect(
     screen.getByText("Contact details could not be loaded."),
   ).toBeInTheDocument();
   expect(
     screen.getByText("Shared access details could not be loaded."),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("Eligible contact keys could not be loaded."),
   ).toBeInTheDocument();
   expect(
     screen.getByText("Key delivery details could not be loaded."),

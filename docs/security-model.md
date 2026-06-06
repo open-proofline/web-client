@@ -19,6 +19,9 @@ This web client is experimental and not production-ready.
   plaintext, raw keys, wrapped-key ciphertext, stored paths, or object keys.
 - Contact public-key management sends only reviewed public-key metadata fields
   and keeps revoked keys visibly ineligible for new sharing grants.
+- Sharing-grant management uses active contact public keys only, keeps expired
+  or revoked grants out of active delivery paths, and does not add decryption,
+  notification, or emergency-response behavior.
 - Registration responses use the server's generic verification-required success
   message and do not create a browser session.
 - The email-verification route reads the token from the URL fragment, submits

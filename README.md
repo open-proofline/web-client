@@ -100,7 +100,7 @@ The current bootstrap includes:
 - incident detail metadata UI
 - stream and chunk metadata review
 - contact public-key metadata views and account-level management
-- sharing-grant metadata views
+- sharing-grant metadata views and incident-scoped management
 - wrapped-key metadata views
 - owner incident deletion status and request UI
 - safe loading, empty, and error states
@@ -149,8 +149,6 @@ The web client must not expose private admin/operator behavior or route `/v1/adm
 
 Planned sharing/contact work includes:
 
-- sharing-grant creation and revocation
-- incident-scoped and stream-scoped grant management
 - wrapped-key metadata review and delivery status
 - clear warnings that wrapped-key metadata is access-enabling metadata
 - trusted-contact access design, once separately scoped and threat-modeled
