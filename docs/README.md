@@ -12,6 +12,8 @@ source of truth remains `open-proofline/server`.
   design and the planned no-account read-only viewer boundary.
 - [Browser security headers](browser-security-headers.md): static-host header
   guidance and credentialed CORS review notes.
+- [Static host headers template](static-host-headers-template.md): adaptable
+  static-host header example with placeholder origins only.
 - [Supply chain review](supply-chain.md)
 - [Threat model](threat-model.md)
 - [Theme tokens](theme.md)
