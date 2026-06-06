@@ -154,6 +154,9 @@ function IncidentDetailPage() {
         (current) => [...(current ?? []), grant],
       );
       void queryClient.invalidateQueries({ queryKey: sharingGrantsQueryKey });
+      void queryClient.invalidateQueries({
+        queryKey: prooflineQueryKeys.incident(incidentId),
+      });
     },
   });
   const revokeSharingGrant = useMutation({
@@ -168,6 +171,9 @@ function IncidentDetailPage() {
       );
       void queryClient.invalidateQueries({ queryKey: sharingGrantsQueryKey });
       void queryClient.invalidateQueries({ queryKey: wrappedKeysQueryKey });
+      void queryClient.invalidateQueries({
+        queryKey: prooflineQueryKeys.incident(incidentId),
+      });
     },
   });
   const requestDeletion = useMutation({

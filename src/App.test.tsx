@@ -949,13 +949,14 @@ test("creates and revokes live sharing grants from active contact keys", async (
   saveLiveSession();
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
   let grants: Record<string, unknown>[] = [];
+  let sharingState = "private";
   server.use(
     http.get("*/v1/incidents/inc_live", () =>
       HttpResponse.json({
         incident: {
           id: "inc_live",
           status: "closed",
-          sharing_state: "private",
+          sharing_state: sharingState,
           deletion_state: "active",
         },
         streams: [
@@ -1041,6 +1042,7 @@ test("creates and revokes live sharing grants from active contact keys", async (
           object_key: "private/object/key",
         };
         grants = [grant];
+        sharingState = "shared";
         return HttpResponse.json({ sharing_grant: grant }, { status: 201 });
       },
     ),
@@ -1055,6 +1057,7 @@ test("creates and revokes live sharing grants from active contact keys", async (
             }
           : grant,
       );
+      sharingState = "private";
       return HttpResponse.json({ sharing_grant: grants[0] });
     }),
     http.get("*/v1/incidents/inc_live/wrapped-keys", () =>
@@ -1088,6 +1091,8 @@ test("creates and revokes live sharing grants from active contact keys", async (
 
   expect(await screen.findByText("Sharing grant created.")).toBeInTheDocument();
   expect(await screen.findByText("sgr_live")).toBeInTheDocument();
+  expect(await screen.findByText("shared")).toBeInTheDocument();
+  expect(screen.queryByText("private")).toBeNull();
   expect(screen.getByText("Active delivery path")).toBeInTheDocument();
   expect(screen.getByText("Yes")).toBeInTheDocument();
   expect(screen.queryByText("wrapped-ciphertext")).toBeNull();
@@ -1100,6 +1105,8 @@ test("creates and revokes live sharing grants from active contact keys", async (
 
   expect(await screen.findByText("Sharing grant revoked.")).toBeInTheDocument();
   expect(await screen.findByText("revoked")).toBeInTheDocument();
+  expect(await screen.findByText("private")).toBeInTheDocument();
+  expect(screen.queryByText("shared")).toBeNull();
   expect(screen.getAllByText("No").length).toBeGreaterThan(0);
   expect(screen.getByRole("button", { name: "Revoke" })).toBeDisabled();
 });
