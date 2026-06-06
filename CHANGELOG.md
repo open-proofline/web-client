@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Documented the viewer-token create/revoke UI design and no-account
+  read-only viewer boundary.
 - Added incident-detail wrapped-key delivery revocation for account-owned
   wrapped-key metadata.
 - Added incident-scoped sharing-grant management for active contact keys,

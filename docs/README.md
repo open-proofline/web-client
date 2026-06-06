@@ -8,6 +8,8 @@ source of truth remains `open-proofline/server`.
   client modes.
 - [Security model](security-model.md): implemented controls, non-controls, and
   browser auth review areas.
+- [Viewer token UI design](viewer-token-ui-design.md): owner create/revoke
+  design and the planned no-account read-only viewer boundary.
 - [Browser security headers](browser-security-headers.md): static-host header
   guidance and credentialed CORS review notes.
 - [Supply chain review](supply-chain.md)

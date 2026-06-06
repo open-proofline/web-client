@@ -256,12 +256,12 @@ do not imply production readiness or public `/v1` API readiness.
 
 The server currently confirms bearer session auth, browser-cookie auth routes,
 `POST /v1/auth/register`, `POST /v1/auth/email/verify`, `GET /v1/account`,
-`POST /v1/account/password`, owner-scoped incident list/detail routes, contact
-public-key routes, sharing-grant routes, and wrapped-key routes. Current
-`open-proofline/server` documents authenticated
-`GET /v1/incidents`, and this client parses that response shape in live mode.
-Mock mode uses prototype incident records only and must not be treated as
-backend truth.
+`POST /v1/account/password`, owner-scoped incident list/detail routes,
+viewer-token create/revoke routes, contact public-key routes, sharing-grant
+routes, and wrapped-key routes. Current `open-proofline/server` documents
+authenticated `GET /v1/incidents`, and this client parses that response shape
+in live mode. Mock mode uses prototype incident records only and must not be
+treated as backend truth.
 
 Authenticated users can open the account profile route to review safe account
 metadata and change their password through `POST /v1/account/password`. The
@@ -281,6 +281,13 @@ The web client reads that secret-bearing fragment, submits the token in the
 verification request body, and clears the fragment from the address bar. Raw
 verification tokens must not be logged, persisted, screenshotted, copied into
 issue drafts, or sent to analytics.
+
+Viewer-token create/revoke UI is documented as a design boundary in
+[Viewer Token UI Design](docs/viewer-token-ui-design.md). The intended
+web-client viewer will replace the current server-rendered incident viewer
+while preserving the same viewer-token system for no-account, read-only access
+to unencrypted incident data. That path is separate from future notification
+delivery and trusted-contact account/key flows.
 
 The client must not log session tokens, Authorization headers, request bodies,
 uploaded bytes, plaintext, raw keys, raw media keys, contact private keys,
