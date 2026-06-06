@@ -165,6 +165,7 @@ export const contactPublicKeySchema = z.object({
   key_state: z.string(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
+  revoked_at: z.string().optional(),
 });
 
 export const contactPublicKeysResponseSchema = z.object({

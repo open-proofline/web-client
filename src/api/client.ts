@@ -59,6 +59,20 @@ type RequestIncidentDeletionRequest = {
   allowOpen: boolean;
 };
 
+export type CreateContactPublicKeyRequest = {
+  contactId?: string;
+  displayLabel?: string;
+  wrappingAlgorithm: string;
+  publicKey: string;
+  publicKeyFingerprint: string;
+  keyState?: string;
+};
+
+export type UpdateContactPublicKeyRequest = {
+  displayLabel?: string;
+  keyState?: string;
+};
+
 type RequestOptions = {
   includeAuth?: boolean;
   includeCredentials?: boolean;
@@ -505,6 +519,116 @@ export class ProoflineApiClient {
     return contactPublicKeyResponseSchema.parse(
       await this.request(
         `/v1/contact-public-keys/${encodeURIComponent(publicKeyId)}`,
+      ),
+    ).contact_public_key;
+  }
+
+  async createContactPublicKey(
+    request: CreateContactPublicKeyRequest,
+  ): Promise<ContactPublicKey> {
+    if (this.mode === "mock") {
+      const now = new Date().toISOString();
+      const contactId = request.contactId || `ctc_prototype_${Date.now()}`;
+      const contactKey: ContactPublicKey = {
+        public_key_id: `cpk_prototype_${Date.now()}`,
+        owner_account_id: mockAccount.id,
+        contact_id: contactId,
+        version: request.contactId ? 2 : 1,
+        display_label: request.displayLabel,
+        wrapping_algorithm: request.wrappingAlgorithm,
+        public_key: request.publicKey,
+        public_key_fingerprint: request.publicKeyFingerprint,
+        key_state: request.keyState ?? "pending_verification",
+        created_at: now,
+        updated_at: now,
+      };
+      mockContactPublicKeys.push(contactKey);
+      return contactKey;
+    }
+
+    const body: Record<string, string> = {
+      wrapping_algorithm: request.wrappingAlgorithm,
+      public_key: request.publicKey,
+      public_key_fingerprint: request.publicKeyFingerprint,
+    };
+    if (request.contactId) {
+      body.contact_id = request.contactId;
+    }
+    if (request.displayLabel !== undefined) {
+      body.display_label = request.displayLabel;
+    }
+    if (request.keyState !== undefined) {
+      body.key_state = request.keyState;
+    }
+
+    return contactPublicKeyResponseSchema.parse(
+      await this.request("/v1/contact-public-keys", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    ).contact_public_key;
+  }
+
+  async updateContactPublicKey(
+    publicKeyId: string,
+    request: UpdateContactPublicKeyRequest,
+  ): Promise<ContactPublicKey> {
+    if (this.mode === "mock") {
+      const updatedAt = new Date().toISOString();
+      const contactKey = mockContactPublicKeys.find(
+        (record) => record.public_key_id === publicKeyId,
+      );
+      const nextContactKey: ContactPublicKey = {
+        ...(contactKey ?? mockContactPublicKey),
+        public_key_id: publicKeyId,
+        ...(request.displayLabel !== undefined
+          ? { display_label: request.displayLabel }
+          : {}),
+        ...(request.keyState !== undefined
+          ? { key_state: request.keyState }
+          : {}),
+        updated_at: updatedAt,
+        ...(request.keyState === "revoked" ? { revoked_at: updatedAt } : {}),
+      };
+      const index = mockContactPublicKeys.findIndex(
+        (record) => record.public_key_id === publicKeyId,
+      );
+      if (index >= 0) {
+        mockContactPublicKeys[index] = nextContactKey;
+      }
+      return nextContactKey;
+    }
+
+    const body: Record<string, string> = {};
+    if (request.displayLabel !== undefined) {
+      body.display_label = request.displayLabel;
+    }
+    if (request.keyState !== undefined) {
+      body.key_state = request.keyState;
+    }
+
+    return contactPublicKeyResponseSchema.parse(
+      await this.request(
+        `/v1/contact-public-keys/${encodeURIComponent(publicKeyId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        },
+      ),
+    ).contact_public_key;
+  }
+
+  async revokeContactPublicKey(publicKeyId: string): Promise<ContactPublicKey> {
+    if (this.mode === "mock") {
+      return this.updateContactPublicKey(publicKeyId, {
+        keyState: "revoked",
+      });
+    }
+
+    return contactPublicKeyResponseSchema.parse(
+      await this.request(
+        `/v1/contact-public-keys/${encodeURIComponent(publicKeyId)}/revoke`,
+        { method: "POST" },
       ),
     ).contact_public_key;
   }
