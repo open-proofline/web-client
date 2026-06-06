@@ -9,6 +9,8 @@ in `open-proofline/server`.
 - Browser session cookies when cookie auth mode is enabled.
 - CSRF tokens for cookie-authenticated unsafe requests.
 - Raw email-verification tokens carried in verification URL fragments.
+- Raw viewer tokens and token-bearing viewer links returned once after owner
+  creation.
 - Account metadata visible to the authenticated user.
 - Incident, stream, chunk, contact public-key, sharing-grant, and wrapped-key
   metadata.
@@ -32,6 +34,9 @@ in `open-proofline/server`.
 - Browser local storage can retain credentials after a session should be gone.
 - Verification URL fragments can be exposed by screenshots, browser extensions,
   debugging tools, copied issue text, or analytics if handled carelessly.
+- Viewer tokens or token-bearing links can be exposed through clipboard history,
+  logs, analytics, referrers, screenshots, issue drafts, or persistent browser
+  storage if the one-time success state is mishandled.
 - Registration UI wording could expose account-existence state if it diverges
   from the server's generic verification-required response.
 - Cookie-auth mode could accidentally mix bearer and cookie credentials,
@@ -50,5 +55,6 @@ in `open-proofline/server`.
 
 Recording, decryption, key escrow, break-glass access, trusted-contact
 decryption, payment processing, public-production account portal claims,
-emergency notifications, and playable media export are out of scope until
-explicitly designed and reviewed.
+emergency notifications, notification delivery channels, trusted-contact
+account/key flows, and playable media export are out of scope until explicitly
+designed and reviewed.

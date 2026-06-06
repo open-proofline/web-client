@@ -48,6 +48,25 @@ persisted in browser storage, screenshotted, copied into public issue drafts,
 included in analytics, or exposed in UI beyond the transient browser URL
 fragment needed to complete verification.
 
+## Viewer Token Boundary
+
+Viewer tokens are bearer secrets for no-account, read-only incident access.
+The planned web-client viewer should replace the current server-rendered viewer
+while preserving the same server token semantics. It may show only unencrypted
+incident data that the backend intentionally exposes to token holders, such as
+safe status, check-in, current-location, or device-state fields when those
+fields are part of the viewer payload.
+
+Viewer-token UI must not persist raw tokens, viewer links, or token-bearing
+paths in browser storage. It must not send raw token values to analytics, logs,
+public issues, PR text, or error messages. Invalid, expired, missing, and
+revoked token states should collapse into generic viewer errors.
+
+Viewer-token access is separate from the future trusted-contact account system.
+Trusted contacts require their own accept/decline flow, account identity,
+client-side private-key creation, public-key storage, encrypted evidence access
+design, and key-custody threat model.
+
 ## Browser Cookie Auth And CSRF
 
 The implemented live client supports bearer-token auth and explicit

@@ -40,6 +40,8 @@ From current `open-proofline/server` docs and route registration:
 - `POST /v1/incidents`
 - `GET /v1/incidents`
 - `GET /v1/incidents/{incident_id}`
+- `POST /v1/incidents/{incident_id}/incident-tokens`
+- `POST /v1/incident-tokens/{token_id}/revoke`
 - `POST /v1/incidents/{incident_id}/deletion`
 - `GET /v1/incidents/{incident_id}/deletion`
 - `POST /v1/contact-public-keys`
@@ -76,6 +78,31 @@ revokes other sessions for the account after a successful password change.
 The UI maps password-change failures to fixed safe messages and does not log or
 persist passwords, request bodies, session tokens, Authorization headers,
 browser session cookies, or CSRF token values.
+
+## Viewer Token UI Boundary
+
+Current `open-proofline/server` documents authenticated owner-scoped
+viewer-token creation and revocation:
+
+- `POST /v1/incidents/{incident_id}/incident-tokens`
+- `POST /v1/incident-tokens/{token_id}/revoke`
+
+The create route returns the raw viewer token only once and stores only a token
+hash on the server. The web-client design for this flow is documented in
+[Viewer Token UI Design](viewer-token-ui-design.md). Runtime client methods are
+not implemented in this repository yet.
+
+The current server also serves a token-scoped read-only incident viewer. The
+intended web-client direction is to replace that surface while using the same
+viewer-token authority model for no-account notification contacts. That viewer
+path is distinct from the future trusted-contact account system and must not
+imply browser decryption, key unwrapping, playable export, notification
+delivery, emergency dispatch, or public production readiness.
+
+No incident-token list or read route is currently documented for long-term
+management UI. Until such a backend contract exists, the web client should not
+promise a durable token table or post-reload revocation workflow for tokens
+created outside the current browser flow.
 
 ## Frontend Metadata Boundary
 
