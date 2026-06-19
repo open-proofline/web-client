@@ -25,6 +25,9 @@ Issue handling mode: `drafts_only`, `create_issues`, or `none`
 
 - Pin citations and report metadata to the reviewed commit.
 - Treat `open-proofline/server` as backend source of truth.
+- Treat `open-proofline/website` as source of truth for public governance,
+  political alignment, public voice, reusable README structure, and
+  source-of-truth mapping.
 - Separate current implementation from future design.
 - Keep public wording safe under `SECURITY.md`.
 - Do not include raw tokens, secrets, exploit details, private deployment
@@ -37,8 +40,10 @@ Issue handling mode: `drafts_only`, `create_issues`, or `none`
 If docs only:
 
 ```bash
-git diff --stat
-git diff -- docs .backlog-drafts
+npx prettier --check \
+  README.md AGENTS.md SECURITY.md CHANGELOG.md \
+  docs/*.md codex/*.md codex/prompts/*.md
+git diff --check
 ```
 
 If code changed unexpectedly, stop and explain why.

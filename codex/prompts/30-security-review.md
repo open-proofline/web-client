@@ -15,9 +15,11 @@ public docs or issue drafts.
 - CSP and security-header deployment expectations
 - route assumptions that might expose private `/v1` or admin routes
 - public UI wording around emergency reliance
-- no logging of raw tokens, Authorization headers, request bodies, plaintext,
-  raw keys, wrapped-key ciphertext, private deployment details, or user safety
-  data
+- no logging of raw tokens, browser session cookies, CSRF tokens,
+  Authorization headers, request bodies, uploaded bytes, plaintext, raw keys,
+  raw media keys, contact private keys, wrapped-key ciphertext, verification
+  credentials, stored paths, object keys, private deployment details, or user
+  safety data
 - no browser decryption, key unwrapping, key escrow, recording, playable export,
   or emergency dispatch added incidentally
 - Catalyst licensing and redistribution boundaries
@@ -34,6 +36,7 @@ npm run typecheck
 npm run lint
 npm run test
 npm run build
+git diff --check
 ```
 
 Run `npm run test:e2e` when browser flows changed.

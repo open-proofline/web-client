@@ -14,6 +14,8 @@ Do **not** change application code. Do **not** create GitHub issues directly.
 
 - `README.md`, `AGENTS.md`, `SECURITY.md`, `CHANGELOG.md`
 - `docs/`
+- current `open-proofline/website` README and source docs when public voice,
+  governance, source-of-truth mapping, or README baseline gaps are candidates
 - `src/api`, `src/auth`, `src/routes`, `src/components`
 - `tests/`
 - `.github/workflows`
@@ -23,9 +25,10 @@ Do **not** change application code. Do **not** create GitHub issues directly.
 ## Candidate Areas
 
 Correctness, security hardening, accessibility, frontend testing gaps,
-documentation gaps, deployment/header guidance, dependency review, API route
-confirmation against `open-proofline/server`, Catalyst licensing hygiene, and
-Codex workflow improvements.
+documentation gaps, public voice or README-baseline drift, deployment/header
+guidance, dependency review, API route confirmation against
+`open-proofline/server`, website source alignment for project-level claims,
+Catalyst licensing hygiene, and Codex workflow improvements.
 
 Never include raw tokens, secrets, exploit details, private deployment details,
 or user safety data in public issue drafts.

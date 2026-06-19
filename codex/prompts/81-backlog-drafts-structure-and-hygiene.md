@@ -26,6 +26,9 @@ Do **not** change application code. Do **not** create or close GitHub issues.
 
 Every public draft should include the `backlog` label and at least one topic
 label. Private notes must not be used for public issue creation.
+Public drafts must not include raw tokens, secrets, exploit details, private
+deployment details, request bodies, plaintext, raw keys, wrapped-key
+ciphertext, stored paths, object keys, or user safety data.
 
 Validate with:
 

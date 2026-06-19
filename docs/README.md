@@ -1,7 +1,17 @@
 # Proofline Web Client Docs
 
 These docs describe the current experimental web-client prototype. The backend
-source of truth remains `open-proofline/server`.
+source of truth remains `open-proofline/server`. Project-wide public
+governance, political alignment, public voice, and reusable README baseline
+guidance live in `open-proofline/website`.
+
+Use the right source for the claim:
+
+- web-client behavior and prototype limits: this repository and these docs
+- backend API, auth, deployment, billing-placeholder, and security facts:
+  `open-proofline/server`
+- public governance, cooperative/public-good posture, public voice, and README
+  structure: `open-proofline/website`
 
 - [Architecture](architecture.md)
 - [End-user web-client design](end-user-web-client-design.md): product
@@ -23,4 +33,5 @@ source of truth remains `open-proofline/server`.
 - [Development](development.md)
 
 The prototype does not implement recording, browser decryption, key escrow,
-playable media export, emergency dispatch, or production safety workflows.
+playable media export, emergency dispatch, hosted billing, notification
+delivery, public admin/operator surfaces, or production safety workflows.

@@ -6,6 +6,16 @@ The web-client repository is frontend-only. `open-proofline/server` remains the
 source of truth for current backend behavior, routes, security model, and
 deployment constraints.
 
+`open-proofline/website` is the project-level source for Proofline public
+governance posture, political alignment, cooperative/public-good framing,
+public voice, reusable README structure, and source-of-truth mapping. When a
+task touches those areas, inspect the current website README,
+`docs/governance-and-political-alignment.md`, and
+`docs/repository-readme-baseline.md` before editing this repo.
+
+Codex output is maintainer-reviewed work. It is not an audit, certification,
+security review, legal review, or endorsement by OpenAI.
+
 ## Prompts
 
 - `00-project-context-check.md`: read repo context before changes
@@ -28,6 +38,17 @@ deployment constraints.
 - `95-validate-deep-research-report.md`: validate technical review reports
 
 ## Standard Validation
+
+For documentation or reusable-prompt-only changes:
+
+```bash
+npx prettier --check \
+  README.md AGENTS.md SECURITY.md CHANGELOG.md \
+  docs/*.md codex/*.md codex/prompts/*.md
+git diff --check
+```
+
+For frontend source, route, browser-flow, auth, API-client, or behavior changes:
 
 ```bash
 npm run typecheck

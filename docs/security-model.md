@@ -48,6 +48,20 @@ persisted in browser storage, screenshotted, copied into public issue drafts,
 included in analytics, or exposed in UI beyond the transient browser URL
 fragment needed to complete verification.
 
+## Account Second-Factor Boundary
+
+Current `open-proofline/server` docs describe account second-factor setup and
+per-session verification routes for email challenge, TOTP, and WebAuthn. This
+web client does not yet implement second-factor setup, challenge, verification,
+or recovery UI, and it does not retain server second-factor setup metadata in
+frontend account state.
+
+Future second-factor UI needs its own account-security design before exposing
+challenge codes, TOTP seeds, WebAuthn ceremony material, or recovery states in
+the browser. Those values must not be logged, persisted outside the intended
+browser ceremony, copied into public issues, sent to analytics, or mixed with
+unrelated account metadata displays.
+
 ## Viewer Token Boundary
 
 Viewer tokens are bearer secrets for no-account, read-only incident access.

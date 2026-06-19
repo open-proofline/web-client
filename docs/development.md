@@ -12,7 +12,17 @@ Run locally:
 npm run dev
 ```
 
-Validation:
+Validation for documentation or reusable-prompt-only changes:
+
+```bash
+npx prettier --check \
+  README.md AGENTS.md SECURITY.md CHANGELOG.md \
+  docs/*.md codex/*.md codex/prompts/*.md
+git diff --check
+```
+
+Validation for frontend source, route, browser-flow, auth, API-client, or
+behavior changes:
 
 ```bash
 npm run typecheck

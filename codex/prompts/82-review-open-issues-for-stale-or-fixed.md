@@ -24,6 +24,9 @@ requested.
 - `sensitive-do-not-publicly-discuss`
 
 Distinguish current-branch fixes from merged target-branch fixes.
+For issues involving public voice, governance, README baseline, or
+source-of-truth mapping, verify against current `open-proofline/website`
+documents before marking them stale or fixed.
 
 Validation:
 

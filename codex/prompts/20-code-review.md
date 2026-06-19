@@ -13,8 +13,10 @@ Do **not** add features unless needed to fix a bug.
 - auth/session token handling
 - local-storage use and warnings
 - accessible forms and states
-- no raw token, Authorization header, request body, plaintext, key, wrapped-key
-  ciphertext, private deployment detail, or user safety data logging
+- no raw token, browser session cookie, CSRF token, Authorization header,
+  request body, uploaded byte, plaintext, raw key, raw media key, contact
+  private key, wrapped-key ciphertext, verification credential, stored path,
+  object key, private deployment detail, or user safety data logging
 - no browser decryption or key unwrapping
 - no recording/capture behavior
 - no production-readiness claims
@@ -34,4 +36,5 @@ npm run lint
 npm run test
 npm run build
 npm run test:e2e
+git diff --check
 ```
