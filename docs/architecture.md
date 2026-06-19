@@ -15,6 +15,9 @@ flowchart LR
 
 - The app handles account login, public registration, email verification,
   account profile/password management, and incident metadata review.
+- The app does not implement account second-factor setup, challenge,
+  verification, or recovery UI yet; current second-factor route support remains
+  a server-side fact to verify against `open-proofline/server`.
 - The live API client supports explicit bearer-token and browser-cookie auth
   modes. Cookie mode uses server-managed HttpOnly cookies, in-memory CSRF
   tokens, and `credentials: "include"` only for cookie-authenticated requests.
@@ -25,6 +28,11 @@ flowchart LR
 
 `open-proofline/server` remains the source of truth for backend routes,
 authorization, encrypted bundle behavior, and security headers.
+
+`open-proofline/website` remains the source of truth for Proofline public
+governance, cooperative/public-good posture, public voice, and reusable README
+structure. Keep those project-level claims linked instead of duplicating them
+in architecture docs.
 
 ## Product Design Boundary
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Refreshed README, documentation, and reusable Codex workflow guidance to
+  consume the website repository's governance, public voice, source-of-truth
+  map, and README baseline while preserving web-client-specific boundaries.
+- Clarified that server-supported account second-factor routes remain outside
+  the current web-client UI and API-client method surface.
 - Documented end-user web-client product design direction for user-facing
   language, trusted-contact invite/accept flows, viewer-link UX, future viewer
   map/location behavior, future browser capture framing, and product-design

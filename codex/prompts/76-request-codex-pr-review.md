@@ -29,7 +29,8 @@ consistency with README.md, AGENTS.md, SECURITY.md, and relevant docs.
 
 Focus on frontend route behavior, API client assumptions against
 open-proofline/server, token handling, no secret logging, no browser decryption
-or key unwrapping, Catalyst licensing boundaries, and validation results.
+or key unwrapping, Catalyst licensing boundaries, website-source alignment for
+public voice/governance/README baseline claims, and validation results.
 ```
 
 Do not merge, approve, or mark ready for review.

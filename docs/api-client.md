@@ -37,6 +37,15 @@ From current `open-proofline/server` docs and route registration:
 - `GET /v1/auth/web/csrf`
 - `GET /v1/account`
 - `POST /v1/account/password`
+- `POST /v1/account/second-factor/email/challenge`
+- `POST /v1/account/second-factor/email/verify`
+- `POST /v1/account/second-factor/totp/enroll`
+- `POST /v1/account/second-factor/totp/confirm`
+- `POST /v1/account/second-factor/totp/verify`
+- `POST /v1/account/second-factor/webauthn/register/start`
+- `POST /v1/account/second-factor/webauthn/register/finish`
+- `POST /v1/account/second-factor/webauthn/verify/start`
+- `POST /v1/account/second-factor/webauthn/verify/finish`
 - `POST /v1/incidents`
 - `GET /v1/incidents`
 - `GET /v1/incidents/{incident_id}`
@@ -78,6 +87,13 @@ revokes other sessions for the account after a successful password change.
 The UI maps password-change failures to fixed safe messages and does not log or
 persist passwords, request bodies, session tokens, Authorization headers,
 browser session cookies, or CSRF token values.
+
+Current server docs also describe account second-factor setup and per-session
+verification routes for email challenge, TOTP, and WebAuthn. This web client
+does not yet implement second-factor setup, challenge, verification, or recovery
+UI, and the current account schema does not retain server second-factor setup
+metadata. Add those flows only through a dedicated account-security design and
+full frontend validation.
 
 ## Viewer Token UI Boundary
 

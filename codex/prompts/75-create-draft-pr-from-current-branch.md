@@ -27,6 +27,18 @@ exist, the diff has unrelated changes, or the base was inferred ambiguously.
 
 ## Validation Before PR
 
+For documentation or reusable-prompt-only branches whose issue or prompt
+explicitly scopes docs-only validation:
+
+```bash
+npx prettier --check \
+  README.md AGENTS.md SECURITY.md CHANGELOG.md \
+  docs/*.md codex/*.md codex/prompts/*.md
+git diff --check
+```
+
+For frontend source, route, browser-flow, auth, API-client, or behavior changes:
+
 ```bash
 npm run typecheck
 npm run lint

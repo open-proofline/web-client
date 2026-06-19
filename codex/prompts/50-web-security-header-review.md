@@ -27,6 +27,15 @@ Document deployment expectations rather than claiming production hardening.
 
 ## Validation
 
+For documentation-only header guidance changes:
+
+```bash
+npx prettier --check \
+  README.md AGENTS.md SECURITY.md CHANGELOG.md \
+  docs/*.md codex/*.md codex/prompts/*.md
+git diff --check
+```
+
 Run frontend validation if config or browser behavior changes:
 
 ```bash

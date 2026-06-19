@@ -5,6 +5,8 @@
 - This repository is `open-proofline/web-client`.
 - This is the Proofline web client only. The current backend source of truth is
   `open-proofline/server`.
+- The project-level public governance, political alignment, public voice, and
+  reusable README baseline source of truth is `open-proofline/website`.
 - Do not implement backend features here.
 - Do not add browser decryption unless explicitly scoped and threat-modeled.
 - Do not add recording or capture behavior here.
@@ -38,6 +40,17 @@
 
 ## Commands
 
+For documentation or reusable-prompt-only changes:
+
+```bash
+npx prettier --check \
+  README.md AGENTS.md SECURITY.md CHANGELOG.md \
+  docs/*.md codex/*.md codex/prompts/*.md
+git diff --check
+```
+
+For frontend source, route, browser-flow, auth, API-client, or behavior changes:
+
 ```bash
 npm run typecheck
 npm run lint
@@ -56,3 +69,10 @@ Check that changes remain frontend-only, do not overpromise production status,
 do not introduce browser decryption or key unwrapping, keep token persistence
 explicit and reviewable, preserve accessible loading/error/empty states, and
 keep server facts tied back to `open-proofline/server`.
+
+When changes touch README structure, public voice, governance,
+cooperative/public-good framing, political alignment, funding posture, or
+source-of-truth mapping, check the current `open-proofline/website` README,
+`docs/governance-and-political-alignment.md`, and
+`docs/repository-readme-baseline.md` instead of rewriting those project-level
+claims here.

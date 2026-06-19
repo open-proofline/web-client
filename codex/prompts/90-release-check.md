@@ -16,6 +16,8 @@ Target final base branch: `<TARGET_FINAL_BASE_BRANCH>`
 - README, AGENTS, SECURITY, CHANGELOG, LICENSE
 - docs accuracy and links
 - API route assumptions against `open-proofline/server`
+- public voice, governance, README baseline, and source-of-truth mapping
+  assumptions against `open-proofline/website`
 - no production-readiness claims
 - no recording, browser decryption, key escrow, playable export, emergency
   dispatch, OAuth, JWT, public admin dashboard, mobile code, or protocol
@@ -29,6 +31,7 @@ Target final base branch: `<TARGET_FINAL_BASE_BRANCH>`
 
 ```bash
 npm ci
+npm run format:check
 npm run typecheck
 npm run lint
 npm run test

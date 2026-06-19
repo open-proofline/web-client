@@ -40,6 +40,14 @@ Start with current source-of-truth files:
 - Catalyst/Tailwind Plus license and provenance files:
   - `src/components/catalyst/README.md`
   - `src/components/catalyst/LICENSE.md`
+- current project-level source documents from `open-proofline/website`, when
+  governance, political alignment, public-good framing, public voice, funding
+  posture, source mapping, or README structure is involved:
+  - `README.md`
+  - `docs/governance-and-political-alignment.md`
+  - `docs/repository-readme-baseline.md`
+  - `codex/README.md`
+  - relevant `codex/prompts/`
 
 Use source and test files to verify UI, API-client, route, auth/session, and
 documentation claims:
@@ -59,6 +67,11 @@ For backend behavior, routes, deployment, and server security claims, inspect
 the current `open-proofline/server` source documents instead of relying on
 web-client assumptions.
 
+For governance, political alignment, public-good framing, public voice,
+repository README structure, and source-of-truth mapping, inspect the current
+`open-proofline/website` source documents instead of duplicating project-level
+claims here.
+
 Do not rely on stale assumptions from this prompt when current docs or source
 code disagree.
 
@@ -72,6 +85,7 @@ Review:
 - all reusable Codex prompt files
 - all public-facing project claims
 - source-of-truth alignment
+- public voice and reusable README baseline alignment
 - technical accuracy
 - linguistic coherence
 - readability and approachability
@@ -109,6 +123,8 @@ Check source-of-truth consistency:
 - Do docs agree with current `README.md`, `AGENTS.md`, `SECURITY.md`, and
   source docs?
 - Do backend claims match the current `open-proofline/server` docs?
+- Do public-governance, political-alignment, public-good, public-voice, and
+  README-baseline claims match the current `open-proofline/website` docs?
 - Do Codex prompts agree with current repo rules?
 - Are public claims supported by implementation or source docs?
 
@@ -146,6 +162,9 @@ Check readability and approachability:
 - Are public-facing docs understandable without internal context?
 - Are technical docs precise without being needlessly dense?
 - Is wording direct, humane, and clear?
+- Does public-facing wording follow the website public voice without putting
+  jokes in emergency, security, implementation-status, encryption, decryption,
+  key-custody, or vulnerability-reporting sections?
 - Are acronyms and project-specific terms explained where needed?
 - Are there sections that sound like internal notes, legal fog, or startup
   hype?
@@ -227,11 +246,16 @@ In edit mode:
 For docs-only edits, run:
 
 ```bash
+npx prettier --check \
+  README.md AGENTS.md SECURITY.md CHANGELOG.md \
+  docs/*.md codex/*.md codex/prompts/*.md
 git diff --check
-npm run format:check
 ```
 
-Run `npm run format:check` only if it is available and applicable.
+Use the docs/prompt Prettier command above for docs-only review work so
+unrelated source formatting drift does not block the docs report. Run
+`npm run format:check` only when a repo-wide formatting check is explicitly
+requested or applicable.
 
 If code changed because the maintainer explicitly scoped that work, run:
 
