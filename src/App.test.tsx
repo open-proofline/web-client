@@ -909,7 +909,7 @@ test("does not show stale contact-key metadata after switching sessions", async 
   expect(
     await screen.findByRole("heading", { name: "Account overview" }),
   ).toBeInTheDocument();
-  fireEvent.click(screen.getAllByRole("link", { name: "Contact keys" })[0]!);
+  fireEvent.click(screen.getAllByRole("link", { name: "Trusted contacts" })[0]!);
   expect(
     await screen.findByRole("heading", { name: "Contact public keys" }),
   ).toBeInTheDocument();
@@ -934,7 +934,7 @@ test("does not show stale contact-key metadata after switching sessions", async 
   expect(
     await screen.findByRole("heading", { name: "Account overview" }),
   ).toBeInTheDocument();
-  fireEvent.click(screen.getAllByRole("link", { name: "Contact keys" })[0]!);
+  fireEvent.click(screen.getAllByRole("link", { name: "Trusted contacts" })[0]!);
 
   expect(await screen.findByText("Loading contact keys.")).toBeInTheDocument();
   expect(screen.queryByText("Alice trusted contact")).toBeNull();
