@@ -10,8 +10,8 @@ import { useAuth } from "../../auth/use-auth";
 
 const navigation = [
   { to: "/", label: "Overview" },
-  { to: "/incidents", label: "Records" },
-  { to: "/contact-keys", label: "Contact keys" },
+  { to: "/incidents", label: "Incidents" },
+  { to: "/contact-keys", label: "Trusted contacts" },
   { to: "/account", label: "Account" },
 ];
 
